@@ -12,6 +12,7 @@ A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Desi
 - **Sticky modifiers** — Ctrl and Alt latch on click; configurable auto-release after one keypress or persistent toggle
 - **Key repeat** — hold any key to continuously send it (400 ms delay, 50 ms interval)
 - **Word prediction** — suggestions drawn from the system dictionary as you type
+- **Custom dictionary** — add your own words and phrases (names, slang, abbreviations) that appear first in suggestions
 - **Emoji panel** — browsable grid with live search; emoji suggestions appear in the suggestion bar automatically
 - **PrtScn snipping tool** — launches the best available screenshot tool (flameshot → gnome-screenshot → fallbacks)
 - **4 themes** — Dark, Light, Midnight, High Contrast — with theme-aware active/modifier colours
@@ -141,8 +142,57 @@ Click the **⚙** button in the suggestion bar to open the settings panel.
 | **Click sound** | Audible click feedback on each keypress |
 | **Modifier keys** | **Auto-release** — Ctrl/Alt clear after one keypress. **Sticky** — stay active until clicked again |
 | **Taskbar** | Creates a `.desktop` launcher and pins it to the Cinnamon panel |
+| **Custom dictionary** | Add and manage your own words and phrases — see below |
 
 Settings are saved to `~/.config/onscreen_keyboard/settings.json` and restored automatically on next launch.
+
+---
+
+## Custom dictionary
+
+The built-in dictionary covers standard English words, but it won't know your friend's nickname, your company name, a street address, or any other personal vocabulary. The custom dictionary lets you add anything you like.
+
+### Adding a word or phrase
+
+1. Open **⚙ Settings** and scroll to the **Custom dictionary** section
+2. Click **+ Add word or phrase**
+3. The keyboard switches to capture mode — the suggestion bar shows:
+   ```
+   + type word/phrase, ↵ to save
+   ```
+4. Type your entry using the keys. Shift works normally for capitals and symbols
+5. Press **↵** to save, or **Esc** / backspace to empty to cancel
+
+**Example:** Your friend is called Dinglebob. Type `D` (Shift + d), `i`, `n`, `g`, `l`, `e`, `b`, `o`, `b`, then press ↵. From now on, typing `din` will show **Dinglebob** as the first suggestion in the bar — click it and the keyboard backtracks the partial prefix and types `Dinglebob` with the correct capital D.
+
+Phrases work the same way. Add `See you later` and typing `see` will offer the full phrase as a suggestion.
+
+### Removing a word
+
+Open **⚙ Settings → Custom dictionary** and click the **×** button next to the entry you want to remove.
+
+### How suggestions work
+
+Custom entries always appear **before** standard dictionary words in the suggestion bar. When you click a custom suggestion:
+
+- The partially typed prefix is automatically backspaced
+- The full custom entry is typed with its original casing
+- A space is appended
+
+So if you typed `din` and click `Dinglebob`, the result in your document is `Dinglebob ` — not `dinGlebob`.
+
+### Storage
+
+Custom words are saved to `~/.config/onscreen_keyboard/custom_words.json` as a plain JSON array, so you can also edit the file directly if you want to bulk-import entries:
+
+```json
+[
+  "Dinglebob",
+  "See you later",
+  "Acme Corp",
+  "R2D2"
+]
+```
 
 ---
 
