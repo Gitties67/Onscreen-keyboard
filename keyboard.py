@@ -59,9 +59,10 @@ if not XDOTOOL_OK:
     print("           Install with: sudo apt install xdotool")
 
 # ── Persistent settings ───────────────────────────────────────────────────────
-CONFIG_DIR  = os.path.expanduser("~/.config/onscreen_keyboard")
-CONFIG_FILE = os.path.join(CONFIG_DIR, "settings.json")
-CLICK_WAV   = "/tmp/osk_click.wav"
+CONFIG_DIR        = os.path.expanduser("~/.config/onscreen_keyboard")
+CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
+CUSTOM_WORDS_FILE = os.path.join(CONFIG_DIR, "custom_words.json")
+CLICK_WAV         = "/tmp/osk_click.wav"
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
@@ -490,6 +491,7 @@ class OnScreenKeyboard(Gtk.Window):
         self.current_word = ""
         self.shift_active = False
         self.caps_lock    = False
+        self._custom_words: list[str] = []
 
         # Widget references
         self._letter_btns:     dict[str, Gtk.Button] = {}
@@ -519,18 +521,25 @@ class OnScreenKeyboard(Gtk.Window):
         self._emoji_query        = ""
         self._emoji_btn:         Gtk.Button | None  = None
         self._emoji_flowbox:     Gtk.FlowBox | None = None
-        self._emoji_label:       Gtk.Label | None   = None
-        self._mod_hint_label:    Gtk.Label | None   = None
-        self._font_size_label:   Gtk.Label | None   = None
-        self._pin_status_label:  Gtk.Label | None   = None
+        self._emoji_label:          Gtk.Label | None   = None
+        self._mod_hint_label:       Gtk.Label | None   = None
+        self._font_size_label:      Gtk.Label | None   = None
+        self._pin_status_label:     Gtk.Label | None   = None
+        self._custom_words_listbox: Gtk.ListBox | None = None
+        self._custom_words_count:   Gtk.Label | None   = None
         # Fast lookup for filter func: char → (name, keywords)
         self._emoji_lookup:   dict[str, tuple[str, list[str]]] = {
             char: (name, kws) for char, name, kws in EMOJI_DATA
         }
 
-        # Suggestion bar: what value each slot will type (word or emoji char)
-        self._suggestion_values: list[str] = [""] * 5
-        self._suggestion_is_emoji: list[bool] = [False] * 5
+        # Suggestion bar: what value each slot will type (word, emoji, or custom)
+        self._suggestion_values:    list[str]  = [""] * 5
+        self._suggestion_is_emoji:  list[bool] = [False] * 5
+        self._suggestion_is_custom: list[bool] = [False] * 5
+
+        # Custom dictionary input mode
+        self._custom_input_mode: bool = False
+        self._custom_input_text: str  = ""
 
         # Sticky modifier state (Ctrl / Alt / Win latch until next keypress)
         self.ctrl_active = False
@@ -562,6 +571,9 @@ class OnScreenKeyboard(Gtk.Window):
         self.settings:       dict = self._load_settings()
         self._dwell_timers:  dict[str, int] = {}  # action → GLib source ID
         self._settings_mode: bool = False
+
+        self._custom_words = self._load_custom_words()
+        self.predictor.set_custom_words(self._custom_words)
 
         self._setup_window()
         self._apply_css()
@@ -957,6 +969,40 @@ class OnScreenKeyboard(Gtk.Window):
             self._update_modifier_visuals()
             return
 
+        # ── Custom word input mode ───────────────────────────────────────────
+        if self._custom_input_mode:
+            if action == "escape":
+                self._close_custom_input_mode()
+            elif action == "return":
+                self._confirm_custom_word()
+            elif action == "backspace":
+                if self._custom_input_text:
+                    self._custom_input_text = self._custom_input_text[:-1]
+                    self._update_custom_input_display()
+                else:
+                    self._close_custom_input_mode()
+            elif action == "space":
+                self._custom_input_text += " "
+                self._update_custom_input_display()
+            elif len(action) == 1 and action.isalpha():
+                char = action.upper() if (self.shift_active ^ self.caps_lock) else action.lower()
+                self._custom_input_text += char
+                if self.shift_active:
+                    self.shift_active = False
+                    self._update_modifier_visuals()
+                self._update_custom_input_display()
+            elif action in SHIFT_MAP:
+                char = SHIFT_MAP[action] if self.shift_active else action
+                self._custom_input_text += char
+                if self.shift_active:
+                    self.shift_active = False
+                    self._update_modifier_visuals()
+                self._update_custom_input_display()
+            elif len(action) == 1 and action.isdigit():
+                self._custom_input_text += action
+                self._update_custom_input_display()
+            return
+
         # ── Emoji mode — keys filter the emoji grid ──────────────────────────
         if self._emoji_mode:
             if action == "backspace":
@@ -1042,6 +1088,114 @@ class OnScreenKeyboard(Gtk.Window):
             self._update_modifier_visuals()
 
     # ── Built-in app launcher ─────────────────────────────────────────────────
+
+    # ── Custom word input mode ────────────────────────────────────────────────
+
+    def _open_custom_input_mode(self):
+        """Switch to key grid and capture typing into the custom word buffer."""
+        # Close any other active panel
+        if self._settings_mode:
+            self._toggle_settings()
+        if self._emoji_mode:
+            self._close_emoji_mode()
+        self._custom_input_mode = True
+        self._custom_input_text = ""
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("keys")
+        self._update_custom_input_display()
+
+    def _close_custom_input_mode(self):
+        self._custom_input_mode = False
+        self._custom_input_text = ""
+        if self._search_label:
+            self._search_label.hide()
+        self._refresh_suggestions()
+
+    def _confirm_custom_word(self):
+        word = self._custom_input_text.strip()
+        if word:
+            self._add_custom_word(word)
+        self._close_custom_input_mode()
+
+    def _update_custom_input_display(self):
+        if self._search_label:
+            txt = self._custom_input_text
+            self._search_label.set_text(f"+ {txt}▏" if txt else "+ type word/phrase, ↵ to save")
+            self._search_label.show()
+        for btn in self._suggestion_btns:
+            btn.set_label("")
+            btn.set_sensitive(False)
+
+    def _add_custom_word(self, word: str):
+        if word not in self._custom_words:
+            self._custom_words.append(word)
+            self.predictor.set_custom_words(self._custom_words)
+            self._save_custom_words()
+            self._rebuild_custom_words_list()
+
+    def _remove_custom_word(self, word: str):
+        if word in self._custom_words:
+            self._custom_words.remove(word)
+            self.predictor.set_custom_words(self._custom_words)
+            self._save_custom_words()
+            self._rebuild_custom_words_list()
+
+    def _load_custom_words(self) -> list[str]:
+        try:
+            with open(CUSTOM_WORDS_FILE, "r") as f:
+                data = json.load(f)
+            return [w for w in data if isinstance(w, str)]
+        except Exception:
+            return []
+
+    def _save_custom_words(self):
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(CUSTOM_WORDS_FILE, "w") as f:
+                json.dump(self._custom_words, f, indent=2)
+        except Exception as exc:
+            print(f"[custom] Could not save: {exc}")
+
+    def _rebuild_custom_words_list(self):
+        """Refresh the ListBox in the settings panel to reflect current custom words."""
+        lb = self._custom_words_listbox
+        if lb is None:
+            return
+        # Remove all existing rows
+        for row in lb.get_children():
+            lb.remove(row)
+        # Re-add
+        for word in self._custom_words:
+            lb.add(self._make_custom_word_row(word))
+        lb.show_all()
+        # Update the count label
+        if self._custom_words_count:
+            n = len(self._custom_words)
+            self._custom_words_count.set_text(f"{n} word{'s' if n != 1 else ''}")
+
+    def _make_custom_word_row(self, word: str) -> Gtk.ListBoxRow:
+        row = Gtk.ListBoxRow()
+        row.set_selectable(False)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        box.set_margin_start(6)
+        box.set_margin_end(4)
+        box.set_margin_top(2)
+        box.set_margin_bottom(2)
+
+        lbl = Gtk.Label(label=word)
+        lbl.set_name("settings-label")
+        lbl.set_xalign(0.0)
+        lbl.set_hexpand(True)
+        box.pack_start(lbl, True, True, 0)
+
+        remove_btn = Gtk.Button(label="×")
+        remove_btn.get_style_context().add_class("settings-choice")
+        remove_btn.set_size_request(30, -1)
+        remove_btn.connect("clicked", lambda _b, w=word: self._remove_custom_word(w))
+        box.pack_end(remove_btn, False, False, 0)
+
+        row.add(box)
+        return row
 
     def _toggle_app_mode(self):
         if self._app_mode:
@@ -1267,6 +1421,43 @@ class OnScreenKeyboard(Gtk.Window):
         shortcut_row.pack_start(self._pin_status_label, False, False, 4)
 
         panel.pack_start(shortcut_row, False, False, 0)
+
+        # ── Custom dictionary section ───────────────────────────────────────
+        # Header row: label + word count
+        dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        dict_lbl = Gtk.Label(label="Custom dictionary")
+        dict_lbl.set_name("settings-label")
+        dict_lbl.set_xalign(0.0)
+        dict_lbl.set_hexpand(True)
+        dict_header.pack_start(dict_lbl, True, True, 0)
+
+        n = len(self._custom_words)
+        self._custom_words_count = Gtk.Label(
+            label=f"{n} word{'s' if n != 1 else ''}")
+        self._custom_words_count.set_name("settings-label")
+        dict_header.pack_end(self._custom_words_count, False, False, 0)
+        panel.pack_start(dict_header, False, False, 0)
+
+        # "Add word" button — opens the keyboard in custom input mode
+        add_btn = Gtk.Button(label="+ Add word or phrase")
+        add_btn.get_style_context().add_class("settings-choice")
+        add_btn.connect("clicked", lambda _: self._open_custom_input_mode())
+        panel.pack_start(add_btn, False, False, 0)
+
+        # Scrollable list of existing custom words
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_size_request(-1, 120)
+
+        self._custom_words_listbox = Gtk.ListBox()
+        self._custom_words_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._custom_words_listbox.set_name("settings-panel")
+
+        for word in self._custom_words:
+            self._custom_words_listbox.add(self._make_custom_word_row(word))
+
+        scroll.add(self._custom_words_listbox)
+        panel.pack_start(scroll, False, False, 0)
 
         self._refresh_theme_buttons()
         return panel
@@ -1729,21 +1920,41 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Suggestion bar ────────────────────────────────��───────────────────────
 
     def _refresh_suggestions(self):
-        word_sugg  = self.predictor.predict(self.current_word, n=3)
-        emoji_sugg = emoji_suggest(self.current_word, n=2) if self.current_word else []
-        all_sugg   = word_sugg + emoji_sugg
+        w = self.current_word
 
-        self._suggestion_values   = [""] * 5
-        self._suggestion_is_emoji = [False] * 5
+        # Custom words always go first (original casing preserved)
+        custom_sugg = self.predictor.custom_matches(w) if w else []
+        custom_lower = {c.lower() for c in custom_sugg}
+
+        # Dictionary words — exclude anything already in custom results
+        dict_sugg = [x for x in self.predictor.predict(w, n=3)
+                     if x not in custom_lower] if w else []
+
+        # Emoji suggestions
+        emoji_sugg = emoji_suggest(w, n=2) if w else []
+
+        # Fill 5 slots: custom → dict → emoji
+        slots: list[tuple[str, bool, bool]] = []   # (value, is_emoji, is_custom)
+        for v in custom_sugg:
+            slots.append((v, False, True))
+        remaining_dict = max(0, 3 - len(custom_sugg))
+        for v in dict_sugg[:remaining_dict]:
+            slots.append((v, False, False))
+        for v in emoji_sugg[:2]:
+            slots.append((v, True, False))
+
+        self._suggestion_values    = [""] * 5
+        self._suggestion_is_emoji  = [False] * 5
+        self._suggestion_is_custom = [False] * 5
 
         for i, btn in enumerate(self._suggestion_btns):
-            if i < len(all_sugg):
-                val = all_sugg[i]
-                is_emoji = (i >= len(word_sugg))
+            if i < len(slots):
+                val, is_emoji, is_custom = slots[i]
                 btn.set_label(val)
                 btn.set_sensitive(True)
-                self._suggestion_values[i]   = val
-                self._suggestion_is_emoji[i] = is_emoji
+                self._suggestion_values[i]    = val
+                self._suggestion_is_emoji[i]  = is_emoji
+                self._suggestion_is_custom[i] = is_custom
             else:
                 btn.set_label("")
                 btn.set_sensitive(False)
@@ -1761,14 +1972,26 @@ class OnScreenKeyboard(Gtk.Window):
             self._close_app_mode()
             return
 
-        # Emoji suggestion — type the emoji character directly
+        # Emoji suggestion
         if idx < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[idx]:
             self.typer.type_emoji(label)
             self.current_word = ""
             self._refresh_suggestions()
             return
 
-        # Normal word-completion
+        # Custom word/phrase — backspace the partial prefix then type full entry
+        # with its original casing (e.g. "Dinglebob" even if user typed "din")
+        if idx < len(self._suggestion_is_custom) and self._suggestion_is_custom[idx]:
+            for _ in range(len(self.current_word)):
+                self.typer.send_special("backspace")
+            for ch in label:
+                self.typer.type_char(ch)
+            self.typer.send_special("space")
+            self.current_word = ""
+            self._refresh_suggestions()
+            return
+
+        # Normal dictionary word-completion (type the remaining suffix)
         remaining = label[len(self.current_word):]
         for ch in remaining:
             self.typer.type_char(ch)

@@ -94,6 +94,7 @@ class WordPredictor:
     def __init__(self, dict_path: str = DICT_PATH):
         self._words: list[str] = []
         self._common: set[str] = COMMON_WORDS
+        self._custom: list[str] = []   # user-defined words/phrases (original casing)
         self._load(dict_path)
 
     def _load(self, path: str) -> None:
@@ -115,6 +116,17 @@ class WordPredictor:
 
         self._words = sorted(words)
         print(f"[predictor] Loaded {len(self._words):,} words")
+
+    def set_custom_words(self, words: list[str]) -> None:
+        """Replace the custom word/phrase list."""
+        self._custom = list(words)
+
+    def custom_matches(self, prefix: str) -> list[str]:
+        """Return custom entries whose text starts with prefix (case-insensitive)."""
+        if not prefix:
+            return []
+        p = prefix.lower()
+        return [w for w in self._custom if w.lower().startswith(p)]
 
     def predict(self, prefix: str, n: int = 5) -> list[str]:
         """Return up to n word suggestions for the given prefix."""
