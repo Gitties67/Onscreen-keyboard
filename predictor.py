@@ -9,6 +9,46 @@ import bisect
 
 DICT_PATH = "/usr/share/dict/american-english"
 
+
+def _osa_distance(s: str, t: str, max_dist: int) -> int:
+    """
+    Optimal String Alignment distance (handles transpositions as 1 edit).
+    Returns the distance, or max_dist+1 if it would exceed the threshold
+    (early-exit optimisation — avoids filling the full matrix).
+    """
+    m, n = len(s), len(t)
+    if abs(m - n) > max_dist:
+        return max_dist + 1
+
+    # Use a flat list rather than a list-of-lists for speed
+    INF = max_dist + 1
+    prev2 = list(range(n + 1))   # d[i-2]
+    prev1 = list(range(n + 1))   # d[i-1]  (pre-filled as base case row 0)
+    curr  = [0] * (n + 1)
+
+    for i in range(1, m + 1):
+        curr[0] = i
+        row_min = INF
+        for j in range(1, n + 1):
+            cost = 0 if s[i - 1] == t[j - 1] else 1
+            val = min(
+                prev1[j] + 1,        # deletion
+                curr[j - 1] + 1,     # insertion
+                prev1[j - 1] + cost, # substitution
+            )
+            # Transposition
+            if i > 1 and j > 1 and s[i - 1] == t[j - 2] and s[i - 2] == t[j - 1]:
+                val = min(val, prev2[j - 2] + cost)
+            curr[j] = val
+            if val < row_min:
+                row_min = val
+        if row_min > max_dist:
+            return INF   # whole row exceeds threshold — no point continuing
+        prev2, prev1 = prev1, curr
+        curr = [0] * (n + 1)
+
+    return prev1[n]
+
 # Top 500 most common English words — boosted to the front of suggestions
 COMMON_WORDS = {
     "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
@@ -87,6 +127,17 @@ COMMON_WORDS = {
     "finger", "industry", "value", "fight", "lie", "beat", "excite",
     "natural", "view", "sense", "capital", "except", "expect", "sister",
     "charge", "possible", "rather", "until", "mouth",
+    # Frequently-misspelled words — boosted so fuzzy ranking finds them first
+    "receive", "believe", "achieve", "relieve", "retrieve",
+    "necessary", "separate", "definitely", "occurred", "occurrence",
+    "accommodate", "beginning", "committee", "conscience", "conscientious",
+    "convenient", "experience", "government", "independent", "immediately",
+    "knowledge", "library", "license", "maintenance", "millennium",
+    "occasion", "occurred", "persistent", "possession", "privilege",
+    "professional", "recommend", "referred", "relevant", "restaurant",
+    "rhythm", "schedule", "secretary", "succeed", "successful",
+    "surprise", "tendency", "therefore", "tomorrow", "transferred",
+    "truly", "until", "usually", "vacuum", "whether", "writing",
 }
 
 
@@ -95,6 +146,7 @@ class WordPredictor:
         self._words: list[str] = []
         self._common: set[str] = COMMON_WORDS
         self._custom: list[str] = []   # user-defined words/phrases (original casing)
+        self._by_first: dict[str, list[str]] = {}  # first-char → word list (for fuzzy)
         self._load(dict_path)
 
     def _load(self, path: str) -> None:
@@ -115,6 +167,13 @@ class WordPredictor:
                 words.append(w)
 
         self._words = sorted(words)
+
+        # Build first-character index for fast fuzzy candidate filtering
+        by_first: dict[str, list[str]] = {}
+        for w in self._words:
+            by_first.setdefault(w[0], []).append(w)
+        self._by_first = by_first
+
         print(f"[predictor] Loaded {len(self._words):,} words")
 
     def set_custom_words(self, words: list[str]) -> None:
@@ -158,3 +217,52 @@ class WordPredictor:
 
         candidates.sort(key=sort_key)
         return candidates[:n]
+
+    def fuzzy_predict(self, prefix: str, n: int = 3) -> list[str]:
+        """
+        Spell-check suggestions for prefix using OSA distance.
+
+        Compares prefix against the first len(prefix) characters of each
+        candidate word so that "reciev" correctly matches "receive".
+        Only activates for prefixes of 3+ characters.
+
+        Edit-distance thresholds:
+          3–4 chars → 1 allowed error
+          5+  chars → 2 allowed errors
+        """
+        if len(prefix) < 3:
+            return []
+
+        prefix = prefix.lower()
+        plen   = len(prefix)
+        max_d  = 1 if plen <= 4 else 2
+
+        # Candidates: same first letter, word length within max_d+1 of prefix length.
+        # We compare the full typed prefix against the full word, so the length
+        # difference alone bounds the minimum possible edit distance.
+        bucket = self._by_first.get(prefix[0], [])
+
+        scored: list[tuple[int, int, int, str]] = []
+        for word in bucket:
+            wlen = len(word)
+            if abs(wlen - plen) > max_d + 1:
+                continue
+            # Compare prefix against the full word (not truncated).
+            # This correctly handles "speling" → "spelling" (1 insertion)
+            # whereas prefix-truncation gives distance 2.
+            dist = _osa_distance(prefix, word, max_d)
+            if dist == 0:
+                continue   # exact match (shouldn't happen for fuzzy path, but guard)
+            if dist <= max_d:
+                # Count shared leading characters — words that share more of the
+                # typed prefix rank higher (e.g. "receive" beats "racier" for "reciev")
+                shared = 0
+                for ca, cb in zip(prefix, word):
+                    if ca != cb:
+                        break
+                    shared += 1
+                scored.append((dist, 0 if word in self._common else 1,
+                                -shared, wlen, word))
+
+        scored.sort()
+        return [w for _, _, _, _, w in scored[:n]]

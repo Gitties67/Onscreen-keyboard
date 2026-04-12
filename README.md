@@ -12,10 +12,12 @@ A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Desi
 - **Sticky modifiers** — Ctrl and Alt latch on click; configurable auto-release after one keypress or persistent toggle
 - **Key repeat** — hold any key to continuously send it (400 ms delay, 50 ms interval)
 - **Word prediction** — suggestions drawn from the system dictionary as you type
+- **Spell-check prediction** — fuzzy matching catches common misspellings (transpositions, missing/extra letters); correct spelling appears in the suggestion bar ~250 ms after you pause
 - **Custom dictionary** — add your own words and phrases (names, slang, abbreviations) that appear first in suggestions
 - **Emoji panel** — browsable grid with live search; emoji suggestions appear in the suggestion bar automatically
 - **PrtScn snipping tool** — launches the best available screenshot tool (flameshot → gnome-screenshot → fallbacks)
-- **4 themes** — Dark, Light, Midnight, High Contrast — with theme-aware active/modifier colours
+- **DIY theme builder** — 6-step colour wizard with live preview; custom themes saved and selectable like built-in ones
+- **4 built-in themes** — Dark, Light, Midnight, High Contrast — with theme-aware active/modifier colours
 - **Adjustable font size** — 10–22 px, applied live
 - **Dwell click** — hover-to-click accessibility mode with adjustable delay
 - **Click sound** — optional audible feedback
@@ -27,7 +29,7 @@ A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Desi
 
 ## Requirements
 
-### Required
+### Linux (required)
 
 | Package | Purpose | Install |
 |---|---|---|
@@ -37,7 +39,7 @@ A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Desi
 | `gir1.2-gtk-3.0` | GTK3 GObject introspection | `sudo apt install gir1.2-gtk-3.0` |
 | `at-spi2-core` | AT-SPI2 fallback typing | `sudo apt install at-spi2-core` |
 
-### Recommended
+### Linux (recommended)
 
 | Package | Purpose | Install |
 |---|---|---|
@@ -54,6 +56,43 @@ sudo apt install flameshot          # recommended — annotate before saving
 sudo apt install gnome-screenshot   # ships with many distros already
 sudo apt install scrot              # lightweight CLI option
 ```
+
+---
+
+## Windows installation
+
+The keyboard runs on Windows 10/11 using GTK3 (via MSYS2) and pynput for key synthesis.
+
+### 1. Install MSYS2
+
+Download and run the installer from [msys2.org](https://www.msys2.org/), then open the **MSYS2 MINGW64** terminal and install Python + GTK3:
+
+```bash
+pacman -Syu
+pacman -S mingw-w64-x86_64-python \
+          mingw-w64-x86_64-python-gobject \
+          mingw-w64-x86_64-gtk3
+```
+
+### 2. Install pynput
+
+pynput handles key synthesis on Windows (replaces XTEST):
+
+```bash
+pip install pynput
+```
+
+### 3. Clone the repo and run
+
+```bash
+git clone https://github.com/Gitties67/Onscreen-keyboard.git
+cd Onscreen-keyboard
+python keyboard.py
+```
+
+Or double-click **`launch.bat`**.
+
+> **Note:** The keyboard window is set to `WS_EX_NOACTIVATE` so it never steals focus from the window you are typing into. If a click still activates the keyboard window, try right-clicking the taskbar button and choosing "Always on top".
 
 ---
 

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-Custom on-screen keyboard — Windows-style dark theme.
-Typed into active window via AT-SPI2 (primary) or python-xlib XTEST (fallback).
+Custom on-screen keyboard — GTK3, cross-platform (Linux + Windows).
+Typed into active window via XTEST (Linux primary), AT-SPI2 (Linux fallback),
+or pynput (Windows primary / universal fallback).
 
-Run:  python3 keyboard.py
-      bash launch.sh
+Run:  bash launch.sh          (Linux)
+      python keyboard.py      (Windows, after installing GTK3 + pynput)
 """
 
 import glob
 import json
 import math
 import os
+import platform
 import re
 import shutil
 import struct
@@ -24,39 +26,76 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Gio", "2.0")
 from gi.repository import Gtk, Gdk, GLib, Gio
 
-# XTEST — primary method; works reliably with all targets including browsers
-XLIB_OK = False
-try:
-    from Xlib import display as xdisplay, X
-    from Xlib.ext import xtest
-    XLIB_OK = True
-    print("[keyboard] python-xlib available — using XTEST key synthesis.")
-except ImportError:
-    print("[keyboard] python3-xlib not found — will try AT-SPI2.")
-    print("           Install with: sudo apt install python3-xlib")
+IS_WINDOWS = platform.system() == "Windows"
 
-# AT-SPI2 — fallback only; can segfault with browser targets
-ATSPI_OK = False
+# ── pynput — cross-platform key synthesis (primary on Windows) ────────────────
+PYNPUT_OK      = False
+PYNPUT_KEY_MAP: dict = {}
+_pynput_ctrl   = None   # module-level Controller instance (set below if available)
 try:
-    gi.require_version("Atspi", "2.0")
-    from gi.repository import Atspi
-    ATSPI_OK = True
-    if not XLIB_OK:
-        print("[keyboard] AT-SPI2 available — using accessibility key synthesis.")
+    from pynput.keyboard import Key as _PKey, Controller as _PController
+    PYNPUT_OK    = True
+    _pynput_ctrl = _PController()
+    PYNPUT_KEY_MAP = {
+        "backspace": _PKey.backspace, "return": _PKey.enter,
+        "tab":       _PKey.tab,       "space":  _PKey.space,
+        "escape":    _PKey.esc,       "delete": _PKey.delete,
+        "home":      _PKey.home,      "end":    _PKey.end,
+        "left":      _PKey.left,      "right":  _PKey.right,
+        "up":        _PKey.up,        "down":   _PKey.down,
+        "f1":  _PKey.f1,  "f2":  _PKey.f2,  "f3":  _PKey.f3,  "f4":  _PKey.f4,
+        "f5":  _PKey.f5,  "f6":  _PKey.f6,  "f7":  _PKey.f7,  "f8":  _PKey.f8,
+        "f9":  _PKey.f9,  "f10": _PKey.f10, "f11": _PKey.f11, "f12": _PKey.f12,
+        "shift_l":  _PKey.shift_l,  "ctrl_l": _PKey.ctrl_l,
+        "ctrl_r":   _PKey.ctrl_r,   "alt_l":  _PKey.alt_l,
+        "alt_r":    _PKey.alt_r,    "super_l": _PKey.cmd,
+        "prtscn":   _PKey.print_screen,
+    }
+    print("[keyboard] pynput available — cross-platform key synthesis enabled.")
+except ImportError:
+    if IS_WINDOWS:
+        print("[keyboard] pynput not found — typing will not work.")
+        print("           Install with: pip install pynput")
     else:
-        print("[keyboard] AT-SPI2 also available (unused; XTEST is primary).")
-except Exception as _e:
-    if not XLIB_OK:
-        print(f"[keyboard] AT-SPI2 also unavailable ({_e}) — typing disabled.")
+        print("[keyboard] pynput not found (optional on Linux).")
+
+# ── XTEST — Linux primary (most reliable for browsers, terminals, etc.) ───────
+XLIB_OK = False
+if not IS_WINDOWS:
+    try:
+        from Xlib import display as xdisplay, X
+        from Xlib.ext import xtest
+        XLIB_OK = True
+        print("[keyboard] python-xlib available — using XTEST key synthesis.")
+    except ImportError:
+        print("[keyboard] python3-xlib not found — will try AT-SPI2 / pynput.")
+        print("           Install with: sudo apt install python3-xlib")
+
+# ── AT-SPI2 — Linux fallback ──────────────────────────────────────────────────
+ATSPI_OK = False
+if not IS_WINDOWS:
+    try:
+        gi.require_version("Atspi", "2.0")
+        from gi.repository import Atspi
+        ATSPI_OK = True
+        if not XLIB_OK:
+            print("[keyboard] AT-SPI2 available — using accessibility key synthesis.")
+        else:
+            print("[keyboard] AT-SPI2 also available (unused; XTEST is primary).")
+    except Exception as _e:
+        if not XLIB_OK and not PYNPUT_OK:
+            print(f"[keyboard] AT-SPI2 also unavailable ({_e}) — typing disabled.")
 
 from predictor import WordPredictor
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
 
-# xdotool — used for typing emoji (arbitrary Unicode)
-XDOTOOL_OK = bool(shutil.which("xdotool"))
-if not XDOTOOL_OK:
-    print("[keyboard] xdotool not found — emoji typing may not work.")
-    print("           Install with: sudo apt install xdotool")
+# xdotool — Linux only, used for emoji Unicode typing
+XDOTOOL_OK = False
+if not IS_WINDOWS:
+    XDOTOOL_OK = bool(shutil.which("xdotool"))
+    if not XDOTOOL_OK:
+        print("[keyboard] xdotool not found — emoji will use pynput fallback.")
+        print("           Install with: sudo apt install xdotool")
 
 # ── Persistent settings ───────────────────────────────────────────────────────
 CONFIG_DIR        = os.path.expanduser("~/.config/onscreen_keyboard")
@@ -465,10 +504,10 @@ class KeyTyper:
     """
     Sends keystrokes to the active window.
 
-    Primary:  python-xlib XTEST — reliable for all targets including browsers.
-    Fallback: AT-SPI2 `Atspi.generate_keyboard_event()` — used only when
-              python-xlib is unavailable; AT-SPI2 can crash (native segfault)
-              when the target is a browser widget (e.g. Google Docs).
+    Windows:  pynput (Win32 SendInput — works in all apps).
+    Linux:    XTEST via python-xlib (primary, most reliable).
+              AT-SPI2 (fallback when python-xlib is absent).
+              pynput (last-resort Linux fallback).
     """
 
     def __init__(self):
@@ -477,7 +516,13 @@ class KeyTyper:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def type_char(self, char: str, mods: list[str] | None = None) -> None:
-        keysym = ord(char)
+        # Windows — always use pynput
+        if IS_WINDOWS:
+            if PYNPUT_OK:
+                self._pynput_type_char(char, mods or [])
+            return
+        # Linux — prefer XTEST, fall back to AT-SPI2, then pynput
+        keysym      = ord(char)
         needs_shift = char.isupper() or char in "!@#$%^&*()_+{}|:\"<>?~"
         if XLIB_OK and self._disp:
             keycode = self._disp.keysym_to_keycode(keysym)
@@ -488,8 +533,17 @@ class KeyTyper:
                 return
         if ATSPI_OK:
             self._atspi_send_keysym(keysym, needs_shift, mods or [])
+            return
+        if PYNPUT_OK:
+            self._pynput_type_char(char, mods or [])
 
     def send_special(self, name: str, mods: list[str] | None = None) -> None:
+        # Windows — always use pynput
+        if IS_WINDOWS:
+            if PYNPUT_OK:
+                self._pynput_send_special(name, mods or [])
+            return
+        # Linux — prefer XTEST, fall back to AT-SPI2, then pynput
         keysym = KEYSYMS.get(name)
         if keysym is None:
             return
@@ -500,6 +554,46 @@ class KeyTyper:
                 return
         if ATSPI_OK:
             self._atspi_send_keysym(keysym, False, mods or [])
+            return
+        if PYNPUT_OK:
+            self._pynput_send_special(name, mods or [])
+
+    # ── pynput implementation (Windows primary / Linux last-resort) ───────────
+
+    def _pynput_type_char(self, char: str, mods: list[str]) -> None:
+        ctrl = _pynput_ctrl
+        try:
+            for m in mods:
+                k = PYNPUT_KEY_MAP.get(m)
+                if k:
+                    ctrl.press(k)
+            ctrl.press(char)
+            ctrl.release(char)
+            for m in reversed(mods):
+                k = PYNPUT_KEY_MAP.get(m)
+                if k:
+                    ctrl.release(k)
+        except Exception as exc:
+            print(f"[pynput] type_char {char!r}: {exc}")
+
+    def _pynput_send_special(self, name: str, mods: list[str]) -> None:
+        key = PYNPUT_KEY_MAP.get(name)
+        if key is None:
+            return
+        ctrl = _pynput_ctrl
+        try:
+            for m in mods:
+                k = PYNPUT_KEY_MAP.get(m)
+                if k:
+                    ctrl.press(k)
+            ctrl.press(key)
+            ctrl.release(key)
+            for m in reversed(mods):
+                k = PYNPUT_KEY_MAP.get(m)
+                if k:
+                    ctrl.release(k)
+        except Exception as exc:
+            print(f"[pynput] send_special {name!r}: {exc}")
 
     # ── AT-SPI2 implementation ────────────────────────────────────────────────
 
@@ -507,7 +601,6 @@ class KeyTyper:
                            mods: list[str]) -> None:
         """Synthesise a key via AT-SPI2 accessibility layer."""
         try:
-            # Build full modifier list
             all_mods: list[int] = []
             if with_shift:
                 all_mods.append(KEYSYMS["shift_l"])
@@ -515,20 +608,13 @@ class KeyTyper:
                 sym = KEYSYMS.get(name)
                 if sym:
                     all_mods.append(sym)
-
-            # Press modifiers
             for sym in all_mods:
                 Atspi.generate_keyboard_event(sym, None, Atspi.KeySynthType.PRESS)
-
-            # Press+release the key
             Atspi.generate_keyboard_event(keysym, None,
                                           Atspi.KeySynthType.PRESSRELEASE)
-
-            # Release modifiers in reverse order
             for sym in reversed(all_mods):
                 Atspi.generate_keyboard_event(sym, None,
                                               Atspi.KeySynthType.RELEASE)
-
         except Exception as exc:
             print(f"[atspi] Error sending keysym {keysym:#x}: {exc}")
 
@@ -536,6 +622,14 @@ class KeyTyper:
 
     def type_emoji(self, emoji_str: str) -> None:
         """Type an emoji / arbitrary Unicode string."""
+        # pynput.type() handles arbitrary Unicode on all platforms
+        if PYNPUT_OK and (IS_WINDOWS or not XDOTOOL_OK):
+            try:
+                _pynput_ctrl.type(emoji_str)
+                return
+            except Exception as exc:
+                print(f"[pynput] emoji type error: {exc}")
+        # Linux — prefer xdotool (most reliable for multi-codepoint emoji)
         if XDOTOOL_OK:
             try:
                 subprocess.run(
@@ -546,7 +640,7 @@ class KeyTyper:
                 return
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass
-        # Fallback: X11 Unicode keysyms (works for most single-codepoint emoji)
+        # Last resort: X11 Unicode keysyms
         if XLIB_OK and self._disp:
             try:
                 for ch in emoji_str:
@@ -637,6 +731,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._suggestion_values:    list[str]  = [""] * 5
         self._suggestion_is_emoji:  list[bool] = [False] * 5
         self._suggestion_is_custom: list[bool] = [False] * 5
+        self._suggestion_is_fuzzy:  list[bool] = [False] * 5
 
         # Custom dictionary input mode
         self._custom_input_mode: bool = False
@@ -684,6 +779,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._repeat_timers: dict[str, int] = {}  # action → GLib source ID
         self._repeat_active: set[str]        = set()  # actions in fast-repeat phase
 
+        # Fuzzy spell-check debounce timer
+        self._fuzzy_timer: int | None = None
+
         # Settings + dwell state
         self.settings:       dict = self._load_settings()
         self._dwell_timers:  dict[str, int] = {}  # action → GLib source ID
@@ -729,6 +827,11 @@ class OnScreenKeyboard(Gtk.Window):
         self.move(0, sh - kb_h)
         self.connect("destroy", Gtk.main_quit)
 
+        if IS_WINDOWS:
+            # Apply WS_EX_NOACTIVATE after the window is realised so the OSK
+            # never steals focus from the application being typed into.
+            self.connect("realize", self._on_realized_windows)
+
         # No override_redirect — DOCK type hint only works when Muffin actually
         # manages the window.  With override_redirect the WM ignores the DOCK
         # hint entirely, and Clutter treats our window as unmanaged (causing
@@ -743,6 +846,22 @@ class OnScreenKeyboard(Gtk.Window):
         self.connect("button-press-event",   self._on_window_button_press)
         self.connect("motion-notify-event",  self._on_resize_motion)
         self.connect("button-release-event", self._on_resize_release)
+
+    def _on_realized_windows(self, _win):
+        """Windows only: set WS_EX_NOACTIVATE so the OSK never steals focus."""
+        try:
+            import ctypes
+            GWL_EXSTYLE      = -20
+            WS_EX_NOACTIVATE = 0x08000000
+            WS_EX_TOOLWINDOW = 0x00000080
+            hwnd  = self.get_window().get_handle()
+            style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE,
+                style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+            )
+        except Exception as exc:
+            print(f"[windows] Could not set WS_EX_NOACTIVATE: {exc}")
 
     # ── CSS ──────────────────────────────────────────────────────────────────
 
@@ -1634,8 +1753,35 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _launch_snipping_tool(self):
         """Launch the best available screenshot/snipping tool for region capture."""
-        # Ordered by preference: flameshot has the best UX, then gnome-screenshot,
-        # then lighter alternatives. Fall back to sending the raw PrtScn key.
+        if IS_WINDOWS:
+            # Windows 10/11 — open Snipping Tool snip mode via its URI
+            for cmd in (
+                ["explorer", "ms-screenclip:"],
+                ["SnippingTool.exe", "/clip"],
+                ["SnippingTool.exe"],
+            ):
+                if shutil.which(cmd[0]) or cmd[0] == "explorer":
+                    try:
+                        subprocess.Popen(
+                            cmd, close_fds=False,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                        )
+                    except Exception as exc:
+                        print(f"[snip] Windows: {exc}")
+                    return
+            # Last resort: Win+Shift+S via pynput
+            if PYNPUT_OK:
+                try:
+                    from pynput.keyboard import Key as _K
+                    with _pynput_ctrl.pressed(_K.cmd):
+                        with _pynput_ctrl.pressed(_K.shift):
+                            _pynput_ctrl.press('s')
+                            _pynput_ctrl.release('s')
+                except Exception as exc:
+                    print(f"[snip] pynput Win+Shift+S: {exc}")
+            return
+
+        # Linux — ordered by preference
         candidates = [
             ["flameshot",          "gui"],
             ["gnome-screenshot",   "--interactive"],
@@ -1824,26 +1970,27 @@ class OnScreenKeyboard(Gtk.Window):
 
         panel.pack_start(font_row, False, False, 0)
 
-        # ── Panel shortcut row ──────────────────────────────────────────────
-        shortcut_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl7 = Gtk.Label(label="Taskbar")
-        lbl7.set_name("settings-label")
-        lbl7.set_xalign(0.0)
-        lbl7.set_size_request(90, -1)
-        shortcut_row.pack_start(lbl7, False, False, 0)
+        # ── Panel shortcut row (Linux / Cinnamon only) ─────────────────────
+        if not IS_WINDOWS:
+            shortcut_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            lbl7 = Gtk.Label(label="Taskbar")
+            lbl7.set_name("settings-label")
+            lbl7.set_xalign(0.0)
+            lbl7.set_size_request(90, -1)
+            shortcut_row.pack_start(lbl7, False, False, 0)
 
-        pin_btn = Gtk.Button(label="Pin to panel")
-        pin_btn.get_style_context().add_class("settings-choice")
-        pin_btn.set_size_request(100, -1)
-        pin_btn.connect("clicked", self._on_pin_to_panel, pin_btn)
-        shortcut_row.pack_start(pin_btn, False, False, 0)
+            pin_btn = Gtk.Button(label="Pin to panel")
+            pin_btn.get_style_context().add_class("settings-choice")
+            pin_btn.set_size_request(100, -1)
+            pin_btn.connect("clicked", self._on_pin_to_panel, pin_btn)
+            shortcut_row.pack_start(pin_btn, False, False, 0)
 
-        self._pin_status_label = Gtk.Label(label="")
-        self._pin_status_label.set_name("settings-label")
-        self._pin_status_label.set_xalign(0.0)
-        shortcut_row.pack_start(self._pin_status_label, False, False, 4)
+            self._pin_status_label = Gtk.Label(label="")
+            self._pin_status_label.set_name("settings-label")
+            self._pin_status_label.set_xalign(0.0)
+            shortcut_row.pack_start(self._pin_status_label, False, False, 4)
 
-        panel.pack_start(shortcut_row, False, False, 0)
+            panel.pack_start(shortcut_row, False, False, 0)
 
         # ── Custom dictionary section ───────────────────────────────────────
         # Header row: label + word count
@@ -2371,42 +2518,90 @@ class OnScreenKeyboard(Gtk.Window):
     def _refresh_suggestions(self):
         w = self.current_word
 
+        # Cancel any pending fuzzy update from a previous keypress
+        if self._fuzzy_timer is not None:
+            GLib.source_remove(self._fuzzy_timer)
+            self._fuzzy_timer = None
+
         # Custom words always go first (original casing preserved)
-        custom_sugg = self.predictor.custom_matches(w) if w else []
+        custom_sugg  = self.predictor.custom_matches(w) if w else []
         custom_lower = {c.lower() for c in custom_sugg}
 
-        # Dictionary words — exclude anything already in custom results
-        dict_sugg = [x for x in self.predictor.predict(w, n=3)
-                     if x not in custom_lower] if w else []
+        # Exact-prefix dictionary words (fast bisect — runs synchronously)
+        n_dict_slots = max(0, 3 - len(custom_sugg))
+        exact_sugg   = [x for x in self.predictor.predict(w, n=n_dict_slots)
+                        if x not in custom_lower] if w else []
 
         # Emoji suggestions
         emoji_sugg = emoji_suggest(w, n=2) if w else []
 
-        # Fill 5 slots: custom → dict → emoji
-        slots: list[tuple[str, bool, bool]] = []   # (value, is_emoji, is_custom)
+        # Fill 5 slots immediately with exact results only
+        slots: list[tuple[str, bool, bool, bool]] = []
         for v in custom_sugg:
-            slots.append((v, False, True))
-        remaining_dict = max(0, 3 - len(custom_sugg))
-        for v in dict_sugg[:remaining_dict]:
-            slots.append((v, False, False))
+            slots.append((v, False, True, False))
+        remaining = max(0, 3 - len(custom_sugg))
+        for v in exact_sugg[:remaining]:
+            slots.append((v, False, False, False))
         for v in emoji_sugg[:2]:
-            slots.append((v, True, False))
+            slots.append((v, True, False, False))
 
         self._suggestion_values    = [""] * 5
         self._suggestion_is_emoji  = [False] * 5
         self._suggestion_is_custom = [False] * 5
+        self._suggestion_is_fuzzy  = [False] * 5
 
         for i, btn in enumerate(self._suggestion_btns):
             if i < len(slots):
-                val, is_emoji, is_custom = slots[i]
+                val, is_emoji, is_custom, is_fuzzy = slots[i]
                 btn.set_label(val)
                 btn.set_sensitive(True)
                 self._suggestion_values[i]    = val
                 self._suggestion_is_emoji[i]  = is_emoji
                 self._suggestion_is_custom[i] = is_custom
+                self._suggestion_is_fuzzy[i]  = is_fuzzy
             else:
                 btn.set_label("")
                 btn.set_sensitive(False)
+
+        # Schedule fuzzy spell-check to run 250ms after typing pauses.
+        # Only runs when there are open dict slots and prefix is long enough.
+        n_exact = len(exact_sugg)
+        if w and n_exact < n_dict_slots and len(w) >= 3:
+            self._fuzzy_timer = GLib.timeout_add(250, self._run_fuzzy_update)
+
+    def _run_fuzzy_update(self) -> bool:
+        """Run fuzzy spell-check and fill remaining suggestion slots (debounced)."""
+        self._fuzzy_timer = None
+        w = self.current_word
+        if not w or len(w) < 3:
+            return False
+
+        custom_sugg  = self.predictor.custom_matches(w)
+        custom_lower = {c.lower() for c in custom_sugg}
+        n_dict_slots = max(0, 3 - len(custom_sugg))
+        exact_sugg   = [x for x in self.predictor.predict(w, n=n_dict_slots)
+                        if x not in custom_lower]
+        n_exact      = len(exact_sugg)
+        n_fuzzy_need = n_dict_slots - n_exact
+        if n_fuzzy_need <= 0:
+            return False
+
+        exact_lower = {x.lower() for x in exact_sugg}
+        fuzzy_sugg  = [x for x in self.predictor.fuzzy_predict(w, n=n_fuzzy_need)
+                       if x not in custom_lower and x not in exact_lower]
+
+        # Fill in the empty dict slots with fuzzy suggestions
+        slot_start = len(custom_sugg) + n_exact
+        for i, v in enumerate(fuzzy_sugg):
+            idx = slot_start + i
+            if idx >= 5:
+                break
+            self._suggestion_btns[idx].set_label(v)
+            self._suggestion_btns[idx].set_sensitive(True)
+            self._suggestion_values[idx]   = v
+            self._suggestion_is_fuzzy[idx] = True
+
+        return False  # don't repeat
 
     def _on_suggestion_clicked(self, btn: Gtk.Button, idx: int = 0):
         label = btn.get_label()
@@ -2431,6 +2626,17 @@ class OnScreenKeyboard(Gtk.Window):
         # Custom word/phrase — backspace the partial prefix then type full entry
         # with its original casing (e.g. "Dinglebob" even if user typed "din")
         if idx < len(self._suggestion_is_custom) and self._suggestion_is_custom[idx]:
+            for _ in range(len(self.current_word)):
+                self.typer.send_special("backspace")
+            for ch in label:
+                self.typer.type_char(ch)
+            self.typer.send_special("space")
+            self.current_word = ""
+            self._refresh_suggestions()
+            return
+
+        # Fuzzy spell-check suggestion — prefix doesn't match so replace in full
+        if idx < len(self._suggestion_is_fuzzy) and self._suggestion_is_fuzzy[idx]:
             for _ in range(len(self.current_word)):
                 self.typer.send_special("backspace")
             for ch in label:
