@@ -54,7 +54,13 @@ if [ -z "$AT_SPI_BUS_ADDRESS" ]; then
     fi
 fi
 
-echo "Launching keyboard on DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"
+# Redirect output to a log file when not running in an interactive terminal
+LOG_FILE="/tmp/onscreen_keyboard.log"
+if [ ! -t 1 ]; then
+    exec >> "$LOG_FILE" 2>&1
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Launching keyboard on DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"
 echo "  DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-<not set>}"
 echo "  AT_SPI_BUS_ADDRESS=${AT_SPI_BUS_ADDRESS:-<not set>}"
 exec python3 /home/bigboy/onscreen_keyboard/keyboard.py

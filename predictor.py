@@ -49,6 +49,89 @@ def _osa_distance(s: str, t: str, max_dist: int) -> int:
 
     return prev1[n]
 
+# Ordered fallback words shown when there are no prefix matches / after a space.
+# Front of list = most likely to be useful.
+TOP_WORDS = [
+    "the", "a", "I", "to", "and", "is", "it", "in", "you", "that",
+    "he", "was", "for", "on", "are", "with", "as", "his", "they", "be",
+    "at", "one", "have", "this", "from", "or", "had", "by", "not", "but",
+    "what", "all", "were", "we", "when", "your", "can", "said", "there",
+    "use", "an", "each", "which", "she", "do", "how", "their", "if", "will",
+    "up", "other", "about", "out", "many", "then", "them", "so", "some",
+    "her", "would", "make", "like", "him", "into", "time", "has", "look",
+    "two", "more", "go", "see", "no", "way", "could", "people", "my",
+    "than", "first", "been", "its", "who", "now", "did", "get", "come",
+    "made", "may", "part", "over", "new", "sound", "take", "only", "little",
+    "work", "know", "place", "years", "live", "back", "give", "most", "very",
+]
+
+# Simple bigram table — words that commonly follow a given word.
+# Used for next-word prediction after the user presses space.
+BIGRAMS: dict[str, list[str]] = {
+    "i":        ["am", "will", "have", "can", "think", "know", "want", "need", "feel", "was"],
+    "the":      ["same", "best", "most", "first", "last", "only", "next", "new", "right", "time"],
+    "a":        ["lot", "good", "new", "few", "big", "little", "great", "small", "long", "bit"],
+    "is":       ["a", "the", "not", "very", "good", "really", "just", "so", "also", "still"],
+    "it":       ["is", "was", "will", "has", "can", "should", "would", "might", "seems", "looks"],
+    "you":      ["are", "can", "will", "have", "should", "know", "want", "need", "were", "might"],
+    "he":       ["was", "is", "had", "has", "will", "would", "could", "did", "said", "went"],
+    "she":      ["was", "is", "had", "has", "will", "would", "could", "did", "said", "went"],
+    "they":     ["are", "were", "have", "had", "will", "would", "can", "could", "did", "said"],
+    "we":       ["are", "were", "have", "had", "will", "can", "should", "need", "want", "went"],
+    "and":      ["the", "a", "I", "it", "then", "also", "so", "they", "you", "we"],
+    "to":       ["be", "get", "do", "go", "make", "have", "see", "take", "come", "know"],
+    "in":       ["the", "a", "this", "my", "your", "our", "their", "some", "many", "that"],
+    "for":      ["the", "a", "this", "that", "your", "my", "all", "some", "now", "years"],
+    "that":     ["the", "a", "it", "this", "he", "she", "they", "I", "we", "is"],
+    "with":     ["the", "a", "my", "your", "his", "her", "their", "me", "him", "them"],
+    "on":       ["the", "a", "my", "your", "this", "that", "it", "top", "time", "each"],
+    "was":      ["a", "the", "not", "very", "so", "just", "also", "still", "already", "now"],
+    "have":     ["a", "the", "been", "had", "to", "never", "always", "just", "not", "also"],
+    "this":     ["is", "was", "will", "has", "can", "could", "might", "seems", "would", "means"],
+    "but":      ["the", "a", "I", "it", "not", "also", "still", "then", "now", "when"],
+    "at":       ["the", "a", "this", "that", "least", "all", "home", "work", "first", "once"],
+    "from":     ["the", "a", "my", "your", "this", "that", "there", "here", "now", "all"],
+    "not":      ["the", "a", "only", "just", "very", "really", "too", "even", "always", "sure"],
+    "can":      ["be", "get", "do", "go", "make", "have", "see", "take", "come", "help"],
+    "if":       ["you", "the", "a", "it", "I", "we", "they", "he", "she", "that"],
+    "my":       ["name", "life", "work", "time", "new", "best", "old", "own", "first", "last"],
+    "your":     ["name", "life", "work", "time", "new", "best", "own", "first", "last", "email"],
+    "what":     ["is", "are", "was", "do", "did", "would", "could", "should", "the", "a"],
+    "when":     ["the", "a", "I", "you", "we", "they", "it", "this", "that", "he"],
+    "how":      ["are", "is", "do", "did", "can", "much", "many", "long", "often", "well"],
+    "do":       ["you", "not", "the", "it", "that", "this", "we", "they", "I", "some"],
+    "so":       ["the", "a", "I", "it", "much", "many", "good", "far", "long", "well"],
+    "all":      ["the", "of", "that", "this", "those", "these", "right", "over", "good", "well"],
+    "would":    ["be", "have", "not", "like", "love", "make", "take", "give", "say", "tell"],
+    "could":    ["be", "have", "not", "also", "still", "just", "really", "even", "always", "never"],
+    "should":   ["be", "have", "not", "also", "just", "really", "always", "never", "still", "only"],
+    "just":     ["a", "the", "be", "do", "get", "want", "need", "know", "say", "go"],
+    "there":    ["is", "are", "was", "were", "will", "might", "could", "should", "have", "has"],
+    "more":     ["than", "and", "of", "the", "a", "like", "about", "to", "time", "work"],
+    "some":     ["of", "the", "people", "time", "good", "great", "new", "more", "other", "other"],
+    "good":     ["morning", "night", "luck", "job", "idea", "time", "thing", "news", "day", "work"],
+    "love":     ["you", "it", "this", "that", "the", "my", "your", "our", "how", "when"],
+    "like":     ["a", "the", "this", "that", "it", "what", "how", "when", "you", "me"],
+    "get":      ["the", "a", "it", "that", "this", "more", "better", "back", "out", "up"],
+    "go":       ["to", "back", "out", "on", "up", "down", "ahead", "home", "away", "there"],
+    "time":     ["to", "for", "is", "was", "will", "and", "the", "of", "now", "soon"],
+    "know":     ["that", "what", "how", "when", "where", "why", "if", "it", "the", "you"],
+    "think":    ["that", "about", "it", "the", "I", "you", "we", "this", "so", "of"],
+    "said":     ["the", "a", "I", "it", "that", "this", "he", "she", "they", "we"],
+    "hey":      ["there", "you", "buddy", "friend", "man", "girl", "guys", "everyone"],
+    "hi":       ["there", "everyone", "guys", "all", "friend"],
+    "hello":    ["there", "everyone", "world", "friend"],
+    "thanks":   ["for", "so", "a", "you", "much", "again", "very"],
+    "thank":    ["you", "god"],
+    "please":   ["let", "make", "be", "do", "note", "send", "check", "help", "try"],
+    "ok":       ["so", "now", "great", "good", "fine", "sure", "then", "well"],
+    "okay":     ["so", "now", "great", "good", "fine", "sure", "then", "well"],
+    "no":       ["one", "way", "more", "longer", "problem", "thanks", "doubt", "matter"],
+    "yes":      ["please", "of", "that", "this", "it", "I", "you", "we"],
+    "as":       ["a", "the", "well", "much", "many", "long", "soon", "far", "good"],
+    "been":     ["a", "the", "very", "so", "quite", "really", "already", "always", "never"],
+}
+
 # Top 500 most common English words — boosted to the front of suggestions
 COMMON_WORDS = {
     "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
@@ -216,6 +299,33 @@ class WordPredictor:
             return (0 if w in self._common else 1, len(w), w)
 
         candidates.sort(key=sort_key)
+        return candidates[:n]
+
+    def predict_padded(self, prefix: str, n: int = 5) -> list[str]:
+        """Like predict() but always returns exactly n results, padding with
+        common words when there aren't enough prefix matches."""
+        results = self.predict(prefix, n) if prefix else []
+        seen = set(results)
+        for w in TOP_WORDS:
+            if len(results) >= n:
+                break
+            if w not in seen:
+                results.append(w)
+                seen.add(w)
+        return results[:n]
+
+    def predict_next(self, prev_word: str, n: int = 5) -> list[str]:
+        """Predict the next word after prev_word using a bigram table,
+        falling back to TOP_WORDS when no bigram entry exists."""
+        key = prev_word.lower().strip()
+        candidates = list(BIGRAMS.get(key, []))
+        seen = set(candidates)
+        for w in TOP_WORDS:
+            if len(candidates) >= n:
+                break
+            if w not in seen:
+                candidates.append(w)
+                seen.add(w)
         return candidates[:n]
 
     def fuzzy_predict(self, prefix: str, n: int = 3) -> list[str]:

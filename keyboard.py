@@ -102,6 +102,7 @@ CONFIG_DIR        = os.path.expanduser("~/.config/onscreen_keyboard")
 CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
 CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
+MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
 CLICK_WAV          = "/tmp/osk_click.wav"
 
 DEFAULT_SETTINGS: dict = {
@@ -111,7 +112,19 @@ DEFAULT_SETTINGS: dict = {
     "dwell_delay":          0.8,      # seconds (0.3 – 2.0)
     "click_sound":          False,
     "modifier_auto_release": True,    # release Ctrl/Alt automatically after next keypress
+    "shift_sticky":          False,   # False = one-shot (release after keypress), True = sticky like Ctrl
+    "opacity":              1.0,      # window opacity (0.3 – 1.0)
+    "key_scale":            1.0,      # key size scale factor (0.3 – 1.5)
+    "font_family":          "Ubuntu", # key label font family
+    "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
 }
+
+DEFAULT_MACROS = [
+    {"trigger": "date", "expansion": "{date}"},
+    {"trigger": "time", "expansion": "{time}"},
+]
+
+FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -234,11 +247,12 @@ WIZARD_DEFAULTS = {
 }
 
 
-def _make_theme_css(c: dict, font_size: int = 14) -> str:
+def _make_theme_css(c: dict, font_size: int = 14, font_family: str = "Ubuntu") -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
     special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
-    return f"""
+    return f"""* {{ font-family: "{font_family}", sans-serif; }}
+
 window {{ background-color: {c['bg']}; }}
 #main-box {{ background-color: {c['bg']}; }}
 #suggestion-bar {{ background-color: {c['bar_bg']}; border-bottom: 1px solid {c['bar_border']}; }}
@@ -493,6 +507,52 @@ KEY_ROWS = [
     ],
 ]
 
+# ── Alternative layouts ───────────────────────────────────────────────────────
+_FN_ROW  = KEY_ROWS[0]   # function keys — same for all layouts
+_NUM_ROW = KEY_ROWS[1]   # number row — same for all layouts
+_BOT_ROW = KEY_ROWS[5]   # bottom row — same for all layouts
+
+LAYOUT_ROWS: dict[str, list] = {
+    "qwerty": KEY_ROWS,
+    "azerty": [
+        _FN_ROW, _NUM_ROW,
+        [("Tab","tab",80,["special"]),
+         ("a","a",52,[]),("z","z",52,[]),("e","e",52,[]),("r","r",52,[]),
+         ("t","t",52,[]),("y","y",52,[]),("u","u",52,[]),("i","i",52,[]),
+         ("o","o",52,[]),("p","p",52,[]),
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[])],
+        [("Caps","caps",92,["special"]),
+         ("q","q",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
+         ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
+         ("l","l",52,[]),("m","m",52,[]),("'","'",52,[]),
+         ("↵","return",111,["special"])],
+        [("⇧","shift",128,["special"]),
+         ("w","w",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
+         ("b","b",52,[]),("n","n",52,[]),(",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
+         ("⇧","shift",128,["special"])],
+        _BOT_ROW,
+    ],
+    "qwertz": [
+        _FN_ROW, _NUM_ROW,
+        [("Tab","tab",80,["special"]),
+         ("q","q",52,[]),("w","w",52,[]),("e","e",52,[]),("r","r",52,[]),
+         ("t","t",52,[]),("z","z",52,[]),("u","u",52,[]),("i","i",52,[]),
+         ("o","o",52,[]),("p","p",52,[]),
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[])],
+        [("Caps","caps",92,["special"]),
+         ("a","a",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
+         ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
+         ("l","l",52,[]),(";",";",52,[]),("'","'",52,[]),
+         ("↵","return",111,["special"])],
+        [("⇧","shift",128,["special"]),
+         ("y","y",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
+         ("b","b",52,[]),("n","n",52,[]),("m","m",52,[]),
+         (",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
+         ("⇧","shift",128,["special"])],
+        _BOT_ROW,
+    ],
+}
+
 # Widest row natural width (row 1): 13×52 + 95 + 13 gaps×3px = 810
 BASE_KB_W = 810
 # 6 rows × base key height (5 typing rows + 1 function key row)
@@ -684,6 +744,7 @@ class OnScreenKeyboard(Gtk.Window):
         self.predictor    = WordPredictor()
         self.typer        = KeyTyper()
         self.current_word = ""
+        self._last_word   = ""   # last fully typed word, for next-word prediction
         self.shift_active = False
         self.caps_lock    = False
         self._custom_words: list[str] = []
@@ -702,6 +763,11 @@ class OnScreenKeyboard(Gtk.Window):
         self._theme_btns:      dict[str, Gtk.Button]  = {}
         # Dual-label symbol keys: action → (main_label, sub_label)
         self._symbol_btns:     dict[str, tuple[Gtk.Label, Gtk.Label]] = {}
+        # All key buttons for key-size scaling: (button, base_width)
+        self._all_key_btns:    list[tuple[Gtk.Button, int]] = []
+        # Theme / layout / font family button dicts
+        self._layout_btns:     dict[str, Gtk.Button] = {}
+        self._font_family_btns: dict[str, Gtk.Button] = {}
 
         # Built-in app launcher (replaces Win→Cinnamon menu, which can't stay
         # open when our keyboard is clicked due to Cinnamon's Clutter-level
@@ -727,16 +793,30 @@ class OnScreenKeyboard(Gtk.Window):
             char: (name, kws) for char, name, kws in EMOJI_DATA
         }
 
+        # Clipboard history
+        self._clipboard_history: list[str] = []
+        self._clipboard_mode:    bool = False
+        self._clipboard_btn:     Gtk.Button | None = None
+        self._clipboard_panel_ready: bool = False
+        self._clipboard_listbox: Gtk.ListBox | None = None
+
+        # Macros
+        self._macros:         list[dict] = []
+        self._macros_listbox: Gtk.ListBox | None = None
+        self._macros_count:   Gtk.Label | None = None
+        self._macro_draft:    dict = {}
+
         # Suggestion bar: what value each slot will type (word, emoji, or custom)
         self._suggestion_values:    list[str]  = [""] * 5
         self._suggestion_is_emoji:  list[bool] = [False] * 5
         self._suggestion_is_custom: list[bool] = [False] * 5
         self._suggestion_is_fuzzy:  list[bool] = [False] * 5
+        self._suggestion_is_macro:  list[bool] = [False] * 5
 
         # Custom dictionary input mode
         self._custom_input_mode: bool = False
         self._custom_input_text: str  = ""
-        self._custom_input_mode_target: str = "word"   # "word" | "theme_name"
+        self._custom_input_mode_target: str = "word"   # "word" | "theme_name" | "macro_trigger" | "macro_expansion"
 
         # DIY theme wizard state
         self._custom_themes: dict[str, dict] = {}
@@ -794,12 +874,20 @@ class OnScreenKeyboard(Gtk.Window):
         for _name, _colors in self._custom_themes.items():
             THEME_COLORS[_name] = _colors
 
+        self._macros = self._load_macros()
+
         self._setup_window()
         self._apply_css()
         self._build_ui()
         self._apply_theme(self.settings["theme"], save=False)
+        self._apply_key_scale(self.settings.get("key_scale", 1.0))
+        self.set_opacity(self.settings.get("opacity", 1.0))
         self._init_click_sound()
         self.show_all()
+
+        # Connect clipboard monitoring after show_all
+        cb = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        cb.connect("owner-change", self._on_clipboard_change)
 
     # ── Window setup ──────────────────────────���──────────────────────────────
 
@@ -823,9 +911,18 @@ class OnScreenKeyboard(Gtk.Window):
         sw, sh  = geo.width, geo.height
 
         kb_h = BASE_KEY_H * 6 + SUGGESTION_H + 7 * 4 + 12
-        self.set_default_size(sw, kb_h)
-        self.move(0, sh - kb_h)
+        # Restore saved position/size, or default to full-width bar at screen bottom
+        saved_x = self.settings.get("win_x", 0)
+        saved_y = self.settings.get("win_y", sh - kb_h)
+        saved_w = self.settings.get("win_w", sw)
+        saved_h = self.settings.get("win_h", kb_h)
+        # Clamp so it can't start fully off-screen
+        saved_x = max(-saved_w + 50, min(saved_x, sw - 50))
+        saved_y = max(0, min(saved_y, sh - 50))
+        self.set_default_size(saved_w, saved_h)
+        self.move(saved_x, saved_y)
         self.connect("destroy", Gtk.main_quit)
+        self.connect("delete-event", self._on_close)
 
         if IS_WINDOWS:
             # Apply WS_EX_NOACTIVATE after the window is realised so the OSK
@@ -880,6 +977,12 @@ class OnScreenKeyboard(Gtk.Window):
             Gdk.Screen.get_default(), self._theme_provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
         )
+        # Scale provider — overrides min-height so keys can shrink below CSS default
+        self._scale_provider = Gtk.CssProvider()
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), self._scale_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 2,
+        )
 
     # ── UI construction ────────────────────────────���──────────────────────────
 
@@ -902,13 +1005,10 @@ class OnScreenKeyboard(Gtk.Window):
         self._key_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self._key_stack.set_transition_duration(120)
 
-        keys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        for row_def in KEY_ROWS:
-            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
-            for label, action, width, extra_classes in row_def:
-                btn = self._make_key(label, action, width, extra_classes)
-                row_box.pack_start(btn, True, True, 0)
-            keys_box.pack_start(row_box, True, True, 0)
+        self._all_key_btns = []
+        layout = self.settings.get("layout", "qwerty")
+        rows = LAYOUT_ROWS.get(layout, KEY_ROWS)
+        keys_box = self._build_keys_box(rows)
 
         self._key_stack.add_named(keys_box,                   "keys")
         self._key_stack.add_named(self._build_settings_panel(), "settings")
@@ -918,6 +1018,17 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Bottom resize strip — covers bottom edge + corners
         root.pack_start(self._make_resize_strip("bottom"), False, False, 0)
+
+    def _build_keys_box(self, rows) -> Gtk.Box:
+        """Build a vertical box of key rows from a layout definition."""
+        keys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        for row_def in rows:
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+            for label, action, width, extra_classes in row_def:
+                btn = self._make_key(label, action, width, extra_classes)
+                row_box.pack_start(btn, True, True, 0)
+            keys_box.pack_start(row_box, True, True, 0)
+        return keys_box
 
     def _make_resize_strip(self, position: str) -> Gtk.EventBox:
         """Thin strip at top or bottom — handles edge/corner resize manually."""
@@ -982,6 +1093,13 @@ class OnScreenKeyboard(Gtk.Window):
             bar.pack_start(btn, True, True, 0)
             self._suggestion_btns.append(btn)
 
+        # Clipboard button
+        self._clipboard_btn = Gtk.Button(label="📋")
+        self._clipboard_btn.set_name("settings-btn")
+        self._clipboard_btn.set_size_request(36, SUGGESTION_H)
+        self._clipboard_btn.connect("clicked", lambda _: self._toggle_clipboard_mode())
+        bar.pack_end(self._clipboard_btn, False, False, 2)
+
         # Emoji toggle button
         self._emoji_btn = Gtk.Button(label="😊")
         self._emoji_btn.set_name("settings-btn")   # reuse settings-btn style
@@ -1000,7 +1118,7 @@ class OnScreenKeyboard(Gtk.Window):
         close_btn = Gtk.Button(label="✕")
         close_btn.set_name("close-btn")
         close_btn.set_size_request(40, SUGGESTION_H)
-        close_btn.connect("clicked", lambda _: Gtk.main_quit())
+        close_btn.connect("clicked", lambda _: self._quit())
         bar.pack_end(close_btn, False, False, 4)
 
         return bar
@@ -1037,6 +1155,7 @@ class OnScreenKeyboard(Gtk.Window):
             ctx.add_class(cls)
 
         btn.set_size_request(width, BASE_KEY_H)
+        self._all_key_btns.append((btn, width))
         btn.connect("clicked", self._on_key_clicked, action)
 
         # Key repeat — press starts the timer; release cancels it
@@ -1093,6 +1212,10 @@ class OnScreenKeyboard(Gtk.Window):
         self._resize_start_y  = event.y_root
         self._resize_start_w, self._resize_start_h = self.get_size()
         self._resize_start_wx, self._resize_start_wy = self.get_position()
+        # Clear button height minimums so GTK won't resist vertical shrinking
+        if "n" in edge or "s" in edge:
+            for btn, base_w in self._all_key_btns:
+                btn.set_size_request(int(base_w * self.settings.get("key_scale", 1.0)), 1)
 
     def _on_resize_motion(self, widget, event):
         if not self._resizing:
@@ -1111,10 +1234,11 @@ class OnScreenKeyboard(Gtk.Window):
             new_w = max(400, w - int(dx))
             wx = wx + (w - new_w)
             w = new_w
+        min_h = int(BASE_KEY_H * 6 * 0.3) + SUGGESTION_H + 7 * 4 + 12
         if "s" in edge:
-            h = max(200, h + int(dy))
+            h = max(min_h, h + int(dy))
         if "n" in edge:
-            new_h = max(200, h - int(dy))
+            new_h = max(min_h, h - int(dy))
             wy = wy + (h - new_h)
             h = new_h
 
@@ -1123,10 +1247,41 @@ class OnScreenKeyboard(Gtk.Window):
             self.move(wx, wy)
 
     def _on_resize_release(self, widget, event):
+        if self._resizing and self._resize_edge:
+            # Derive scale from the new window height and snap buttons to fit
+            _, new_h = self.get_size()
+            overhead = SUGGESTION_H + 7 * 4 + 12
+            scale = round(
+                max(0.3, min(1.5, (new_h - overhead) / (BASE_KEY_H * 6))), 2
+            )
+            self.settings["key_scale"] = scale
+            self._save_settings()
+            if hasattr(self, "_key_scale_label") and self._key_scale_label:
+                self._key_scale_label.set_label(f"{scale:.2f}×")
+            self._apply_key_scale(scale)
         self._resizing    = False
         self._resize_edge = ""
 
     # ── Drag to move ──────────────────────────────────────────────────────────
+
+    def _save_geometry(self):
+        """Persist current window position and size to settings."""
+        x, y = self.get_position()
+        w, h = self.get_size()
+        self.settings["win_x"] = x
+        self.settings["win_y"] = y
+        self.settings["win_w"] = w
+        self.settings["win_h"] = h
+        self._save_settings()
+
+    def _quit(self):
+        self._save_geometry()
+        Gtk.main_quit()
+
+    def _on_close(self, widget, event):
+        """Save window geometry when closed via WM (alt-F4 etc.)."""
+        self._save_geometry()
+        return False  # allow the close to proceed
 
     def _on_drag_press(self, widget, event):
         if event.button == 1:
@@ -1209,6 +1364,12 @@ class OnScreenKeyboard(Gtk.Window):
             self._update_modifier_visuals()
             return
 
+        # ── Clipboard mode — Escape closes it ───────────────────────────────
+        if self._clipboard_mode:
+            if action == "escape":
+                self._close_clipboard_mode()
+            return
+
         # ── Custom word input mode ───────────────────────────────────────────
         if self._custom_input_mode:
             if action == "escape":
@@ -1227,14 +1388,14 @@ class OnScreenKeyboard(Gtk.Window):
             elif len(action) == 1 and action.isalpha():
                 char = action.upper() if (self.shift_active ^ self.caps_lock) else action.lower()
                 self._custom_input_text += char
-                if self.shift_active:
+                if self.shift_active and not self.settings.get("shift_sticky", False):
                     self.shift_active = False
                     self._update_modifier_visuals()
                 self._update_custom_input_display()
             elif action in SHIFT_MAP:
                 char = SHIFT_MAP[action] if self.shift_active else action
                 self._custom_input_text += char
-                if self.shift_active:
+                if self.shift_active and not self.settings.get("shift_sticky", False):
                     self.shift_active = False
                     self._update_modifier_visuals()
                 self._update_custom_input_display()
@@ -1274,7 +1435,7 @@ class OnScreenKeyboard(Gtk.Window):
             elif len(action) == 1 and (action.isalpha() or action.isdigit()):
                 char = action.upper() if (self.shift_active ^ self.caps_lock) else action.lower()
                 self._app_query += char
-                if self.shift_active:
+                if self.shift_active and not self.settings.get("shift_sticky", False):
                     self.shift_active = False
                     self._update_modifier_visuals()
             self._refresh_app_results()
@@ -1293,11 +1454,15 @@ class OnScreenKeyboard(Gtk.Window):
 
         elif action == "return":
             self.typer.send_special("return", mods)
+            if self.current_word:
+                self._last_word = self.current_word
             self.current_word = ""
             self._refresh_suggestions()
 
         elif action == "space":
             self.typer.send_special("space", mods)
+            if self.current_word:
+                self._last_word = self.current_word
             self.current_word = ""
             self._refresh_suggestions()
 
@@ -1346,9 +1511,12 @@ class OnScreenKeyboard(Gtk.Window):
         self._update_custom_input_display()
 
     def _close_custom_input_mode(self):
+        target = self._custom_input_mode_target
         self._custom_input_mode = False
         self._custom_input_text = ""
         self._custom_input_mode_target = "word"
+        if target in ("macro_trigger", "macro_expansion"):
+            self._macro_draft = {}
         if self._search_label:
             self._search_label.hide()
         self._refresh_suggestions()
@@ -1363,6 +1531,17 @@ class OnScreenKeyboard(Gtk.Window):
                 self._wizard_step   = 1
                 self._wizard_colors = dict(WIZARD_DEFAULTS)
                 self._open_wizard_color_step()
+        elif self._custom_input_mode_target == "macro_trigger":
+            if word:
+                self._macro_draft["trigger"] = word
+                self._open_custom_input_mode(target="macro_expansion")
+            else:
+                self._close_custom_input_mode()
+        elif self._custom_input_mode_target == "macro_expansion":
+            if word and "trigger" in self._macro_draft:
+                self._add_macro(self._macro_draft["trigger"], word)
+            self._macro_draft = {}
+            self._close_custom_input_mode()
         else:
             if word:
                 self._add_custom_word(word)
@@ -1374,6 +1553,13 @@ class OnScreenKeyboard(Gtk.Window):
             if self._custom_input_mode_target == "theme_name":
                 prompt = "🎨 Type theme name, ↵ to confirm"
                 self._search_label.set_text(f"🎨 {txt}▏" if txt else prompt)
+            elif self._custom_input_mode_target == "macro_trigger":
+                prompt = "🔤 Macro shortcut: type trigger, ↵"
+                self._search_label.set_text(f"🔤 {txt}▏" if txt else prompt)
+            elif self._custom_input_mode_target == "macro_expansion":
+                trigger = self._macro_draft.get("trigger", "")
+                prompt = f"↪ Expansion for '{trigger}': type text, ↵"
+                self._search_label.set_text(f"↪ {txt}▏" if txt else prompt)
             else:
                 self._search_label.set_text(f"+ {txt}▏" if txt else "+ type word/phrase, ↵ to save")
             self._search_label.show()
@@ -1451,6 +1637,274 @@ class OnScreenKeyboard(Gtk.Window):
 
         row.add(box)
         return row
+
+    # ── Macros ────────────────────────────────────────────────────────────────
+
+    def _load_macros(self) -> list[dict]:
+        try:
+            with open(MACROS_FILE, "r") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                return data
+        except FileNotFoundError:
+            self._save_macros_list(DEFAULT_MACROS)
+            return list(DEFAULT_MACROS)
+        except Exception:
+            pass
+        return []
+
+    def _save_macros(self):
+        self._save_macros_list(self._macros)
+
+    def _save_macros_list(self, macros: list[dict]):
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(MACROS_FILE, "w") as f:
+                json.dump(macros, f, indent=2)
+        except Exception as exc:
+            print(f"[macros] Could not save: {exc}")
+
+    def _expand_macro(self, expansion: str) -> str:
+        import datetime
+        now = datetime.datetime.now()
+        expansion = expansion.replace("{date}", now.strftime("%d/%m/%Y"))
+        expansion = expansion.replace("{time}", now.strftime("%H:%M"))
+        return expansion
+
+    def _add_macro(self, trigger: str, expansion: str):
+        self._macros.append({"trigger": trigger, "expansion": expansion})
+        self._save_macros()
+        self._rebuild_macros_list()
+
+    def _remove_macro(self, trigger: str):
+        self._macros = [m for m in self._macros if m.get("trigger") != trigger]
+        self._save_macros()
+        self._rebuild_macros_list()
+
+    def _rebuild_macros_list(self):
+        lb = self._macros_listbox
+        if lb is None:
+            return
+        for row in lb.get_children():
+            lb.remove(row)
+        for macro in self._macros:
+            lb.add(self._make_macro_row(macro))
+        lb.show_all()
+        if self._macros_count:
+            n = len(self._macros)
+            self._macros_count.set_text(f"{n} macro{'s' if n != 1 else ''}")
+
+    def _make_macro_row(self, macro: dict) -> Gtk.ListBoxRow:
+        row = Gtk.ListBoxRow()
+        row.set_selectable(False)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        box.set_margin_start(6)
+        box.set_margin_end(4)
+        box.set_margin_top(2)
+        box.set_margin_bottom(2)
+
+        trigger = macro.get("trigger", "")
+        expansion = macro.get("expansion", "")
+        lbl = Gtk.Label(label=f"{trigger} → {expansion}")
+        lbl.set_name("settings-label")
+        lbl.set_xalign(0.0)
+        lbl.set_hexpand(True)
+        box.pack_start(lbl, True, True, 0)
+
+        remove_btn = Gtk.Button(label="×")
+        remove_btn.get_style_context().add_class("settings-choice")
+        remove_btn.set_size_request(30, -1)
+        remove_btn.connect("clicked", lambda _b, t=trigger: self._remove_macro(t))
+        box.pack_end(remove_btn, False, False, 0)
+
+        row.add(box)
+        return row
+
+    # ── Clipboard ─────────────────────────────────────────────────────────────
+
+    def _on_clipboard_change(self, clipboard, event):
+        text = clipboard.wait_for_text()
+        if not text:
+            return
+        text = text.strip()
+        if not text:
+            return
+        # Deduplicate: remove existing copy then prepend
+        if text in self._clipboard_history:
+            self._clipboard_history.remove(text)
+        self._clipboard_history.insert(0, text)
+        # Cap at 10 items
+        self._clipboard_history = self._clipboard_history[:10]
+
+    def _toggle_clipboard_mode(self):
+        if self._clipboard_mode:
+            self._close_clipboard_mode()
+        else:
+            self._open_clipboard_mode()
+
+    def _open_clipboard_mode(self):
+        self._clipboard_mode = True
+        # Close other panels
+        if self._settings_mode:
+            self._toggle_settings()
+        if self._emoji_mode:
+            self._close_emoji_mode()
+
+        if not self._clipboard_panel_ready and self._key_stack:
+            panel = self._build_clipboard_panel()
+            self._key_stack.add_named(panel, "clipboard")
+            panel.show_all()
+            self._clipboard_panel_ready = True
+        else:
+            # Rebuild the list with latest history
+            self._rebuild_clipboard_list()
+
+        if self._clipboard_btn:
+            self._clipboard_btn.get_style_context().add_class("active")
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("clipboard")
+
+    def _close_clipboard_mode(self):
+        self._clipboard_mode = False
+        if self._clipboard_btn:
+            self._clipboard_btn.get_style_context().remove_class("active")
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("keys")
+        self._refresh_suggestions()
+
+    def _build_clipboard_panel(self) -> Gtk.Box:
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        panel.set_name("settings-panel")
+        panel.set_margin_start(8)
+        panel.set_margin_end(8)
+        panel.set_margin_top(4)
+        panel.set_margin_bottom(4)
+
+        # Clear button at top
+        clear_btn = Gtk.Button(label="Clear history")
+        clear_btn.get_style_context().add_class("settings-choice")
+        clear_btn.connect("clicked", self._on_clipboard_clear)
+        panel.pack_start(clear_btn, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+
+        self._clipboard_listbox = Gtk.ListBox()
+        self._clipboard_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._clipboard_listbox.set_name("settings-panel")
+        self._rebuild_clipboard_list()
+
+        scroll.add(self._clipboard_listbox)
+        panel.pack_start(scroll, True, True, 0)
+        return panel
+
+    def _rebuild_clipboard_list(self):
+        lb = self._clipboard_listbox
+        if lb is None:
+            return
+        for row in lb.get_children():
+            lb.remove(row)
+        for item in self._clipboard_history:
+            row = Gtk.ListBoxRow()
+            row.set_selectable(False)
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+            box.set_margin_start(4)
+            box.set_margin_end(4)
+            box.set_margin_top(2)
+            box.set_margin_bottom(2)
+            # Truncate display text
+            display = item[:40] + ("…" if len(item) > 40 else "")
+            btn = Gtk.Button(label=display)
+            btn.get_style_context().add_class("settings-choice")
+            btn.set_hexpand(True)
+            btn.connect("clicked", lambda _b, text=item: self._on_clipboard_item_clicked(text))
+            box.pack_start(btn, True, True, 0)
+            row.add(box)
+            lb.add(row)
+        lb.show_all()
+
+    def _on_clipboard_item_clicked(self, text: str):
+        for ch in text:
+            self.typer.type_char(ch)
+        self._close_clipboard_mode()
+
+    def _on_clipboard_clear(self, _btn):
+        self._clipboard_history = []
+        self._rebuild_clipboard_list()
+
+    # ── Key size scaling ──────────────────────────────────────────────────────
+
+    def _apply_key_scale(self, scale: float, reposition: bool = False):
+        h = int(BASE_KEY_H * scale)
+        for btn, base_w in self._all_key_btns:
+            btn.set_size_request(int(base_w * scale), h)
+        keys_h = int(BASE_KEY_H * 6 * scale)
+        total_h = keys_h + SUGGESTION_H + 7 * 4 + 12
+        w, _ = self.get_size()
+        self.resize(w, total_h)
+        if reposition:
+            display = Gdk.Display.get_default()
+            monitor = display.get_primary_monitor() or display.get_monitor(0)
+            geo = monitor.get_geometry()
+            self.move(0, geo.height - total_h)
+
+    # ── Layout switcher ───────────────────────────────────────────────────────
+
+    def _switch_layout(self, layout: str):
+        self.settings["layout"] = layout
+        self._save_settings()
+        # Clear tracked widget collections
+        self._letter_btns   = {}
+        self._shift_btns    = []
+        self._caps_btn      = None
+        self._modifier_btns = {"ctrl": [], "alt": [], "win": []}
+        self._symbol_btns   = {}
+        self._all_key_btns  = []
+
+        if self._key_stack:
+            old_child = self._key_stack.get_child_by_name("keys")
+            if old_child:
+                self._key_stack.remove(old_child)
+
+        rows = LAYOUT_ROWS.get(layout, KEY_ROWS)
+        keys_box = self._build_keys_box(rows)
+        self._key_stack.add_named(keys_box, "keys")
+        keys_box.show_all()
+
+        if not (self._settings_mode or self._emoji_mode or
+                self._clipboard_mode or self._app_mode or
+                self._custom_input_mode):
+            self._key_stack.set_visible_child_name("keys")
+
+        self._apply_key_scale(self.settings.get("key_scale", 1.0))
+        self._refresh_layout_buttons()
+
+    def _refresh_layout_buttons(self):
+        current = self.settings.get("layout", "qwerty")
+        for key, btn in self._layout_btns.items():
+            ctx = btn.get_style_context()
+            if key == current:
+                ctx.add_class("active")
+            else:
+                ctx.remove_class("active")
+
+    # ── Font family ───────────────────────────────────────────────────────────
+
+    def _on_font_family_clicked(self, family: str):
+        self.settings["font_family"] = family
+        self._reload_theme_css()
+        self._save_settings()
+        self._refresh_font_family_buttons()
+
+    def _refresh_font_family_buttons(self):
+        current = self.settings.get("font_family", "Ubuntu")
+        for family, btn in self._font_family_btns.items():
+            ctx = btn.get_style_context()
+            if family == current:
+                ctx.add_class("active")
+            else:
+                ctx.remove_class("active")
 
     # ── DIY theme wizard ──────────────────────────────────────────────────────
 
@@ -1614,8 +2068,9 @@ class OnScreenKeyboard(Gtk.Window):
     def _wizard_preview_theme(self):
         """Apply current wizard colours to the keyboard CSS as a live preview."""
         c = _build_custom_theme(**self._wizard_colors)
-        font_size = self.settings.get("font_size", 14)
-        self._theme_provider.load_from_data(_make_theme_css(c, font_size).encode())
+        font_size   = self.settings.get("font_size", 14)
+        font_family = self.settings.get("font_family", "Ubuntu")
+        self._theme_provider.load_from_data(_make_theme_css(c, font_size, font_family).encode())
 
     def _wizard_go_back(self):
         """Go back one colour step, or back to name entry if at step 1."""
@@ -1842,7 +2297,19 @@ class OnScreenKeyboard(Gtk.Window):
         panel.set_margin_top(8)
         panel.set_margin_bottom(8)
 
-        # ── Theme row ──────────────────────────────────────────────────────
+        # Wrap in a scrolled window so all settings are accessible
+        scroll_outer = Gtk.ScrolledWindow()
+        scroll_outer.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll_outer.set_vexpand(True)
+
+        inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        inner.set_name("settings-panel")
+        inner.set_margin_start(0)
+        inner.set_margin_end(0)
+        inner.set_margin_top(0)
+        inner.set_margin_bottom(0)
+
+        # ── 1. Theme row ───────────────────────────────────────────────────
         theme_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl = Gtk.Label(label="Theme")
         lbl.set_name("settings-label")
@@ -1857,9 +2324,128 @@ class OnScreenKeyboard(Gtk.Window):
             theme_row.pack_start(btn, True, True, 0)
             self._theme_btns[key] = btn
 
-        panel.pack_start(theme_row, False, False, 0)
+        inner.pack_start(theme_row, False, False, 0)
 
-        # ── Dwell row ──────────────────────────────────────────────────────
+        # ── 2. Layout row ──────────────────────────────────────────────────
+        layout_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_layout = Gtk.Label(label="Layout")
+        lbl_layout.set_name("settings-label")
+        lbl_layout.set_xalign(0.0)
+        lbl_layout.set_size_request(90, -1)
+        layout_row.pack_start(lbl_layout, False, False, 0)
+
+        for key in ("qwerty", "azerty", "qwertz"):
+            btn = Gtk.Button(label=key.upper())
+            btn.get_style_context().add_class("settings-choice")
+            btn.connect("clicked", lambda _b, k=key: self._switch_layout(k))
+            layout_row.pack_start(btn, True, True, 0)
+            self._layout_btns[key] = btn
+
+        inner.pack_start(layout_row, False, False, 0)
+
+        # ── 3. Font family row ─────────────────────────────────────────────
+        font_fam_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_ff = Gtk.Label(label="Font")
+        lbl_ff.set_name("settings-label")
+        lbl_ff.set_xalign(0.0)
+        lbl_ff.set_size_request(90, -1)
+        font_fam_row.pack_start(lbl_ff, False, False, 0)
+
+        for family in FONT_FAMILIES:
+            # Use abbreviated label for common families
+            short = family.split()[0]
+            btn = Gtk.Button(label=short)
+            btn.get_style_context().add_class("settings-choice")
+            btn.set_tooltip_text(family)
+            btn.connect("clicked", lambda _b, f=family: self._on_font_family_clicked(f))
+            font_fam_row.pack_start(btn, True, True, 0)
+            self._font_family_btns[family] = btn
+
+        inner.pack_start(font_fam_row, False, False, 0)
+
+        # ── 4. Font size row ───────────────────────────────────────────────
+        font_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl6 = Gtk.Label(label="Font size")
+        lbl6.set_name("settings-label")
+        lbl6.set_xalign(0.0)
+        lbl6.set_size_request(90, -1)
+        font_row.pack_start(lbl6, False, False, 0)
+
+        font_dec = Gtk.Button(label="−")
+        font_dec.get_style_context().add_class("settings-choice")
+        font_dec.set_size_request(36, -1)
+        font_dec.connect("clicked", self._on_font_size_change, -1)
+        font_row.pack_start(font_dec, False, False, 0)
+
+        cur_size = self.settings.get("font_size", 14)
+        self._font_size_label = Gtk.Label(label=f"{cur_size}px")
+        self._font_size_label.set_name("settings-label")
+        self._font_size_label.set_size_request(42, -1)
+        font_row.pack_start(self._font_size_label, False, False, 0)
+
+        font_inc = Gtk.Button(label="+")
+        font_inc.get_style_context().add_class("settings-choice")
+        font_inc.set_size_request(36, -1)
+        font_inc.connect("clicked", self._on_font_size_change, +1)
+        font_row.pack_start(font_inc, False, False, 0)
+
+        inner.pack_start(font_row, False, False, 0)
+
+        # ── 5. Key size row ────────────────────────────────────────────────
+        key_scale_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_ks = Gtk.Label(label="Key size")
+        lbl_ks.set_name("settings-label")
+        lbl_ks.set_xalign(0.0)
+        lbl_ks.set_size_request(90, -1)
+        key_scale_row.pack_start(lbl_ks, False, False, 0)
+
+        ks_dec = Gtk.Button(label="−")
+        ks_dec.get_style_context().add_class("settings-choice")
+        ks_dec.set_size_request(36, -1)
+        ks_dec.connect("clicked", self._on_key_scale_change, -0.05)
+        key_scale_row.pack_start(ks_dec, False, False, 0)
+
+        cur_scale = self.settings.get("key_scale", 1.0)
+        self._key_scale_label = Gtk.Label(label=f"{cur_scale:.2f}×")
+        self._key_scale_label.set_name("settings-label")
+        self._key_scale_label.set_size_request(46, -1)
+        key_scale_row.pack_start(self._key_scale_label, False, False, 0)
+
+        ks_inc = Gtk.Button(label="+")
+        ks_inc.get_style_context().add_class("settings-choice")
+        ks_inc.set_size_request(36, -1)
+        ks_inc.connect("clicked", self._on_key_scale_change, +0.05)
+        key_scale_row.pack_start(ks_inc, False, False, 0)
+
+        inner.pack_start(key_scale_row, False, False, 0)
+
+        # ── 6. Opacity row ─────────────────────────────────────────────────
+        opacity_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_op = Gtk.Label(label="Opacity")
+        lbl_op.set_name("settings-label")
+        lbl_op.set_xalign(0.0)
+        lbl_op.set_size_request(90, -1)
+        opacity_row.pack_start(lbl_op, False, False, 0)
+
+        cur_opacity = self.settings.get("opacity", 1.0)
+        opacity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL,
+                                                  0.3, 1.0, 0.05)
+        opacity_scale.set_value(cur_opacity)
+        opacity_scale.set_draw_value(False)
+        opacity_scale.set_hexpand(True)
+        opacity_scale.set_size_request(120, -1)
+
+        self._opacity_label = Gtk.Label(label=f"{int(cur_opacity * 100)}%")
+        self._opacity_label.set_name("settings-label")
+        self._opacity_label.set_size_request(40, -1)
+
+        opacity_scale.connect("value-changed", self._on_opacity_changed)
+        opacity_row.pack_start(opacity_scale, True, True, 0)
+        opacity_row.pack_start(self._opacity_label, False, False, 0)
+
+        inner.pack_start(opacity_row, False, False, 0)
+
+        # ── 7. Dwell row ───────────────────────────────────────────────────
         dwell_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl2 = Gtk.Label(label="Dwell click")
         lbl2.set_name("settings-label")
@@ -1897,9 +2483,9 @@ class OnScreenKeyboard(Gtk.Window):
         inc_btn.connect("clicked", self._on_dwell_delay, +0.1)
         dwell_row.pack_start(inc_btn, False, False, 0)
 
-        panel.pack_start(dwell_row, False, False, 0)
+        inner.pack_start(dwell_row, False, False, 0)
 
-        # ── Sound row ──────────────────────────────────────────────────────
+        # ── 8. Sound row ───────────────────────────────────────────────────
         sound_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl4 = Gtk.Label(label="Click sound")
         lbl4.set_name("settings-label")
@@ -1915,9 +2501,9 @@ class OnScreenKeyboard(Gtk.Window):
         sound_toggle.connect("toggled", self._on_sound_toggled, sound_toggle)
         sound_row.pack_start(sound_toggle, False, False, 0)
 
-        panel.pack_start(sound_row, False, False, 0)
+        inner.pack_start(sound_row, False, False, 0)
 
-        # ── Modifier auto-release row ───────────────────────────────────────
+        # ── 9. Modifier auto-release row ───────────────────────────────────
         mod_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl5 = Gtk.Label(label="Modifier keys")
         lbl5.set_name("settings-label")
@@ -1940,37 +2526,34 @@ class OnScreenKeyboard(Gtk.Window):
         self._mod_hint_label = mod_hint
         mod_row.pack_start(mod_hint, False, False, 4)
 
-        panel.pack_start(mod_row, False, False, 0)
+        inner.pack_start(mod_row, False, False, 0)
 
-        # ── Font size row ───────────────────────────────────────────────────
-        font_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl6 = Gtk.Label(label="Font size")
-        lbl6.set_name("settings-label")
-        lbl6.set_xalign(0.0)
-        lbl6.set_size_request(90, -1)
-        font_row.pack_start(lbl6, False, False, 0)
+        # ── 9b. Shift behaviour row ────────────────────────────────────────
+        shift_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_sh = Gtk.Label(label="Shift key")
+        lbl_sh.set_name("settings-label")
+        lbl_sh.set_xalign(0.0)
+        lbl_sh.set_size_request(90, -1)
+        shift_row.pack_start(lbl_sh, False, False, 0)
 
-        font_dec = Gtk.Button(label="−")
-        font_dec.get_style_context().add_class("settings-choice")
-        font_dec.set_size_request(36, -1)
-        font_dec.connect("clicked", self._on_font_size_change, -1)
-        font_row.pack_start(font_dec, False, False, 0)
+        shift_sticky = self.settings.get("shift_sticky", False)
+        self._shift_toggle = Gtk.ToggleButton(
+            label="Sticky" if shift_sticky else "One-shot")
+        self._shift_toggle.set_name("settings-toggle")
+        self._shift_toggle.set_size_request(100, -1)
+        self._shift_toggle.set_active(shift_sticky)
+        self._shift_toggle.connect("toggled", self._on_shift_sticky_toggled)
+        shift_row.pack_start(self._shift_toggle, False, False, 0)
 
-        cur_size = self.settings.get("font_size", 14)
-        self._font_size_label = Gtk.Label(label=f"{cur_size}px")
-        self._font_size_label.set_name("settings-label")
-        self._font_size_label.set_size_request(42, -1)
-        font_row.pack_start(self._font_size_label, False, False, 0)
+        self._shift_hint_label = Gtk.Label(
+            label="stays until clicked again" if shift_sticky else "releases after keypress")
+        self._shift_hint_label.set_name("settings-label")
+        self._shift_hint_label.set_xalign(0.0)
+        shift_row.pack_start(self._shift_hint_label, False, False, 4)
 
-        font_inc = Gtk.Button(label="+")
-        font_inc.get_style_context().add_class("settings-choice")
-        font_inc.set_size_request(36, -1)
-        font_inc.connect("clicked", self._on_font_size_change, +1)
-        font_row.pack_start(font_inc, False, False, 0)
+        inner.pack_start(shift_row, False, False, 0)
 
-        panel.pack_start(font_row, False, False, 0)
-
-        # ── Panel shortcut row (Linux / Cinnamon only) ─────────────────────
+        # ── 10. Panel shortcut row (Linux / Cinnamon only) ─────────────────
         if not IS_WINDOWS:
             shortcut_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             lbl7 = Gtk.Label(label="Taskbar")
@@ -1990,10 +2573,9 @@ class OnScreenKeyboard(Gtk.Window):
             self._pin_status_label.set_xalign(0.0)
             shortcut_row.pack_start(self._pin_status_label, False, False, 4)
 
-            panel.pack_start(shortcut_row, False, False, 0)
+            inner.pack_start(shortcut_row, False, False, 0)
 
-        # ── Custom dictionary section ───────────────────────────────────────
-        # Header row: label + word count
+        # ── 11. Custom dictionary section ──────────────────────────────────
         dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         dict_lbl = Gtk.Label(label="Custom dictionary")
         dict_lbl.set_name("settings-label")
@@ -2006,18 +2588,16 @@ class OnScreenKeyboard(Gtk.Window):
             label=f"{n} word{'s' if n != 1 else ''}")
         self._custom_words_count.set_name("settings-label")
         dict_header.pack_end(self._custom_words_count, False, False, 0)
-        panel.pack_start(dict_header, False, False, 0)
+        inner.pack_start(dict_header, False, False, 0)
 
-        # "Add word" button — opens the keyboard in custom input mode
         add_btn = Gtk.Button(label="+ Add word or phrase")
         add_btn.get_style_context().add_class("settings-choice")
         add_btn.connect("clicked", lambda _: self._open_custom_input_mode())
-        panel.pack_start(add_btn, False, False, 0)
+        inner.pack_start(add_btn, False, False, 0)
 
-        # Scrollable list of existing custom words
-        scroll = Gtk.ScrolledWindow()
-        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_size_request(-1, 120)
+        scroll_words = Gtk.ScrolledWindow()
+        scroll_words.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll_words.set_size_request(-1, 80)
 
         self._custom_words_listbox = Gtk.ListBox()
         self._custom_words_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -2026,10 +2606,44 @@ class OnScreenKeyboard(Gtk.Window):
         for word in self._custom_words:
             self._custom_words_listbox.add(self._make_custom_word_row(word))
 
-        scroll.add(self._custom_words_listbox)
-        panel.pack_start(scroll, False, False, 0)
+        scroll_words.add(self._custom_words_listbox)
+        inner.pack_start(scroll_words, False, False, 0)
 
-        # ── Custom themes section ───────────────────────────────────────────
+        # ── 12. Macros section ─────────────────────────────────────────────
+        macros_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        macros_lbl = Gtk.Label(label="Macros")
+        macros_lbl.set_name("settings-label")
+        macros_lbl.set_xalign(0.0)
+        macros_lbl.set_hexpand(True)
+        macros_header.pack_start(macros_lbl, True, True, 0)
+
+        nm = len(self._macros)
+        self._macros_count = Gtk.Label(label=f"{nm} macro{'s' if nm != 1 else ''}")
+        self._macros_count.set_name("settings-label")
+        macros_header.pack_end(self._macros_count, False, False, 0)
+        inner.pack_start(macros_header, False, False, 0)
+
+        add_macro_btn = Gtk.Button(label="+ Add macro")
+        add_macro_btn.get_style_context().add_class("settings-choice")
+        add_macro_btn.connect("clicked",
+                              lambda _: self._open_custom_input_mode(target="macro_trigger"))
+        inner.pack_start(add_macro_btn, False, False, 0)
+
+        scroll_macros = Gtk.ScrolledWindow()
+        scroll_macros.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll_macros.set_size_request(-1, 80)
+
+        self._macros_listbox = Gtk.ListBox()
+        self._macros_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._macros_listbox.set_name("settings-panel")
+
+        for macro in self._macros:
+            self._macros_listbox.add(self._make_macro_row(macro))
+
+        scroll_macros.add(self._macros_listbox)
+        inner.pack_start(scroll_macros, False, False, 0)
+
+        # ── 13. Custom themes section ──────────────────────────────────────
         ctheme_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl_ct = Gtk.Label(label="Custom themes")
         lbl_ct.set_name("settings-label")
@@ -2041,15 +2655,19 @@ class OnScreenKeyboard(Gtk.Window):
         new_theme_btn.get_style_context().add_class("settings-choice")
         new_theme_btn.connect("clicked", lambda _: self._open_theme_wizard())
         ctheme_hdr.pack_end(new_theme_btn, False, False, 0)
-        panel.pack_start(ctheme_hdr, False, False, 0)
+        inner.pack_start(ctheme_hdr, False, False, 0)
 
-        # Box that holds one row per saved custom theme (rebuilt dynamically)
         self._custom_theme_btns_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        panel.pack_start(self._custom_theme_btns_box, False, False, 0)
+        inner.pack_start(self._custom_theme_btns_box, False, False, 0)
         self._rebuild_custom_theme_buttons()
 
+        scroll_outer.add(inner)
+        panel.pack_start(scroll_outer, True, True, 0)
+
         self._refresh_theme_buttons()
+        self._refresh_layout_buttons()
+        self._refresh_font_family_buttons()
         return panel
 
     def _build_emoji_panel(self) -> Gtk.Box:
@@ -2159,12 +2777,37 @@ class OnScreenKeyboard(Gtk.Window):
                 "releases after keypress" if enabled else "stays until clicked again")
         self._save_settings()
 
+    def _on_shift_sticky_toggled(self, toggle: Gtk.ToggleButton):
+        sticky = toggle.get_active()
+        toggle.set_label("Sticky" if sticky else "One-shot")
+        self.settings["shift_sticky"] = sticky
+        if hasattr(self, "_shift_hint_label"):
+            self._shift_hint_label.set_text(
+                "stays until clicked again" if sticky else "releases after keypress")
+        self._save_settings()
+
     def _on_font_size_change(self, _btn, delta: int):
         size = max(10, min(22, self.settings.get("font_size", 14) + delta))
         self.settings["font_size"] = size
         if self._font_size_label:
             self._font_size_label.set_label(f"{size}px")
         self._reload_theme_css()
+        self._save_settings()
+
+    def _on_key_scale_change(self, _btn, delta: float):
+        scale = round(max(0.3, min(1.5, self.settings.get("key_scale", 1.0) + delta)), 2)
+        self.settings["key_scale"] = scale
+        if hasattr(self, "_key_scale_label") and self._key_scale_label:
+            self._key_scale_label.set_label(f"{scale:.2f}×")
+        self._apply_key_scale(scale, reposition=True)
+        self._save_settings()
+
+    def _on_opacity_changed(self, scale_widget: Gtk.Scale):
+        value = round(scale_widget.get_value(), 2)
+        self.settings["opacity"] = value
+        self.set_opacity(value)
+        if hasattr(self, "_opacity_label") and self._opacity_label:
+            self._opacity_label.set_label(f"{int(value * 100)}%")
         self._save_settings()
 
     def _on_pin_to_panel(self, _btn, pin_btn: Gtk.Button):
@@ -2176,7 +2819,7 @@ class OnScreenKeyboard(Gtk.Window):
         GLib.timeout_add(3000, lambda: pin_btn.set_sensitive(True) or False)
 
     def _create_panel_shortcut(self) -> str:
-        """Create .desktop file and add keyboard launcher to the Cinnamon panel."""
+        """Create .desktop file, autostart entry, and add launcher to the Cinnamon panel."""
         # ── 1. Write the .desktop file ────────────────────────────────────────
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch.sh")
         desktop_content = (
@@ -2187,6 +2830,7 @@ class OnScreenKeyboard(Gtk.Window):
             "Icon=input-keyboard\n"
             "Type=Application\n"
             "Categories=Utility;Accessibility;\n"
+            "Terminal=false\n"
             "StartupNotify=false\n"
             "NoDisplay=false\n"
         )
@@ -2199,6 +2843,32 @@ class OnScreenKeyboard(Gtk.Window):
             os.chmod(desktop_file, 0o755)
         except Exception as exc:
             return f"Error: {exc}"
+
+        # ── 1b. Write autostart entry so keyboard launches on login ──────────
+        autostart_dir = os.path.expanduser("~/.config/autostart")
+        os.makedirs(autostart_dir, exist_ok=True)
+        autostart_content = (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=On-Screen Keyboard\n"
+            f"Exec=bash {script}\n"
+            "Terminal=false\n"
+            "Hidden=false\n"
+            "NoDisplay=false\n"
+            "X-GNOME-Autostart-enabled=true\n"
+        )
+        try:
+            with open(os.path.join(autostart_dir, "onscreen-keyboard.desktop"), "w") as f:
+                f.write(autostart_content)
+        except Exception:
+            pass  # autostart failure is non-fatal
+
+        # Refresh desktop database so the app appears in menus immediately
+        try:
+            subprocess.Popen(["update-desktop-database", apps_dir],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
         # ── 2. Add / update the Cinnamon panel-launchers applet ───────────────
         try:
@@ -2271,10 +2941,11 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Theme ─────────────────────────────────────────────────────────────────
 
     def _reload_theme_css(self):
-        """Regenerate and reload the theme CSS (colours + font size)."""
-        colors    = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
-        font_size = self.settings.get("font_size", 14)
-        css = _make_theme_css(colors, font_size)
+        """Regenerate and reload the theme CSS (colours + font size + font family)."""
+        colors      = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
+        font_size   = self.settings.get("font_size", 14)
+        font_family = self.settings.get("font_family", "Ubuntu")
+        css = _make_theme_css(colors, font_size, font_family)
         self._theme_provider.load_from_data(css.encode())
 
     def _apply_theme(self, theme: str, save: bool = True):
@@ -2509,7 +3180,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._refresh_suggestions()
 
-        if self.shift_active:
+        if self.shift_active and not self.settings.get("shift_sticky", False):
             self.shift_active = False
             self._update_modifier_visuals()
 
@@ -2523,50 +3194,103 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(self._fuzzy_timer)
             self._fuzzy_timer = None
 
-        # Custom words always go first (original casing preserved)
+        # ── Build word candidates for slots 0–4 ──────────────────────────────
+        # slot 4 is reserved for emoji if there's a match; otherwise a 5th word.
+        # slots: (label, is_emoji, is_custom, is_fuzzy, is_macro, expansion)
+        slots: list[tuple[str, bool, bool, bool, bool, str]] = []
+
+        # Macro exact match — highest priority, takes slot 0
+        macro_match = None
+        if w:
+            w_lower = w.lower()
+            for m in self._macros:
+                if m.get("trigger", "").lower() == w_lower:
+                    macro_match = m
+                    break
+        if macro_match:
+            exp     = macro_match.get("expansion", "")
+            display = exp[:28] + ("…" if len(exp) > 28 else "")
+            slots.append((display, False, False, False, True, exp))
+
+        # Custom words
         custom_sugg  = self.predictor.custom_matches(w) if w else []
         custom_lower = {c.lower() for c in custom_sugg}
-
-        # Exact-prefix dictionary words (fast bisect — runs synchronously)
-        n_dict_slots = max(0, 3 - len(custom_sugg))
-        exact_sugg   = [x for x in self.predictor.predict(w, n=n_dict_slots)
-                        if x not in custom_lower] if w else []
-
-        # Emoji suggestions
-        emoji_sugg = emoji_suggest(w, n=2) if w else []
-
-        # Fill 5 slots immediately with exact results only
-        slots: list[tuple[str, bool, bool, bool]] = []
         for v in custom_sugg:
-            slots.append((v, False, True, False))
-        remaining = max(0, 3 - len(custom_sugg))
-        for v in exact_sugg[:remaining]:
-            slots.append((v, False, False, False))
-        for v in emoji_sugg[:2]:
-            slots.append((v, True, False, False))
+            slots.append((v, False, True, False, False, ""))
 
+        # Exact-prefix dictionary words — or next-word prediction when no prefix
+        n_word_slots = 4 - len(slots)   # fill up to 4 word slots total
+        if w:
+            exact_sugg = [x for x in self.predictor.predict(w, n=n_word_slots + 2)
+                          if x not in custom_lower]
+        else:
+            # After a space: predict based on the previous word
+            exact_sugg = self.predictor.predict_next(self._last_word, n=n_word_slots + 2)
+
+        seen_words = {s[0].lower() for s in slots}
+        for v in exact_sugg:
+            if len(slots) >= 4:
+                break
+            if v.lower() not in seen_words:
+                slots.append((v, False, False, False, False, ""))
+                seen_words.add(v.lower())
+
+        # Pad to 4 word slots with common fallback words
+        fallback = self.predictor.predict_padded("", 20)
+        for v in fallback:
+            if len(slots) >= 4:
+                break
+            if v.lower() not in seen_words:
+                slots.append((v, False, False, False, False, ""))
+                seen_words.add(v.lower())
+
+        # Slot 4: emoji if any of the 4 word slots has an emoji match,
+        # otherwise pad with a 5th word
+        emoji_slot: tuple[str, bool, bool, bool, bool, str] | None = None
+        check_words = [s[0] for s in slots[:4] if not s[1]]  # word labels only
+        for word in check_words:
+            hits = emoji_suggest(word, n=1)
+            if hits:
+                emoji_slot = (hits[0], True, False, False, False, "")
+                break
+        if emoji_slot:
+            slots.append(emoji_slot)
+        else:
+            # 5th word
+            for v in fallback:
+                if v.lower() not in seen_words:
+                    slots.append((v, False, False, False, False, ""))
+                    seen_words.add(v.lower())
+                    break
+
+        # ── Populate buttons ──────────────────────────────────────────────────
         self._suggestion_values    = [""] * 5
         self._suggestion_is_emoji  = [False] * 5
         self._suggestion_is_custom = [False] * 5
         self._suggestion_is_fuzzy  = [False] * 5
+        self._suggestion_is_macro  = [False] * 5
+        self._suggestion_macro_expansions: list[str] = [""] * 5
 
         for i, btn in enumerate(self._suggestion_btns):
             if i < len(slots):
-                val, is_emoji, is_custom, is_fuzzy = slots[i]
-                btn.set_label(val)
+                val, is_emoji, is_custom, is_fuzzy, is_macro, expansion = slots[i]
+                # Store raw value; display with shift/caps casing applied
+                display = val if (is_emoji or is_macro) else self._case_word(val)
+                btn.set_label(display)
                 btn.set_sensitive(True)
                 self._suggestion_values[i]    = val
                 self._suggestion_is_emoji[i]  = is_emoji
                 self._suggestion_is_custom[i] = is_custom
                 self._suggestion_is_fuzzy[i]  = is_fuzzy
+                self._suggestion_is_macro[i]  = is_macro
+                self._suggestion_macro_expansions[i] = expansion
             else:
                 btn.set_label("")
                 btn.set_sensitive(False)
 
-        # Schedule fuzzy spell-check to run 250ms after typing pauses.
-        # Only runs when there are open dict slots and prefix is long enough.
-        n_exact = len(exact_sugg)
-        if w and n_exact < n_dict_slots and len(w) >= 3:
+        # Schedule fuzzy spell-check to fill empty slots 250ms after typing pauses
+        n_exact = sum(1 for s in slots[:4] if not s[1] and not s[4])  # non-emoji, non-macro words
+        if w and n_exact < 4 and len(w) >= 3:
             self._fuzzy_timer = GLib.timeout_add(250, self._run_fuzzy_update)
 
     def _run_fuzzy_update(self) -> bool:
@@ -2578,11 +3302,12 @@ class OnScreenKeyboard(Gtk.Window):
 
         custom_sugg  = self.predictor.custom_matches(w)
         custom_lower = {c.lower() for c in custom_sugg}
-        n_dict_slots = max(0, 3 - len(custom_sugg))
-        exact_sugg   = [x for x in self.predictor.predict(w, n=n_dict_slots)
+        # Word slots are 0–3; find which are already filled with exact matches
+        exact_sugg   = [x for x in self.predictor.predict(w, n=4)
                         if x not in custom_lower]
-        n_exact      = len(exact_sugg)
-        n_fuzzy_need = n_dict_slots - n_exact
+        # Slots already occupied by custom + exact words
+        n_filled     = len(custom_sugg) + len(exact_sugg)
+        n_fuzzy_need = max(0, 4 - n_filled)
         if n_fuzzy_need <= 0:
             return False
 
@@ -2590,13 +3315,13 @@ class OnScreenKeyboard(Gtk.Window):
         fuzzy_sugg  = [x for x in self.predictor.fuzzy_predict(w, n=n_fuzzy_need)
                        if x not in custom_lower and x not in exact_lower]
 
-        # Fill in the empty dict slots with fuzzy suggestions
-        slot_start = len(custom_sugg) + n_exact
+        # Fill empty word slots (0–3) with fuzzy suggestions
+        slot_start = n_filled
         for i, v in enumerate(fuzzy_sugg):
             idx = slot_start + i
-            if idx >= 5:
+            if idx >= 4:   # don't overwrite slot 4 (emoji/5th word)
                 break
-            self._suggestion_btns[idx].set_label(v)
+            self._suggestion_btns[idx].set_label(self._case_word(v))
             self._suggestion_btns[idx].set_sensitive(True)
             self._suggestion_values[idx]   = v
             self._suggestion_is_fuzzy[idx] = True
@@ -2614,6 +3339,23 @@ class OnScreenKeyboard(Gtk.Window):
                     self._launch_app(app_info)
                     break
             self._close_app_mode()
+            return
+
+        # Macro suggestion — backspace trigger, type expanded text + space
+        if idx < len(self._suggestion_is_macro) and self._suggestion_is_macro[idx]:
+            expansion = ""
+            if hasattr(self, "_suggestion_macro_expansions"):
+                expansion = self._suggestion_macro_expansions[idx]
+            if not expansion:
+                expansion = label
+            expanded = self._expand_macro(expansion)
+            for _ in range(len(self.current_word)):
+                self.typer.send_special("backspace")
+            for ch in expanded:
+                self.typer.type_char(ch)
+            self.typer.send_special("space")
+            self.current_word = ""
+            self._refresh_suggestions()
             return
 
         # Emoji suggestion
@@ -2646,15 +3388,46 @@ class OnScreenKeyboard(Gtk.Window):
             self._refresh_suggestions()
             return
 
-        # Normal dictionary word-completion (type the remaining suffix)
-        remaining = label[len(self.current_word):]
-        for ch in remaining:
-            self.typer.type_char(ch)
+        # Normal dictionary word-completion
+        cased = self._case_word(label)
+        if self.shift_active or self.caps_lock:
+            # Retype the whole word with casing (backspace the partial prefix first)
+            for _ in range(len(self.current_word)):
+                self.typer.send_special("backspace")
+            for ch in cased:
+                self.typer.type_char(ch)
+        else:
+            # Fast path: just type the remaining suffix
+            for ch in cased[len(self.current_word):]:
+                self.typer.type_char(ch)
         self.typer.send_special("space")
+        self._last_word   = label
         self.current_word = ""
         self._refresh_suggestions()
 
     # ── Modifier visuals ────────────��─────────────────────────���───────────────
+
+    def _refresh_suggestion_casing(self):
+        """Re-label suggestion buttons to reflect current shift/caps state,
+        without rerunning the prediction logic."""
+        for i, btn in enumerate(self._suggestion_btns):
+            val = self._suggestion_values[i] if i < len(self._suggestion_values) else ""
+            if not val:
+                continue
+            is_emoji = i < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[i]
+            is_macro = i < len(self._suggestion_is_macro) and self._suggestion_is_macro[i]
+            if not is_emoji and not is_macro:
+                btn.set_label(self._case_word(val))
+
+    def _case_word(self, word: str) -> str:
+        """Apply current shift/caps state to a suggestion word."""
+        if not word:
+            return word
+        if self.caps_lock:
+            return word.upper()
+        if self.shift_active:
+            return word[0].upper() + word[1:]
+        return word
 
     def _update_modifier_visuals(self):
         upper = self.shift_active ^ self.caps_lock
@@ -2682,6 +3455,9 @@ class OnScreenKeyboard(Gtk.Window):
         _set_active(self._shift_btns, self.shift_active)
         if self._caps_btn:
             _set_active([self._caps_btn], self.caps_lock)
+
+        # Update suggestion bar labels to reflect the new casing
+        self._refresh_suggestion_casing()
         _set_active(self._modifier_btns["ctrl"], self.ctrl_active)
         _set_active(self._modifier_btns["alt"],  self.alt_active)
         _set_active(self._modifier_btns["win"],  self.win_active)

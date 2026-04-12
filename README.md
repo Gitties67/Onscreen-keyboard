@@ -9,21 +9,31 @@ A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Desi
 - **Reliable typing** via XTEST — works in browsers, terminals, and all GTK/Qt apps without stealing focus
 - **Full key layout** — function keys (F1–F12), Esc, Del, Home, End, PrtScn, arrows, and standard QWERTY
 - **Lowercase labels** with shifted-symbol hints in the corner of each key
-- **Sticky modifiers** — Ctrl and Alt latch on click; configurable auto-release after one keypress or persistent toggle
+- **Sticky modifiers** — Ctrl, Alt, and optionally Shift latch on click; configurable auto-release after one keypress or persistent toggle
 - **Key repeat** — hold any key to continuously send it (400 ms delay, 50 ms interval)
-- **Word prediction** — suggestions drawn from the system dictionary as you type
+- **Word prediction** — 5 suggestions always shown; draws from system dictionary, custom dictionary, and next-word bigram model
+- **Next-word prediction** — after pressing space, predicts likely next words based on what you just typed
 - **Spell-check prediction** — fuzzy matching catches common misspellings (transpositions, missing/extra letters); correct spelling appears in the suggestion bar ~250 ms after you pause
+- **Suggestion casing** — suggestion bar capitalises words when Shift is active; uppercases when Caps Lock is on
+- **Emoji in suggestions** — 5th suggestion slot shows a relevant emoji when the predicted words have one
 - **Custom dictionary** — add your own words and phrases (names, slang, abbreviations) that appear first in suggestions
+- **Macros** — define trigger→expansion pairs with dynamic `{date}` / `{time}` tokens; triggered from the suggestion bar
+- **Clipboard history** — 📋 button shows the last 20 clipboard entries; click any to type it
 - **Emoji panel** — browsable grid with live search; emoji suggestions appear in the suggestion bar automatically
 - **PrtScn snipping tool** — launches the best available screenshot tool (flameshot → gnome-screenshot → fallbacks)
 - **DIY theme builder** — 6-step colour wizard with live preview; custom themes saved and selectable like built-in ones
 - **4 built-in themes** — Dark, Light, Midnight, High Contrast — with theme-aware active/modifier colours
 - **Adjustable font size** — 10–22 px, applied live
+- **Font family** — choose from Ubuntu, Noto Sans, DejaVu Sans, or Monospace
+- **Key layout** — switch between QWERTY, AZERTY, and QWERTZ
+- **Key size scaling** — scale keys from 0.3× to 1.5× via settings or by dragging any window edge/corner
+- **Window opacity** — adjustable from 30% to 100%
 - **Dwell click** — hover-to-click accessibility mode with adjustable delay
 - **Click sound** — optional audible feedback
-- **Drag to move** and **manual resize** via 8-zone edge/corner handles
+- **Drag to move** and **free resize** — drag any edge or corner to resize; buttons scale to fit automatically
+- **Remembers size and position** — restores last window geometry on reopen
+- **Standalone app** — run `install.sh` once to add to the app menu and autostart on login (no terminal needed)
 - **Pin to Cinnamon panel** — one-click shortcut from inside the settings panel
-- **Autostart** support via `.desktop` file
 
 ---
 
@@ -130,7 +140,17 @@ exec python3 /home/YOUR_USERNAME/onscreen_keyboard/keyboard.py
 
 ## Running
 
-Always launch via `launch.sh` — it auto-detects the X display, Xauthority, D-Bus session address, and AT-SPI2 bus before starting the keyboard.
+### Option A — Run once to install, then never use a terminal again
+
+```bash
+bash ~/onscreen_keyboard/install.sh
+```
+
+This creates an app menu entry and configures autostart on login. After running it once, launch the keyboard from your app menu or let it start automatically — no terminal needed.
+
+### Option B — Launch from a terminal
+
+Always use `launch.sh` — it auto-detects the X display, Xauthority, D-Bus session address, and AT-SPI2 bus before starting the keyboard.
 
 ```bash
 bash ~/onscreen_keyboard/launch.sh
@@ -175,13 +195,19 @@ Click the **⚙** button in the suggestion bar to open the settings panel.
 
 | Setting | Description |
 |---|---|
-| **Theme** | Dark / Light / Midnight / High Contrast |
+| **Theme** | Dark / Light / Midnight / High Contrast + custom themes via the DIY wizard |
+| **Layout** | QWERTY / AZERTY / QWERTZ |
+| **Font** | Ubuntu / Noto Sans / DejaVu Sans / Monospace |
 | **Font size** | Key label size from 10–22 px, adjusted with − and + buttons, applied live |
+| **Key size** | Scale all keys from 0.3× to 1.5× with − and + buttons (or drag a window edge) |
+| **Opacity** | Window transparency from 30% to 100% |
 | **Dwell click** | Hover-to-click — enable the toggle and set the delay (0.3–2.0 s) |
 | **Click sound** | Audible click feedback on each keypress |
 | **Modifier keys** | **Auto-release** — Ctrl/Alt clear after one keypress. **Sticky** — stay active until clicked again |
-| **Taskbar** | Creates a `.desktop` launcher and pins it to the Cinnamon panel |
+| **Shift key** | **One-shot** — releases after each keypress (default). **Sticky** — stays latched like Ctrl/Alt |
+| **Taskbar** | Creates a `.desktop` launcher, pins to the Cinnamon panel, and enables autostart on login |
 | **Custom dictionary** | Add and manage your own words and phrases — see below |
+| **Macros** | Add trigger→expansion pairs; `{date}` and `{time}` insert today's date/time |
 
 Settings are saved to `~/.config/onscreen_keyboard/settings.json` and restored automatically on next launch.
 
@@ -274,10 +300,11 @@ Emoji are typed via `xdotool type --clearmodifiers` which handles arbitrary Unic
 ```
 onscreen_keyboard/
 ├── keyboard.py      # Main GTK3 window and all UI logic
-├── predictor.py     # Dictionary word predictor (no external deps)
+├── predictor.py     # Dictionary word predictor + next-word bigram model
 ├── emojis.py        # Emoji data, search, and suggestion ranking
 ├── style.css        # Structural GTK CSS (layout, radii, transitions)
 ├── launch.sh        # Environment setup script — always use this to launch
+├── install.sh       # One-time setup: app menu entry + autostart on login
 └── CLAUDE.md        # Architecture notes for AI-assisted development
 ```
 
