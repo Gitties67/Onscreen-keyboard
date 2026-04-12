@@ -61,8 +61,9 @@ if not XDOTOOL_OK:
 # ── Persistent settings ───────────────────────────────────────────────────────
 CONFIG_DIR        = os.path.expanduser("~/.config/onscreen_keyboard")
 CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
-CUSTOM_WORDS_FILE = os.path.join(CONFIG_DIR, "custom_words.json")
-CLICK_WAV         = "/tmp/osk_click.wav"
+CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
+CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
+CLICK_WAV          = "/tmp/osk_click.wav"
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
@@ -179,6 +180,20 @@ THEME_COLORS: dict[str, dict] = {
     },
 }
 
+# ── DIY theme builder constants ───────────────────────────────────────────────
+WIZARD_STEPS = [
+    ("Background colour",                          "bg"),
+    ("Key colour",                                 "key_bg"),
+    ("Key text colour",                            "key_fg"),
+    ("Border colour",                              "border"),
+    ("Accent colour  (active keys / suggestions)", "accent"),
+    ("Close button colour",                        "danger"),
+]
+WIZARD_DEFAULTS = {
+    "bg": "#1c1c1c", "key_bg": "#2d2d2d", "key_fg": "#f0f0f0",
+    "border": "#404040", "accent": "#0078d4", "danger": "#ff6b6b",
+}
+
 
 def _make_theme_css(c: dict, font_size: int = 14) -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
@@ -236,6 +251,92 @@ window {{ background-color: {c['bg']}; }}
 #settings-toggle:checked {{ background-color: {c['active_bg']}; color: {c['active_fg']};
                              border-color: {c['active_border']}; background-image: none; }}
 """
+
+# ── Colour helpers for the DIY theme builder ─────────────────────────────────
+
+def _hex_to_rgb(h: str) -> tuple:
+    h = h.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+def _rgb_to_hex(r: int, g: int, b: int) -> str:
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+def _adjust(color: str, factor: float) -> str:
+    r, g, b = _hex_to_rgb(color)
+    return _rgb_to_hex(
+        max(0, min(255, int(r * factor))),
+        max(0, min(255, int(g * factor))),
+        max(0, min(255, int(b * factor))),
+    )
+
+def _mix(a: str, b: str, t: float) -> str:
+    r1, g1, b1 = _hex_to_rgb(a)
+    r2, g2, b2 = _hex_to_rgb(b)
+    return _rgb_to_hex(
+        int(r1 + (r2 - r1) * t),
+        int(g1 + (g2 - g1) * t),
+        int(b1 + (b2 - b1) * t),
+    )
+
+def _luminance(color: str) -> float:
+    def lin(c: int) -> float:
+        v = c / 255
+        return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = _hex_to_rgb(color)
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+
+def _contrast_text(bg: str) -> str:
+    return "#ffffff" if _luminance(bg) < 0.179 else "#000000"
+
+def _hex_to_gdk_rgba(h: str) -> "Gdk.RGBA":
+    rgba = Gdk.RGBA()
+    rgba.parse(h)
+    return rgba
+
+def _gdk_rgba_to_hex(rgba: "Gdk.RGBA") -> str:
+    return _rgb_to_hex(int(rgba.red * 255), int(rgba.green * 255), int(rgba.blue * 255))
+
+def _build_custom_theme(bg: str, key_bg: str, key_fg: str,
+                        border: str, accent: str, danger: str) -> dict:
+    """Derive a complete THEME_COLORS-style dict from 6 user-chosen hex colours."""
+    bar_bg        = _adjust(bg, 0.85)
+    key_hover     = _mix(key_bg, "#ffffff", 0.10)
+    special_bg    = _mix(bg, key_bg, 0.5)
+    special_fg    = _mix(key_fg, bg, 0.35)
+    accent_fg     = _contrast_text(accent)
+    accent_dark   = _adjust(accent, 0.72)
+    accent_darker = _adjust(accent, 0.55)
+    danger_light  = _mix(danger, bg, 0.78)
+    sugg_hover    = _mix(bg, key_bg, 0.5)
+    toggle_fg     = _mix(key_fg, bg, 0.40)
+    sublabel      = _mix(key_fg, bg, 0.55)
+    return {
+        "bg": bg, "bar_bg": bar_bg, "bar_border": border,
+        "key_bg": key_bg, "key_fg": key_fg,
+        "key_border": border, "key_bot": _adjust(border, 0.65),
+        "key_hover": key_hover,
+        "key_hover_border": _mix(border, "#ffffff", 0.25),
+        "special_bg": special_bg, "special_fg": special_fg,
+        "special_border": border, "special_bot": _adjust(border, 0.55),
+        "special_hover": _mix(special_bg, "#ffffff", 0.07),
+        "sugg_fg": accent, "sugg_hover": sugg_hover, "sugg_divider": border,
+        "search_fg": key_fg,
+        "close_bg": danger_light, "close_fg": danger,
+        "close_border": _mix(danger, bg, 0.55),
+        "close_bot": _mix(danger, bg, 0.35),
+        "close_hover_bg": _mix(danger, "#ffffff", 0.15),
+        "close_hover_fg": accent_fg,
+        "settings_bg": special_bg, "settings_fg": special_fg,
+        "settings_border": border, "settings_bot": _adjust(border, 0.65),
+        "choice_bg": key_bg, "choice_fg": key_fg,
+        "choice_border": border, "choice_bot": _adjust(border, 0.65),
+        "toggle_fg": toggle_fg,
+        "sublabel_fg": sublabel,
+        "active_bg": accent, "active_fg": accent_fg,
+        "active_border": accent_dark, "active_bot": accent_darker,
+        "active_hover": _mix(accent, "#ffffff", 0.18),
+    }
+
 
 # ── Keysyms for special keys ──────────────────────────────────────────────────
 KEYSYMS = {
@@ -540,6 +641,22 @@ class OnScreenKeyboard(Gtk.Window):
         # Custom dictionary input mode
         self._custom_input_mode: bool = False
         self._custom_input_text: str  = ""
+        self._custom_input_mode_target: str = "word"   # "word" | "theme_name"
+
+        # DIY theme wizard state
+        self._custom_themes: dict[str, dict] = {}
+        self._wizard_colors: dict[str, str]  = dict(WIZARD_DEFAULTS)
+        self._wizard_name:   str             = ""
+        self._wizard_step:   int             = 0   # 1–6 when wizard page is open
+        self._wizard_page_ready: bool        = False
+        self._wizard_step_label:     Gtk.Label | None       = None
+        self._wizard_question_label: Gtk.Label | None       = None
+        self._wizard_color_btn:      Gtk.ColorButton | None = None
+        self._wizard_next_btn:       Gtk.Button | None      = None
+        self._wizard_name_display:   Gtk.Label | None       = None
+        self._wizard_preview_swatches: list[Gtk.EventBox]   = []
+        self._custom_theme_btns_box: Gtk.Box | None         = None
+        self._custom_theme_btns:     dict[str, Gtk.Button]  = {}
 
         # Sticky modifier state (Ctrl / Alt / Win latch until next keypress)
         self.ctrl_active = False
@@ -574,6 +691,10 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._custom_words = self._load_custom_words()
         self.predictor.set_custom_words(self._custom_words)
+
+        self._custom_themes = self._load_custom_themes()
+        for _name, _colors in self._custom_themes.items():
+            THEME_COLORS[_name] = _colors
 
         self._setup_window()
         self._apply_css()
@@ -1091,8 +1212,9 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Custom word input mode ────────────────────────────────────────────────
 
-    def _open_custom_input_mode(self):
+    def _open_custom_input_mode(self, target: str = "word"):
         """Switch to key grid and capture typing into the custom word buffer."""
+        self._custom_input_mode_target = target
         # Close any other active panel
         if self._settings_mode:
             self._toggle_settings()
@@ -1107,20 +1229,34 @@ class OnScreenKeyboard(Gtk.Window):
     def _close_custom_input_mode(self):
         self._custom_input_mode = False
         self._custom_input_text = ""
+        self._custom_input_mode_target = "word"
         if self._search_label:
             self._search_label.hide()
         self._refresh_suggestions()
 
     def _confirm_custom_word(self):
         word = self._custom_input_text.strip()
-        if word:
-            self._add_custom_word(word)
-        self._close_custom_input_mode()
+        if self._custom_input_mode_target == "theme_name":
+            if word:
+                self._wizard_name = word
+            self._close_custom_input_mode()
+            if self._wizard_name:
+                self._wizard_step   = 1
+                self._wizard_colors = dict(WIZARD_DEFAULTS)
+                self._open_wizard_color_step()
+        else:
+            if word:
+                self._add_custom_word(word)
+            self._close_custom_input_mode()
 
     def _update_custom_input_display(self):
         if self._search_label:
             txt = self._custom_input_text
-            self._search_label.set_text(f"+ {txt}▏" if txt else "+ type word/phrase, ↵ to save")
+            if self._custom_input_mode_target == "theme_name":
+                prompt = "🎨 Type theme name, ↵ to confirm"
+                self._search_label.set_text(f"🎨 {txt}▏" if txt else prompt)
+            else:
+                self._search_label.set_text(f"+ {txt}▏" if txt else "+ type word/phrase, ↵ to save")
             self._search_label.show()
         for btn in self._suggestion_btns:
             btn.set_label("")
@@ -1196,6 +1332,293 @@ class OnScreenKeyboard(Gtk.Window):
 
         row.add(box)
         return row
+
+    # ── DIY theme wizard ──────────────────────────────────────────────────────
+
+    def _open_theme_wizard(self):
+        """Start the theme wizard: collect name via keyboard, then 6 colour steps."""
+        self._wizard_name   = ""
+        self._wizard_step   = 0
+        self._wizard_colors = dict(WIZARD_DEFAULTS)
+        self._open_custom_input_mode(target="theme_name")
+
+    def _open_wizard_color_step(self):
+        """Show the colour-picker page for the current wizard step (1–6)."""
+        if not self._wizard_page_ready and self._key_stack:
+            page = self._build_theme_wizard_page()
+            self._key_stack.add_named(page, "theme-wizard")
+            page.show_all()
+            self._wizard_page_ready = True
+
+        self._wizard_update_step()
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("theme-wizard")
+
+        # Show a live preview of current wizard colours
+        self._wizard_preview_theme()
+
+    def _build_theme_wizard_page(self) -> Gtk.Box:
+        """Build the compact theme-wizard UI (added to the stack lazily)."""
+        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        page.set_name("settings-panel")
+        page.set_margin_start(20)
+        page.set_margin_end(20)
+        page.set_margin_top(12)
+        page.set_margin_bottom(12)
+
+        # ── Top row: step counter + cancel button ──────────────────────────
+        top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self._wizard_step_label = Gtk.Label(label="Step 1 / 6")
+        self._wizard_step_label.set_name("settings-label")
+        self._wizard_step_label.set_xalign(0.0)
+        self._wizard_step_label.set_hexpand(True)
+        top_row.pack_start(self._wizard_step_label, True, True, 0)
+
+        cancel_btn = Gtk.Button(label="✕ Cancel")
+        cancel_btn.get_style_context().add_class("settings-choice")
+        cancel_btn.connect("clicked", lambda _: self._cancel_theme_wizard())
+        top_row.pack_end(cancel_btn, False, False, 0)
+        page.pack_start(top_row, False, False, 0)
+
+        # ── Question label ─────────────────────────────────────────────────
+        self._wizard_question_label = Gtk.Label(label="")
+        self._wizard_question_label.set_name("settings-label")
+        self._wizard_question_label.set_xalign(0.0)
+        page.pack_start(self._wizard_question_label, False, False, 0)
+
+        # ── Colour picker button ───────────────────────────────────────────
+        picker_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+
+        self._wizard_color_btn = Gtk.ColorButton()
+        self._wizard_color_btn.set_use_alpha(False)
+        self._wizard_color_btn.set_size_request(160, 52)
+        self._wizard_color_btn.connect("color-set", self._on_wizard_color_set)
+        picker_row.pack_start(self._wizard_color_btn, False, False, 0)
+
+        # Colour swatches: one box per wizard step, filled in as user proceeds
+        swatch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        swatch_box.set_valign(Gtk.Align.CENTER)
+        self._wizard_preview_swatches = []
+        for _i in range(len(WIZARD_STEPS)):
+            eb = Gtk.EventBox()
+            eb.set_size_request(28, 28)
+            swatch_box.pack_start(eb, False, False, 0)
+            self._wizard_preview_swatches.append(eb)
+        picker_row.pack_start(swatch_box, True, True, 0)
+        page.pack_start(picker_row, False, False, 0)
+
+        # ── Theme name display ─────────────────────────────────────────────
+        self._wizard_name_display = Gtk.Label(label="")
+        self._wizard_name_display.set_name("settings-label")
+        self._wizard_name_display.set_xalign(0.0)
+        page.pack_start(self._wizard_name_display, False, False, 0)
+
+        # ── Navigation buttons ─────────────────────────────────────────────
+        nav_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        nav_row.set_vexpand(True)
+        nav_row.set_valign(Gtk.Align.END)
+
+        back_btn = Gtk.Button(label="◀ Back")
+        back_btn.get_style_context().add_class("settings-choice")
+        back_btn.set_size_request(100, -1)
+        back_btn.connect("clicked", lambda _: self._wizard_go_back())
+        nav_row.pack_start(back_btn, False, False, 0)
+
+        spacer = Gtk.Label(label="")
+        nav_row.pack_start(spacer, True, True, 0)
+
+        self._wizard_next_btn = Gtk.Button(label="Next ▶")
+        self._wizard_next_btn.get_style_context().add_class("settings-choice")
+        self._wizard_next_btn.set_size_request(100, -1)
+        self._wizard_next_btn.connect("clicked", lambda _: self._wizard_go_next())
+        nav_row.pack_end(self._wizard_next_btn, False, False, 0)
+
+        page.pack_start(nav_row, True, True, 0)
+        return page
+
+    def _wizard_update_step(self):
+        """Refresh wizard page labels and colour button for the current step."""
+        step = self._wizard_step
+        total = len(WIZARD_STEPS)
+
+        if self._wizard_step_label:
+            self._wizard_step_label.set_text(f"Step {step} / {total}")
+
+        question, color_key = WIZARD_STEPS[step - 1]
+        if self._wizard_question_label:
+            self._wizard_question_label.set_text(question)
+
+        if self._wizard_color_btn:
+            self._wizard_color_btn.set_rgba(
+                _hex_to_gdk_rgba(self._wizard_colors.get(color_key, "#888888")))
+
+        if self._wizard_next_btn:
+            self._wizard_next_btn.set_label(
+                "Save ✓" if step == total else "Next ▶")
+
+        if hasattr(self, "_wizard_name_display") and self._wizard_name_display:
+            self._wizard_name_display.set_text(f"Theme: {self._wizard_name}")
+
+        # Update swatches
+        for i, (_, ck) in enumerate(WIZARD_STEPS):
+            if i < len(self._wizard_preview_swatches):
+                eb = self._wizard_preview_swatches[i]
+                hex_c = self._wizard_colors.get(ck, "#888888")
+                # Mark steps already configured with their chosen colour;
+                # future steps shown dimmed.
+                if (i + 1) <= step:
+                    self._set_swatch_color(eb, hex_c)
+                else:
+                    self._set_swatch_color(eb, _mix(hex_c, "#888888", 0.7))
+
+    def _set_swatch_color(self, eb: Gtk.EventBox, hex_c: str):
+        """Apply a background colour to an EventBox via an inline CSS provider."""
+        provider = Gtk.CssProvider()
+        provider.load_from_data(
+            f"* {{ background-color: {hex_c}; border-radius: 4px; }}".encode()
+        )
+        eb.get_style_context().add_provider(
+            provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 10)
+
+    def _on_wizard_color_set(self, btn: Gtk.ColorButton):
+        """User confirmed a colour in the picker — store it and preview live."""
+        _, color_key = WIZARD_STEPS[self._wizard_step - 1]
+        self._wizard_colors[color_key] = _gdk_rgba_to_hex(btn.get_rgba())
+        # Update the swatch for this step immediately
+        if (self._wizard_step - 1) < len(self._wizard_preview_swatches):
+            self._set_swatch_color(
+                self._wizard_preview_swatches[self._wizard_step - 1],
+                self._wizard_colors[color_key],
+            )
+        self._wizard_preview_theme()
+
+    def _wizard_preview_theme(self):
+        """Apply current wizard colours to the keyboard CSS as a live preview."""
+        c = _build_custom_theme(**self._wizard_colors)
+        font_size = self.settings.get("font_size", 14)
+        self._theme_provider.load_from_data(_make_theme_css(c, font_size).encode())
+
+    def _wizard_go_back(self):
+        """Go back one colour step, or back to name entry if at step 1."""
+        if self._wizard_step <= 1:
+            # Return to settings, restore original theme
+            self._cancel_theme_wizard()
+        else:
+            self._wizard_step -= 1
+            self._wizard_update_step()
+
+    def _wizard_go_next(self):
+        """Advance one colour step, or save and finish if on last step."""
+        if self._wizard_step >= len(WIZARD_STEPS):
+            self._wizard_save_theme()
+        else:
+            self._wizard_step += 1
+            self._wizard_update_step()
+            self._wizard_preview_theme()
+
+    def _wizard_save_theme(self):
+        """Persist the new custom theme, apply it, and return to settings."""
+        colors = _build_custom_theme(**self._wizard_colors)
+        name   = self._wizard_name
+
+        # Register in the global table and in our custom themes dict
+        THEME_COLORS[name]          = colors
+        self._custom_themes[name]   = self._wizard_colors.copy()
+        self._save_custom_themes()
+
+        # Apply the new theme
+        self.settings["theme"] = name
+        self._reload_theme_css()
+        self._save_settings()
+
+        # Rebuild the custom theme buttons in settings
+        self._rebuild_custom_theme_buttons()
+
+        # Return to settings panel
+        self._wizard_page_ready = False
+        if self._key_stack:
+            # Remove the stale wizard page so it gets rebuilt fresh next time
+            wizard_page = self._key_stack.get_child_by_name("theme-wizard")
+            if wizard_page:
+                self._key_stack.remove(wizard_page)
+        self._toggle_settings()
+        self._refresh_theme_buttons()
+
+    def _cancel_theme_wizard(self):
+        """Discard wizard changes and return to the settings panel."""
+        self._wizard_page_ready = False
+        if self._key_stack:
+            wizard_page = self._key_stack.get_child_by_name("theme-wizard")
+            if wizard_page:
+                self._key_stack.remove(wizard_page)
+        # Restore original theme CSS
+        self._reload_theme_css()
+        self._toggle_settings()
+
+    # ── Custom theme persistence ───────────────────────────────────────────────
+
+    def _load_custom_themes(self) -> dict:
+        """Load custom themes from disk: {name: {bg, key_bg, key_fg, ...}}"""
+        try:
+            with open(CUSTOM_THEMES_FILE, "r") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+        return {}
+
+    def _save_custom_themes(self):
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(CUSTOM_THEMES_FILE, "w") as f:
+                json.dump(self._custom_themes, f, indent=2)
+        except Exception as exc:
+            print(f"[themes] Could not save custom themes: {exc}")
+
+    def _delete_custom_theme(self, name: str):
+        """Remove a custom theme and rebuild buttons."""
+        self._custom_themes.pop(name, None)
+        THEME_COLORS.pop(name, None)
+        self._save_custom_themes()
+        # If the deleted theme is active, fall back to dark
+        if self.settings.get("theme") == name:
+            self._apply_theme("dark")
+        self._rebuild_custom_theme_buttons()
+        self._refresh_theme_buttons()
+
+    def _rebuild_custom_theme_buttons(self):
+        """Repopulate the custom-themes row in the settings panel."""
+        box = self._custom_theme_btns_box
+        if box is None:
+            return
+        for child in box.get_children():
+            box.remove(child)
+
+        current = self.settings.get("theme", "dark")
+        for name in list(self._custom_themes.keys()):
+            # Wrapper so each name + del button stay together
+            wrap = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+
+            sel_btn = Gtk.Button(label=name)
+            sel_btn.get_style_context().add_class("settings-choice")
+            sel_btn.connect("clicked", lambda _b, n=name: self._apply_theme(n))
+            if name == current:
+                sel_btn.get_style_context().add_class("active")
+            wrap.pack_start(sel_btn, True, True, 0)
+            self._custom_theme_btns[name] = sel_btn
+
+            del_btn = Gtk.Button(label="×")
+            del_btn.get_style_context().add_class("settings-choice")
+            del_btn.set_size_request(28, -1)
+            del_btn.connect("clicked", lambda _b, n=name: self._delete_custom_theme(n))
+            wrap.pack_start(del_btn, False, False, 0)
+
+            box.pack_start(wrap, True, True, 0)
+
+        box.show_all()
+
+    # ── Toggle app mode ───────────────────────────────────────────────────────
 
     def _toggle_app_mode(self):
         if self._app_mode:
@@ -1459,6 +1882,26 @@ class OnScreenKeyboard(Gtk.Window):
         scroll.add(self._custom_words_listbox)
         panel.pack_start(scroll, False, False, 0)
 
+        # ── Custom themes section ───────────────────────────────────────────
+        ctheme_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_ct = Gtk.Label(label="Custom themes")
+        lbl_ct.set_name("settings-label")
+        lbl_ct.set_xalign(0.0)
+        lbl_ct.set_hexpand(True)
+        ctheme_hdr.pack_start(lbl_ct, True, True, 0)
+
+        new_theme_btn = Gtk.Button(label="+ New theme")
+        new_theme_btn.get_style_context().add_class("settings-choice")
+        new_theme_btn.connect("clicked", lambda _: self._open_theme_wizard())
+        ctheme_hdr.pack_end(new_theme_btn, False, False, 0)
+        panel.pack_start(ctheme_hdr, False, False, 0)
+
+        # Box that holds one row per saved custom theme (rebuilt dynamically)
+        self._custom_theme_btns_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        panel.pack_start(self._custom_theme_btns_box, False, False, 0)
+        self._rebuild_custom_theme_buttons()
+
         self._refresh_theme_buttons()
         return panel
 
@@ -1523,6 +1966,12 @@ class OnScreenKeyboard(Gtk.Window):
     def _refresh_theme_buttons(self):
         current = self.settings.get("theme", "dark")
         for key, btn in self._theme_btns.items():
+            ctx = btn.get_style_context()
+            if key == current:
+                ctx.add_class("active")
+            else:
+                ctx.remove_class("active")
+        for key, btn in self._custom_theme_btns.items():
             ctx = btn.get_style_context()
             if key == current:
                 ctx.add_class("active")
