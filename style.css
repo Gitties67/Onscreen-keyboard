@@ -1,0 +1,182 @@
+/* ============================================================
+   On-screen keyboard — structural / layout styles only.
+   Theme colours are applied at runtime via a separate CSS
+   provider generated in keyboard.py (_make_theme_css).
+   ============================================================ */
+
+* {
+    font-family: "Segoe UI", "Ubuntu", "Noto Sans", sans-serif;
+    -gtk-outline-radius: 0;
+    outline: none;
+    outline-width: 0;
+}
+
+/* ── Suggestion bar ────────────────────────────────────────── */
+#suggestion-bar {
+    padding: 0 4px;
+    min-height: 36px;
+}
+
+.suggestion-btn {
+    background-image: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 10px;
+    min-height: 30px;
+    box-shadow: none;
+    text-shadow: none;
+    transition: background-color 80ms ease;
+}
+.suggestion-btn:hover { background-image: none; }
+.suggestion-btn:active { background-image: none; }
+.suggestion-btn:disabled { color: transparent; background: transparent; }
+.suggestion-btn + .suggestion-btn { border-left-width: 1px; border-left-style: solid; border-radius: 0; }
+
+#search-label {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 4px;
+}
+
+/* ── Base key style ────────────────────────────────────────── */
+.key-btn {
+    background-image: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 2px 4px;
+    min-height: 52px;
+    box-shadow: none;
+    text-shadow: none;
+    transition: background-color 80ms ease, border-color 80ms ease;
+}
+.key-btn:hover  { background-image: none; }
+.key-btn:active { background-image: none; border-bottom-width: 1px; padding-top: 3px; }
+
+/* ── Special/modifier keys ─────────────────────────────────── */
+.special { font-size: 11px; font-weight: 400; }
+.special:hover  { background-image: none; }
+.special:active { background-image: none; }
+
+/* ── Space bar ─────────────────────────────────────────────── */
+.space { background-image: none; }
+.space:hover { background-image: none; }
+
+/* ── Shift-symbol sub-label (top-right hint on symbol keys) ── */
+.key-sublabel {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 3px 0 0;
+}
+
+/* ── Active/latched modifier — colours are theme-driven (see _make_theme_css) ── */
+
+/* ── Dwell pending ─────────────────────────────────────────── */
+.dwell-pending {
+    background-color: #005a9e;
+    background-image: none;
+    border-color: #0078d4;
+}
+
+/* ── Drag handle ───────────────────────────────────────────── */
+#drag-handle { background-color: transparent; padding: 0 4px; }
+#drag-label  { color: #555555; font-size: 16px; }
+#drag-handle:hover #drag-label { color: #888888; }
+
+/* ── Resize grip ───────────────────────────────────────────── */
+#resize-grip { background-color: transparent; }
+#resize-label { color: #444444; font-size: 14px; padding: 0 2px; }
+#resize-grip:hover #resize-label { color: #777777; }
+
+/* ── Close button ──────────────────────────────────────────── */
+#close-btn {
+    background-image: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 8px;
+    min-height: 30px;
+    min-width: 36px;
+    box-shadow: none;
+    text-shadow: none;
+}
+#close-btn:hover  { background-image: none; }
+#close-btn:active { background-image: none; }
+
+/* ── Settings gear button ──────────────────────────────────── */
+#settings-btn {
+    background-image: none;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 2px 6px;
+    min-height: 30px;
+    box-shadow: none;
+    text-shadow: none;
+}
+#settings-btn:hover  { background-image: none; }
+#settings-btn:active { background-image: none; }
+/* #settings-btn.active — theme-driven (see _make_theme_css) */
+
+/* ── Emoji panel ───────────────────────────────────────────── */
+#emoji-panel { padding: 0; }
+
+#emoji-search-label {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 3px 8px;
+    min-height: 28px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+.emoji-btn {
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 20px;
+    padding: 1px;
+    min-height: 40px;
+    min-width: 40px;
+    box-shadow: none;
+    text-shadow: none;
+}
+.emoji-btn:hover  { background-image: none; }
+.emoji-btn:active { background-image: none; }
+
+/* ── Settings panel ────────────────────────────────────────── */
+#settings-panel { padding: 6px 0; }
+
+#settings-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.settings-choice {
+    background-image: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    min-height: 34px;
+    box-shadow: none;
+    text-shadow: none;
+    transition: background-color 80ms ease;
+}
+.settings-choice:hover  { background-image: none; }
+.settings-choice:active { background-image: none; }
+/* .settings-choice.active — theme-driven (see _make_theme_css) */
+
+#settings-toggle {
+    background-image: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    min-height: 34px;
+    box-shadow: none;
+    text-shadow: none;
+}
+#settings-toggle:active { background-image: none; }
+/* #settings-toggle:checked — theme-driven (see _make_theme_css) */
