@@ -22,16 +22,14 @@ jobs:
           update: false
           install: >-
             mingw-w64-x86_64-gtk3
-            mingw-w64-x86_64-python3
-            mingw-w64-x86_64-python3-pip
-            mingw-w64-x86_64-python3-gobject
-            mingw-w64-x86_64-python3-cairo
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-python-gobject
+            mingw-w64-x86_64-python-cairo
             mingw-w64-x86_64-adwaita-icon-theme
-            mingw-w64-x86_64-python-pyinstaller
 
-      - name: Install pynput
+      - name: Install PyInstaller and pynput
         shell: msys2 {0}
-        run: python3 -m pip install pynput
+        run: python3 -m pip install pyinstaller pynput
 
       - name: Regenerate pixbuf loaders cache
         shell: msys2 {0}
