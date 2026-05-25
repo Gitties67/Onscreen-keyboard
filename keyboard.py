@@ -8,12 +8,14 @@ Run:  bash launch.sh          (Linux)
       python keyboard.py      (Windows, after installing GTK3 + pynput)
 """
 
+import contextlib
 import glob
 import json
 import math
 import os
 import platform
 import re
+import shlex
 import shutil
 import struct
 import subprocess
@@ -89,6 +91,17 @@ if not IS_WINDOWS:
 from predictor import WordPredictor
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
 
+
+def _resolve_dict_path() -> str:
+    if getattr(sys, "frozen", False):
+        p = os.path.join(sys._MEIPASS, "words.txt")
+        if os.path.exists(p):
+            return p
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "words.txt")
+    if os.path.exists(local):
+        return local
+    return "/usr/share/dict/american-english"
+
 # xdotool — Linux only, used for emoji Unicode typing
 XDOTOOL_OK = False
 if not IS_WINDOWS:
@@ -103,7 +116,7 @@ CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
 CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
 MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
-CLICK_WAV          = "/tmp/osk_click.wav"
+CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
@@ -117,6 +130,7 @@ DEFAULT_SETTINGS: dict = {
     "key_scale":            1.0,      # key size scale factor (0.3 – 1.5)
     "font_family":          "Ubuntu", # key label font family
     "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
+    "update_check_enabled": True,
 }
 
 DEFAULT_MACROS = [
@@ -125,6 +139,8 @@ DEFAULT_MACROS = [
 ]
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
+
+__version__ = "0.1.0-beta"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -139,6 +155,7 @@ THEME_LABELS = {"dark": "Dark", "light": "Light",
 #       sublabel_fg
 THEME_COLORS: dict[str, dict] = {
     "dark": {
+        "titlebar_bg": "#1a1a1a", "titlebar_fg": "#cccccc", "titlebar_border": "#333333",
         "bg": "#1c1c1c", "bar_bg": "#141414", "bar_border": "#333333",
         "key_bg": "#2d2d2d", "key_fg": "#f0f0f0",
         "key_border": "#404040", "key_bot": "#111111",
@@ -162,6 +179,7 @@ THEME_COLORS: dict[str, dict] = {
         "active_hover": "#1a8ae0",
     },
     "light": {
+        "titlebar_bg": "#e0e0e0", "titlebar_fg": "#333333", "titlebar_border": "#bdbdbd",
         "bg": "#e8e8e8", "bar_bg": "#d4d4d4", "bar_border": "#bbbbbb",
         "key_bg": "#ffffff", "key_fg": "#1a1a1a",
         "key_border": "#c0c0c0", "key_bot": "#999999",
@@ -185,6 +203,7 @@ THEME_COLORS: dict[str, dict] = {
         "active_hover": "#1a75c4",
     },
     "midnight": {
+        "titlebar_bg": "#0a0a1a", "titlebar_fg": "#8888cc", "titlebar_border": "#1a1a3a",
         "bg": "#0d1117", "bar_bg": "#090d12", "bar_border": "#1f2937",
         "key_bg": "#1a2332", "key_fg": "#c9d1d9",
         "key_border": "#30404d", "key_bot": "#060a0f",
@@ -208,6 +227,7 @@ THEME_COLORS: dict[str, dict] = {
         "active_hover": "#2d82d0",
     },
     "hc": {
+        "titlebar_bg": "#000000", "titlebar_fg": "#ffffff", "titlebar_border": "#ffffff",
         "bg": "#000000", "bar_bg": "#000000", "bar_border": "#ffffff",
         "key_bg": "#000000", "key_fg": "#ffffff",
         "key_border": "#ffffff", "key_bot": "#ffffff",
@@ -249,12 +269,17 @@ WIZARD_DEFAULTS = {
 
 def _make_theme_css(c: dict, font_size: int = 14, font_family: str = "Ubuntu") -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
+    if font_family not in FONT_FAMILIES:
+        print(f"[theme] Unknown font_family {font_family!r}, falling back to Ubuntu")
+        font_family = "Ubuntu"
     special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
     return f"""* {{ font-family: "{font_family}", sans-serif; }}
 
 window {{ background-color: {c['bg']}; }}
 #main-box {{ background-color: {c['bg']}; }}
+#title-bar {{ background-color: {c['titlebar_bg']}; border-bottom-color: {c['titlebar_border']}; }}
+#titlebar-title {{ color: {c['titlebar_fg']}; }}
 #suggestion-bar {{ background-color: {c['bar_bg']}; border-bottom: 1px solid {c['bar_border']}; }}
 .suggestion-btn {{ color: {c['sugg_fg']}; background-color: transparent;
                    font-size: {font_size}px; }}
@@ -279,6 +304,9 @@ window {{ background-color: {c['bg']}; }}
 #settings-btn {{ background-color: {c['settings_bg']}; color: {c['settings_fg']};
                  border: 1px solid {c['settings_border']}; border-bottom: 2px solid {c['settings_bot']}; }}
 #settings-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
+#minimize-btn {{ background-color: {c['settings_bg']}; color: {c['settings_fg']};
+                 border: 1px solid {c['settings_border']}; border-bottom: 2px solid {c['settings_bot']}; }}
+#minimize-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
 #settings-panel {{ background-color: {c['bg']}; }}
 #settings-label {{ color: {c['key_fg']}; }}
 .settings-choice {{ background-color: {c['choice_bg']}; color: {c['choice_fg']};
@@ -309,6 +337,8 @@ window {{ background-color: {c['bg']}; }}
 
 def _hex_to_rgb(h: str) -> tuple:
     h = h.lstrip("#")
+    if len(h) < 6:
+        raise ValueError(f"Invalid hex colour: #{h}")
     return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
 
 def _rgb_to_hex(r: int, g: int, b: int) -> str:
@@ -363,7 +393,13 @@ def _build_custom_theme(bg: str, key_bg: str, key_fg: str,
     sugg_hover    = _mix(bg, key_bg, 0.5)
     toggle_fg     = _mix(key_fg, bg, 0.40)
     sublabel      = _mix(key_fg, bg, 0.55)
+    # Title bar mirrors the suggestion bar: slightly darker than the background,
+    # body text colour for the label, accent border for the bottom edge.
+    titlebar_bg = _adjust(bg, 0.80)
+    titlebar_fg = _mix(key_fg, bg, 0.15)
     return {
+        "titlebar_bg": titlebar_bg, "titlebar_fg": titlebar_fg,
+        "titlebar_border": border,
         "bg": bg, "bar_bg": bar_bg, "bar_border": border,
         "key_bg": key_bg, "key_fg": key_fg,
         "key_border": border, "key_bot": _adjust(border, 0.65),
@@ -432,7 +468,10 @@ SHIFT_MAP = {
 BASE_KEY_W  = 52
 BASE_KEY_H  = 52
 SUGGESTION_H = 38   # height of the suggestion bar row
-EDGE_ZONE    = 10   # px from window edge that triggers resize
+TITLEBAR_H   = 26   # height of the custom title-bar strip
+STRIP_H      = 11   # height of the top/bottom resize strips
+MIN_W        = 400  # minimum window width during resize
+EDGE_ZONE    = 14   # px from window edge that triggers resize
 
 # ── Key repeat ────────────────────────────────────────────────────────────────
 REPEAT_DELAY_MS    = 400   # delay before repeat starts (ms)
@@ -721,19 +760,35 @@ class KeyTyper:
         """Press optional modifiers, then the key, then release everything."""
         mod_keycodes: list[int] = []
         if with_shift:
-            mod_keycodes.append(self._disp.keysym_to_keycode(KEYSYMS["shift_l"]))
+            shift_kc = self._disp.keysym_to_keycode(KEYSYMS["shift_l"])
+            if shift_kc:
+                mod_keycodes.append(shift_kc)
         for mod_name in mods:
             kc = self._disp.keysym_to_keycode(KEYSYMS[mod_name])
             if kc:
                 mod_keycodes.append(kc)
 
-        for kc in mod_keycodes:
-            xtest.fake_input(self._disp, X.KeyPress, kc)
-        xtest.fake_input(self._disp, X.KeyPress,   keycode)
-        xtest.fake_input(self._disp, X.KeyRelease, keycode)
-        for kc in reversed(mod_keycodes):
-            xtest.fake_input(self._disp, X.KeyRelease, kc)
-        self._disp.flush()
+        pressed: list[int] = []
+        try:
+            for kc in mod_keycodes:
+                xtest.fake_input(self._disp, X.KeyPress, kc)
+                pressed.append(kc)
+            xtest.fake_input(self._disp, X.KeyPress,   keycode)
+            xtest.fake_input(self._disp, X.KeyRelease, keycode)
+            for kc in reversed(pressed):
+                xtest.fake_input(self._disp, X.KeyRelease, kc)
+            self._disp.flush()
+        except Exception as exc:
+            print(f"[xtest] send error (attempting modifier cleanup): {exc}")
+            for kc in reversed(pressed):
+                try:
+                    xtest.fake_input(self._disp, X.KeyRelease, kc)
+                except Exception:
+                    pass
+            try:
+                self._disp.flush()
+            except Exception:
+                pass
 
 
 # ── Main keyboard window ───────────────────���────────────────────────────────���─
@@ -741,7 +796,7 @@ class OnScreenKeyboard(Gtk.Window):
 
     def __init__(self):
         super().__init__()
-        self.predictor    = WordPredictor()
+        self.predictor    = WordPredictor(_resolve_dict_path())
         self.typer        = KeyTyper()
         self.current_word = ""
         self._last_word   = ""   # last fully typed word, for next-word prediction
@@ -775,6 +830,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._app_mode      = False   # True while launcher search is active
         self._app_query     = ""
         self._app_results:  list[Gio.AppInfo] = []
+        self._cached_apps:  list | None = None  # populated once on launcher open
 
         # Emoji panel (built lazily — avoids FlowBoxChild GdkWindows blocking keys)
         self._emoji_mode         = False
@@ -838,12 +894,9 @@ class OnScreenKeyboard(Gtk.Window):
         self.alt_active  = False
         self.win_active  = False
 
-        # Drag-to-move state
-        self._drag_active  = False
-        self._drag_start_x = 0.0
-
         # Manual resize state (used because override_redirect disables WM resize)
         self._resizing        = False
+        self._resize_did_move = False
         self._resize_edge     = ""
         self._resize_start_x  = 0.0
         self._resize_start_y  = 0.0
@@ -851,9 +904,34 @@ class OnScreenKeyboard(Gtk.Window):
         self._resize_start_h  = 0
         self._resize_start_wx = 0
         self._resize_start_wy = 0
-        self._drag_start_y = 0.0
-        self._drag_win_x   = 0
-        self._drag_win_y   = 0
+        self._resize_grip:  Gtk.EventBox | None = None
+
+        # Manual title-bar move state.  begin_move_drag() is a no-op on Muffin
+        # for DOCK windows (treated as struts → _NET_WM_MOVERESIZE ignored), so
+        # we track the drag ourselves: save pointer + window origin on press,
+        # self.move() by the delta on motion.
+        self._moving         = False
+        self._move_start_x   = 0.0
+        self._move_start_y   = 0.0
+        self._move_start_wx  = 0
+        self._move_start_wy  = 0
+
+        # Window-control / collapse state (Windows 11-style minimize)
+        self._minimize_btn:   Gtk.Button | None  = None
+        self._close_btn:      Gtk.Button | None  = None
+        self._update_status_label: Gtk.Label | None  = None
+        self._update_btn:          Gtk.Button | None = None
+        self._titlebar:       Gtk.EventBox | None = None
+        self._suggestion_bar: Gtk.Box | None     = None
+        self._top_strip:      Gtk.EventBox | None = None
+        self._bottom_strip:   Gtk.EventBox | None = None
+        self._collapsed       = False
+        self._pre_collapse_h  = 0
+        # Height of the collapsed strip: title bar + suggestion bar + top resize
+        # strip + chrome.  The collapsed state now keeps the title bar AND
+        # suggestion bar visible; the title bar is the only way to expand again.
+        # The bottom resize strip is hidden when collapsed, so only one strip.
+        self._collapsed_h     = TITLEBAR_H + SUGGESTION_H + STRIP_H + 8
 
         # Key repeat state
         self._repeat_timers: dict[str, int] = {}  # action → GLib source ID
@@ -864,7 +942,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Settings + dwell state
         self.settings:       dict = self._load_settings()
-        self._dwell_timers:  dict[str, int] = {}  # action → GLib source ID
+        self._dwell_timers:  dict[int, int] = {}  # id(widget) → GLib source ID
         self._settings_mode: bool = False
 
         self._custom_words = self._load_custom_words()
@@ -910,7 +988,7 @@ class OnScreenKeyboard(Gtk.Window):
         geo     = monitor.get_geometry()
         sw, sh  = geo.width, geo.height
 
-        kb_h = BASE_KEY_H * 6 + SUGGESTION_H + 7 * 4 + 12
+        kb_h = BASE_KEY_H * 6 + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
         # Restore saved position/size, or default to full-width bar at screen bottom
         saved_x = self.settings.get("win_x", 0)
         saved_y = self.settings.get("win_y", sh - kb_h)
@@ -993,12 +1071,28 @@ class OnScreenKeyboard(Gtk.Window):
         root.set_margin_end(8)
         root.set_margin_top(0)     # resize strips cover top/bottom instead
         root.set_margin_bottom(0)
-        self.add(root)
 
-        # Top resize strip — covers top edge + corners
-        root.pack_start(self._make_resize_strip("top"), False, False, 0)
+        # Overlay so the always-visible resize grip can float over the
+        # bottom-right corner without being clipped by the resize strips.
+        overlay = Gtk.Overlay()
+        overlay.add(root)
+        overlay.add_overlay(self._make_resize_grip())
+        self.add(overlay)
 
-        root.pack_start(self._build_suggestion_bar(), False, False, 0)
+        # Top resize strip — covers top edge + corners.  Packed FIRST so it
+        # sits above the title bar; the title bar must never overlap it (no
+        # Overlay here — the Overlay above only floats the bottom-right grip).
+        self._top_strip = self._make_resize_strip("top")
+        root.pack_start(self._top_strip, False, False, 0)
+
+        # Title bar — drag surface + window controls (─ ✕).  Sits between the
+        # top resize strip and the suggestion bar; always visible (it is the
+        # only way to expand the keyboard once collapsed).
+        self._titlebar = self._build_title_bar()
+        root.pack_start(self._titlebar, False, False, 0)
+
+        self._suggestion_bar = self._build_suggestion_bar()
+        root.pack_start(self._suggestion_bar, False, False, 0)
 
         # Stack switches between the key grid and the settings panel
         self._key_stack = Gtk.Stack()
@@ -1017,7 +1111,8 @@ class OnScreenKeyboard(Gtk.Window):
         root.pack_start(self._key_stack, True, True, 0)
 
         # Bottom resize strip — covers bottom edge + corners
-        root.pack_start(self._make_resize_strip("bottom"), False, False, 0)
+        self._bottom_strip = self._make_resize_strip("bottom")
+        root.pack_start(self._bottom_strip, False, False, 0)
 
     def _build_keys_box(self, rows) -> Gtk.Box:
         """Build a vertical box of key rows from a layout definition."""
@@ -1034,7 +1129,7 @@ class OnScreenKeyboard(Gtk.Window):
         """Thin strip at top or bottom — handles edge/corner resize manually."""
         strip = Gtk.EventBox()
         strip.set_name(f"resize-strip-{position}")
-        strip.set_size_request(-1, 7)
+        strip.set_size_request(-1, STRIP_H)
         strip.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK   |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
@@ -1058,24 +1153,152 @@ class OnScreenKeyboard(Gtk.Window):
         self._start_resize(event, edge)
         return True
 
-    def _build_suggestion_bar(self) -> Gtk.Box:
-        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        bar.set_name("suggestion-bar")
+    def _make_resize_grip(self) -> Gtk.EventBox:
+        """Always-visible bottom-right grip — click-drag to south-east resize.
 
-        # Drag handle
-        drag = Gtk.EventBox()
-        drag.set_name("drag-handle")
-        drag.add(Gtk.Label(label="⠿"))
-        drag.set_size_request(28, SUGGESTION_H)
-        drag.add_events(
-            Gdk.EventMask.BUTTON_PRESS_MASK |
+        Floats as an Overlay child anchored to the bottom-right corner.  Gives
+        users a clear, dwell-friendly resize target while the invisible 8-zone
+        edge/corner handlers remain functional.
+        """
+        grip = Gtk.EventBox()
+        grip.set_name("resize-grip")
+        grip.set_halign(Gtk.Align.END)
+        grip.set_valign(Gtk.Align.END)
+        # 22×14: covers the 7px bottom strip plus ~7px of the key row above it —
+        # a deliberate trade-off for a dwell-friendly target size.
+        grip.set_size_request(22, 14)
+        lbl = Gtk.Label(label="◢")   # corner triangle reads as a resize grip
+        lbl.set_name("resize-label")
+        grip.add(lbl)
+        grip.add_events(
+            Gdk.EventMask.BUTTON_PRESS_MASK   |
+            Gdk.EventMask.BUTTON_RELEASE_MASK |
+            Gdk.EventMask.POINTER_MOTION_MASK |
+            Gdk.EventMask.ENTER_NOTIFY_MASK   |
+            Gdk.EventMask.LEAVE_NOTIFY_MASK
+        )
+        grip.connect("button-press-event",   self._on_grip_press)
+        grip.connect("motion-notify-event",  self._on_resize_motion)
+        grip.connect("button-release-event", self._on_resize_release)
+        # CSS `cursor` is unsupported in GTK; drive the Gdk cursor directly.
+        grip.connect("enter-notify-event", self._on_grip_enter)
+        grip.connect("leave-notify-event", self._on_grip_leave)
+        self._resize_grip = grip
+        return grip
+
+    def _on_grip_press(self, widget, event):
+        if event.button != 1:
+            return False
+        self._start_resize(event, "se")
+        return True
+
+    def _on_grip_enter(self, widget, _event):
+        gdk_win = widget.get_window()
+        if gdk_win is not None:
+            display = widget.get_display()
+            cursor = Gdk.Cursor.new_from_name(display, "nwse-resize") \
+                or Gdk.Cursor.new_from_name(display, "se-resize")
+            gdk_win.set_cursor(cursor)
+        return False
+
+    def _on_grip_leave(self, widget, _event):
+        gdk_win = widget.get_window()
+        if gdk_win is not None:
+            gdk_win.set_cursor(None)   # revert to the inherited/default cursor
+        return False
+
+    def _build_title_bar(self) -> Gtk.EventBox:
+        """Custom 26px title bar: draggable title label + window controls.
+
+        The EventBox itself is the drag surface — left-click-drag moves the
+        window via manual move tracking (Muffin ignores begin_move_drag for DOCK
+        windows, so we self.move() against press-time baselines), double-click
+        toggles collapse.  The minimize (─) and close (✕) buttons live at the
+        far right.
+        """
+        bar = Gtk.EventBox()
+        bar.set_name("title-bar")
+        bar.add_events(
+            Gdk.EventMask.BUTTON_PRESS_MASK   |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
             Gdk.EventMask.POINTER_MOTION_MASK
         )
-        drag.connect("button-press-event",   self._on_drag_press)
-        drag.connect("button-release-event", self._on_drag_release)
-        drag.connect("motion-notify-event",  self._on_drag_motion)
-        bar.pack_start(drag, False, False, 4)
+        bar.connect("button-press-event",   self._on_titlebar_press)
+        bar.connect("motion-notify-event",  self._on_titlebar_motion)
+        bar.connect("button-release-event", self._on_titlebar_release)
+        bar.get_accessible().set_name("Keyboard title bar — drag to move")
+
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        bar.add(hbox)
+
+        # Version badge — top-left corner, small and unobtrusive.
+        ver_lbl = Gtk.Label(label=f"β {__version__}")
+        ver_lbl.set_name("version-badge")
+        hbox.pack_start(ver_lbl, False, False, 6)
+
+        # Title label — fills the bar so the whole strip is a drag target.
+        title = Gtk.Label(label="On-Screen Keyboard")
+        title.set_name("titlebar-title")
+        title.set_xalign(0.0)
+        hbox.pack_start(title, True, True, 0)
+
+        # ── Window controls (Windows 11 style: [─] [✕] at the top-right) ──────
+        # pack_end packs right-to-left, so the FIRST pack_end ends up rightmost.
+        # Close is packed first (far right); minimize second (to its left).
+
+        # Close button — far top-right corner
+        self._close_btn = Gtk.Button(label="✕")
+        self._close_btn.set_name("close-btn")
+        self._close_btn.set_size_request(40, TITLEBAR_H)
+        self._close_btn.connect("clicked", lambda _: self._quit())
+        hbox.pack_end(self._close_btn, False, False, 4)
+
+        # Minimize / collapse button — directly left of the close button.
+        # Shows ▼ when expanded (click to collapse), ▲ when collapsed.
+        self._minimize_btn = Gtk.Button(label="▼")
+        self._minimize_btn.set_name("minimize-btn")
+        self._minimize_btn.set_tooltip_text("Collapse / expand keyboard")
+        self._minimize_btn.set_size_request(40, TITLEBAR_H)
+        self._minimize_btn.connect("clicked", lambda _: self._toggle_collapse())
+        hbox.pack_end(self._minimize_btn, False, False, 2)
+
+        return bar
+
+    def _on_titlebar_press(self, widget, event):
+        if event.button != 1:
+            return False
+        if event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
+            # Cancel any move started by the preceding single-press of the pair.
+            self._moving = False
+            self._toggle_collapse()
+            return True
+        # Manual move: begin_move_drag() is silently ignored by Muffin for DOCK
+        # windows, so track the drag ourselves against press-time baselines.
+        self._moving        = True
+        self._move_start_x  = event.x_root
+        self._move_start_y  = event.y_root
+        self._move_start_wx, self._move_start_wy = self.get_position()
+        return True
+
+    def _on_titlebar_motion(self, widget, event):
+        if not self._moving:
+            return False
+        dx = int(event.x_root - self._move_start_x)
+        dy = int(event.y_root - self._move_start_y)
+        self.move(self._move_start_wx + dx, self._move_start_wy + dy)
+        return True
+
+    def _on_titlebar_release(self, widget, event):
+        if event.button != 1:
+            return False
+        if self._moving:
+            self._moving = False
+            self._save_geometry()
+        return True
+
+    def _build_suggestion_bar(self) -> Gtk.Box:
+        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        bar.set_name("suggestion-bar")
 
         # Search label — shown only in app-launcher mode
         self._search_label = Gtk.Label(label="")
@@ -1092,6 +1315,10 @@ class OnScreenKeyboard(Gtk.Window):
             btn.connect("clicked", lambda b, idx=i: self._on_suggestion_clicked(b, idx))
             bar.pack_start(btn, True, True, 0)
             self._suggestion_btns.append(btn)
+
+        # ── Panel-mode toggles (right side): [settings] [emoji] [clipboard] ───
+        # pack_end packs right-to-left, so the FIRST pack_end ends up rightmost.
+        # Window controls (─ ✕) now live in the title bar above this row.
 
         # Clipboard button
         self._clipboard_btn = Gtk.Button(label="📋")
@@ -1113,13 +1340,6 @@ class OnScreenKeyboard(Gtk.Window):
         self._settings_btn.set_size_request(36, SUGGESTION_H)
         self._settings_btn.connect("clicked", lambda _: self._toggle_settings())
         bar.pack_end(self._settings_btn, False, False, 2)
-
-        # Close button
-        close_btn = Gtk.Button(label="✕")
-        close_btn.set_name("close-btn")
-        close_btn.set_size_request(40, SUGGESTION_H)
-        close_btn.connect("clicked", lambda _: self._quit())
-        bar.pack_end(close_btn, False, False, 4)
 
         return bar
 
@@ -1185,17 +1405,24 @@ class OnScreenKeyboard(Gtk.Window):
 
 
     def _on_window_button_press(self, window, event):
-        """Handle left/right edge resize from the 8px side margins."""
+        """Handle left/right edge resize from the side margins.
+
+        Only fires for the left/right edge zones — the top/bottom edges (and
+        their corners) are owned by the 7px resize strips, whose own EventBox
+        handlers run before this window-level handler.  The corner zones here
+        use STRIP_H (not EDGE_ZONE) so a press in the title-bar rows (y >= 7)
+        is treated as a side EDGE, never a top/bottom CORNER — otherwise the
+        title bar's top rows would be misclassified as nw/ne resize.
+        """
         if event.button != 1:
             return False
         w, h = self.get_size()
-        E = EDGE_ZONE
-        left  = event.x < E
-        right = event.x > w - E
+        left  = event.x < EDGE_ZONE
+        right = event.x > w - EDGE_ZONE
         if not (left or right):
             return False
-        top    = event.y < E
-        bottom = event.y > h - E
+        top    = event.y < STRIP_H
+        bottom = event.y > h - STRIP_H
         if left:
             edge = "nw" if top else ("sw" if bottom else "w")
         else:
@@ -1207,6 +1434,7 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _start_resize(self, event, edge: str):
         self._resizing        = True
+        self._resize_did_move = False
         self._resize_edge     = edge
         self._resize_start_x  = event.x_root
         self._resize_start_y  = event.y_root
@@ -1220,47 +1448,108 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_resize_motion(self, widget, event):
         if not self._resizing:
             return
-        dx = event.x_root - self._resize_start_x
-        dy = event.y_root - self._resize_start_y
+        dx = int(event.x_root - self._resize_start_x)
+        dy = int(event.y_root - self._resize_start_y)
+        if abs(dx) <= 2 and abs(dy) <= 2:
+            return
+        self._resize_did_move = True
         edge = self._resize_edge
-        w  = self._resize_start_w
-        h  = self._resize_start_h
-        wx = self._resize_start_wx
-        wy = self._resize_start_wy
 
+        # Compute every output (w, h, wx, wy) strictly from the press-time
+        # baselines.  Never read get_size()/get_position() here — resize() and
+        # move() are async, so the configure-event hasn't landed yet and those
+        # getters return stale values, which is what made the window "walk".
+        start_w  = self._resize_start_w
+        start_h  = self._resize_start_h
+        start_wx = self._resize_start_wx
+        start_wy = self._resize_start_wy
+
+        min_h = int(BASE_KEY_H * 6 * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
+
+        # Start from the baselines.  Each edge touches ONLY the geometry
+        # components it owns: horizontal edges (e/w) read dx and write width
+        # (+ wx for w); vertical edges (n/s) read dy and write height (+ wy for
+        # n).  dx never reaches height and dy never reaches width — so a pure
+        # n/s/e/w drag stays single-axis and corners change exactly two.
+        w, h   = start_w, start_h
+        wx, wy = start_wx, start_wy
+
+        # East/south edges: only size grows, the opposite edge/position anchored.
         if "e" in edge:
-            w = max(400, w + int(dx))
-        if "w" in edge:
-            new_w = max(400, w - int(dx))
-            wx = wx + (w - new_w)
-            w = new_w
-        min_h = int(BASE_KEY_H * 6 * 0.3) + SUGGESTION_H + 7 * 4 + 12
+            w = max(MIN_W, start_w + dx)
         if "s" in edge:
-            h = max(min_h, h + int(dy))
-        if "n" in edge:
-            new_h = max(min_h, h - int(dy))
-            wy = wy + (h - new_h)
-            h = new_h
+            h = max(min_h, start_h + dy)
 
+        # West/north edges: the moving edge's position shifts by the *clamped*
+        # size delta so the opposite edge stays pinned.  Deriving the move from
+        # (start_size - new_size) rather than from dx makes the clamp and the
+        # move agree even when the size hits MIN_W / min_h.
+        if "w" in edge:
+            w  = max(MIN_W, start_w - dx)
+            wx = start_wx + (start_w - w)
+        if "n" in edge:
+            h  = max(min_h, start_h - dy)
+            wy = start_wy + (start_h - h)
+
+        # Pin ONLY the dragged axes before resize().  resize() is only a
+        # *request* on a resizable DOCK window; Muffin reconciles it against the
+        # content's natural size on the axis we did NOT change, which is what
+        # made a vertical drag also grow width (and vice-versa).  A min==max
+        # request forces the WM to honour the exact computed geometry.
+        #
+        # But pin ONLY the axis this edge owns.  For a pure e/w drag, h is just
+        # the stale start_h baseline (get_size() at press time), which does NOT
+        # match the content's natural height on a resizable DOCK window — pinning
+        # it to that stale value makes Muffin reject the *entire* configure
+        # request, dropping the width change too, so e/w resize appeared dead.
+        # Leave the un-dragged axis free (-1) so GTK uses natural size for it.
+        # Cleared in _on_resize_release so normal layout/scaling resumes.
+        pin_w = w if ("e" in edge or "w" in edge) else -1
+        pin_h = h if ("n" in edge or "s" in edge) else -1
+        self.set_size_request(pin_w, pin_h)
         self.resize(w, h)
         if "w" in edge or "n" in edge:
             self.move(wx, wy)
 
     def _on_resize_release(self, widget, event):
-        if self._resizing and self._resize_edge:
-            # Derive scale from the new window height and snap buttons to fit
-            _, new_h = self.get_size()
-            overhead = SUGGESTION_H + 7 * 4 + 12
-            scale = round(
-                max(0.3, min(1.5, (new_h - overhead) / (BASE_KEY_H * 6))), 2
-            )
-            self.settings["key_scale"] = scale
-            self._save_settings()
-            if hasattr(self, "_key_scale_label") and self._key_scale_label:
-                self._key_scale_label.set_label(f"{scale:.2f}×")
+        if event.button != 1:
+            return False
+        # A pure click (press + release, no motion) must not reshape anything.
+        # All geometry-touching work below is guarded on _resize_did_move; only
+        # the state teardown runs unconditionally.
+        if self._resizing and self._resize_did_move:
+            # Release the min==max pin set during the drag so the window can
+            # flow to its content again (and so _apply_key_scale's resize() can
+            # take).  Only _on_resize_motion ever sets this pin, so it's only
+            # present when motion occurred.
+            self.set_size_request(-1, -1)
+            scale = self.settings.get("key_scale", 1.0)
+            if self._resize_edge and not self._collapsed:
+                # Derive scale from the new window height and snap buttons to fit
+                _, new_h = self.get_size()
+                overhead = TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
+                scale = round(
+                    max(0.3, min(1.5, (new_h - overhead) / (BASE_KEY_H * 6))), 2
+                )
+                self.settings["key_scale"] = scale
+                self._save_settings()
+                if hasattr(self, "_key_scale_label") and self._key_scale_label:
+                    self._key_scale_label.set_label(f"{scale:.2f}×")
+            # Always restore button sizes (covers the collapsed-drag path where
+            # scale doesn't change but min-heights were stripped by _start_resize)
             self._apply_key_scale(scale)
-        self._resizing    = False
-        self._resize_edge = ""
+        elif self._resizing and ("n" in self._resize_edge or "s" in self._resize_edge):
+            # No motion, but _start_resize stripped the button height minimums
+            # to 1px for n/s edges.  Restore them at the current scale without
+            # touching window geometry, otherwise a pure click on the top/bottom
+            # strip leaves the keys squashed.
+            scale = self.settings.get("key_scale", 1.0)
+            h = int(BASE_KEY_H * scale)
+            for btn, base_w in self._all_key_btns:
+                btn.set_size_request(int(base_w * scale), h)
+        self._resizing        = False
+        self._resize_did_move = False
+        self._resize_edge     = ""
 
     # ── Drag to move ──────────────────────────────────────────────────────────
 
@@ -1268,36 +1557,39 @@ class OnScreenKeyboard(Gtk.Window):
         """Persist current window position and size to settings."""
         x, y = self.get_position()
         w, h = self.get_size()
+        # If collapsed, persist the expanded height so we don't relaunch stuck
+        # at the strip height with _collapsed=False (which would be unrecoverable).
+        if self._collapsed and self._pre_collapse_h:
+            h = self._pre_collapse_h
         self.settings["win_x"] = x
         self.settings["win_y"] = y
         self.settings["win_w"] = w
         self.settings["win_h"] = h
         self._save_settings()
 
+    def _cancel_all_timers(self):
+        """Cancel all pending GLib timers to prevent callbacks firing on torn-down widgets."""
+        for tid in list(self._repeat_timers.values()):
+            GLib.source_remove(tid)
+        self._repeat_timers.clear()
+        self._repeat_active.clear()
+        for tid in list(self._dwell_timers.values()):
+            GLib.source_remove(tid)
+        self._dwell_timers.clear()
+        if self._fuzzy_timer is not None:
+            GLib.source_remove(self._fuzzy_timer)
+            self._fuzzy_timer = None
+
     def _quit(self):
+        self._cancel_all_timers()
         self._save_geometry()
         Gtk.main_quit()
 
     def _on_close(self, widget, event):
         """Save window geometry when closed via WM (alt-F4 etc.)."""
+        self._cancel_all_timers()
         self._save_geometry()
         return False  # allow the close to proceed
-
-    def _on_drag_press(self, widget, event):
-        if event.button == 1:
-            self._drag_active  = True
-            self._drag_start_x = event.x_root
-            self._drag_start_y = event.y_root
-            self._drag_win_x, self._drag_win_y = self.get_position()
-
-    def _on_drag_release(self, widget, event):
-        self._drag_active = False
-
-    def _on_drag_motion(self, widget, event):
-        if self._drag_active:
-            dx = event.x_root - self._drag_start_x
-            dy = event.y_root - self._drag_start_y
-            self.move(int(self._drag_win_x + dx), int(self._drag_win_y + dy))
 
     # ── Key event handling ───────────────────────────────────────────────────
 
@@ -1645,7 +1937,7 @@ class OnScreenKeyboard(Gtk.Window):
             with open(MACROS_FILE, "r") as f:
                 data = json.load(f)
             if isinstance(data, list):
-                return data
+                return [m for m in data if isinstance(m, dict)]
         except FileNotFoundError:
             self._save_macros_list(DEFAULT_MACROS)
             return list(DEFAULT_MACROS)
@@ -1723,12 +2015,16 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Clipboard ─────────────────────────────────────────────────────────────
 
     def _on_clipboard_change(self, clipboard, event):
-        text = clipboard.wait_for_text()
+        clipboard.request_text(self._on_clipboard_text_received)
+
+    def _on_clipboard_text_received(self, clipboard, text):
         if not text:
             return
         text = text.strip()
         if not text:
             return
+        # Cap individual items to 10 KB to avoid memory bloat from large copies
+        text = text[:10000]
         # Deduplicate: remove existing copy then prepend
         if text in self._clipboard_history:
             self._clipboard_history.remove(text)
@@ -1840,7 +2136,7 @@ class OnScreenKeyboard(Gtk.Window):
         for btn, base_w in self._all_key_btns:
             btn.set_size_request(int(base_w * scale), h)
         keys_h = int(BASE_KEY_H * 6 * scale)
-        total_h = keys_h + SUGGESTION_H + 7 * 4 + 12
+        total_h = keys_h + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
         w, _ = self.get_size()
         self.resize(w, total_h)
         if reposition:
@@ -1852,6 +2148,7 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Layout switcher ───────────────────────────────────────────────────────
 
     def _switch_layout(self, layout: str):
+        self._cancel_all_timers()
         self.settings["layout"] = layout
         self._save_settings()
         # Clear tracked widget collections
@@ -2137,10 +2434,34 @@ class OnScreenKeyboard(Gtk.Window):
             with open(CUSTOM_THEMES_FILE, "r") as f:
                 data = json.load(f)
             if isinstance(data, dict):
+                for colors in data.values():
+                    if isinstance(colors, dict):
+                        self._backfill_theme_keys(colors)
                 return data
         except Exception:
             pass
         return {}
+
+    @staticmethod
+    def _backfill_theme_keys(colors: dict) -> None:
+        """Add any colour keys missing from an older saved theme, in place.
+
+        Themes saved before a new key was introduced (e.g. the title-bar keys)
+        would otherwise raise KeyError in _make_theme_css.  Derive sane defaults
+        from existing colours so legacy themes keep working.
+        """
+        try:
+            if "titlebar_bg" not in colors:
+                colors["titlebar_bg"] = _adjust(colors.get("bar_bg", colors["bg"]), 0.95)
+            if "titlebar_fg" not in colors:
+                colors["titlebar_fg"] = _mix(colors["key_fg"], colors["bg"], 0.15)
+            if "titlebar_border" not in colors:
+                colors["titlebar_border"] = colors.get("bar_border", colors.get("key_border", "#333333"))
+        except (KeyError, ValueError):
+            # Malformed theme — fall back to dark-theme title-bar colours.
+            colors.setdefault("titlebar_bg", "#1a1a1a")
+            colors.setdefault("titlebar_fg", "#cccccc")
+            colors.setdefault("titlebar_border", "#333333")
 
     def _save_custom_themes(self):
         try:
@@ -2195,14 +2516,116 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Toggle app mode ───────────────────────────────────────────────────────
 
     def _toggle_app_mode(self):
-        if self._app_mode:
-            self._close_app_mode()
+        if IS_WINDOWS:
+            # On Windows, just open the Start menu via Win key press
+            if PYNPUT_OK and _pynput_ctrl:
+                import pynput.keyboard as _pk
+                _pynput_ctrl.press(_pk.Key.cmd)
+                _pynput_ctrl.release(_pk.Key.cmd)
+            return
+        # Showing/hiding self._search_label and swapping the suggestion-button
+        # labels for app names changes the suggestion bar's minimum size, which
+        # makes GTK re-expand (or revert) the window.  Pin the user's dragged
+        # geometry across the whole mode switch so the Win key never resizes us.
+        if self._collapsed:
+            self._expand()
+        with self._preserve_window_size():
+            if self._app_mode:
+                self._close_app_mode()
+            else:
+                if self._emoji_mode:
+                    self._close_emoji_mode()
+                if self._settings_mode:
+                    self._toggle_settings()
+                self._open_app_mode()
+
+    @contextlib.contextmanager
+    def _preserve_window_size(self):
+        """Snapshot the current window size, run the body, then re-pin the size.
+
+        Child-widget changes (showing the search label, relabelling the
+        suggestion buttons) can shift the container's minimum size and cause GTK
+        to grow or shrink the toplevel.  GTK recomputes geometry on the next
+        main-loop iteration, so we re-assert the size both immediately and via
+        an idle callback to catch the deferred resize.
+        """
+        w, h = self.get_size()
+        try:
+            yield
+        finally:
+            if self.get_size() != (w, h):
+                self.resize(w, h)
+
+            def _repin():
+                if self.get_size() != (w, h):
+                    self.resize(w, h)
+                return False  # one-shot
+
+            GLib.idle_add(_repin)
+
+    # ── Collapse / expand (Windows 11-style minimize) ─────────────────────────
+
+    def _toggle_collapse(self):
+        if self._collapsed:
+            self._expand()
         else:
-            if self._emoji_mode:
-                self._close_emoji_mode()
-            if self._settings_mode:
-                self._toggle_settings()
-            self._open_app_mode()
+            self._collapse()
+
+    def _collapse(self):
+        """Shrink to the title bar + suggestion bar; hide only the key grid.
+
+        The title bar (with its ─/✕ controls) and the suggestion bar both stay
+        visible — the title bar is the only way to expand again, and keeping the
+        suggestion bar lets word prediction / panel toggles remain reachable in
+        the collapsed state.
+        """
+        if self._collapsed:
+            return
+        w, h = self.get_size()
+        self._pre_collapse_h = h
+        self._collapsed = True
+
+        # Hide only the key grid and the bottom resize strip.  The title bar is
+        # never hidden, and the suggestion bar stays visible (the collapsed
+        # height budgets for both — see _collapsed_h).
+        if self._key_stack:
+            self._key_stack.hide()
+        if self._bottom_strip:
+            self._bottom_strip.hide()
+
+        if self._minimize_btn:
+            self._minimize_btn.set_label("▲")   # chevron-up: click to expand
+
+        # Cancel timers tied to now-hidden keys so they can't fire on hidden widgets
+        self._cancel_all_timers()
+        self.resize(w, self._collapsed_h)
+
+    def _expand(self):
+        """Restore the full keyboard to its pre-collapse height."""
+        if not self._collapsed:
+            return
+        self._collapsed = False
+        w, _ = self.get_size()
+
+        if self._key_stack:
+            self._key_stack.show()
+        if self._bottom_strip:
+            self._bottom_strip.show()
+
+        if self._minimize_btn:
+            self._minimize_btn.set_label("▼")   # chevron-down: click to collapse
+
+        target_h = self._pre_collapse_h or (
+            int(BASE_KEY_H * 6 * self.settings.get("key_scale", 1.0))
+            + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
+        )
+        self.resize(w, target_h)
+        # Repopulate the suggestion bar for whatever mode is active.
+        if self._app_mode:
+            self._refresh_app_results()
+        elif not (self._custom_input_mode or self._emoji_mode or
+                  self._clipboard_mode or self._settings_mode):
+            self._refresh_suggestions()
 
     # ── Snipping tool ─────────────────────────────────────────────────────────
 
@@ -2662,6 +3085,24 @@ class OnScreenKeyboard(Gtk.Window):
         inner.pack_start(self._custom_theme_btns_box, False, False, 0)
         self._rebuild_custom_theme_buttons()
 
+        # ── 14. Updates ────────────────────────────────────────────────────────
+        update_hdr = Gtk.Label(label="Updates")
+        update_hdr.set_name("settings-label")
+        update_hdr.set_xalign(0.0)
+        update_hdr.set_margin_top(4)
+        inner.pack_start(update_hdr, False, False, 0)
+
+        self._update_status_label = Gtk.Label(label="")
+        self._update_status_label.set_name("settings-label")
+        self._update_status_label.set_xalign(0.0)
+        self._update_status_label.set_line_wrap(True)
+        inner.pack_start(self._update_status_label, False, False, 0)
+
+        self._update_btn = Gtk.Button(label="Check for updates")
+        self._update_btn.get_style_context().add_class("settings-choice")
+        self._update_btn.connect("clicked", self._on_check_for_updates)
+        inner.pack_start(self._update_btn, False, False, 0)
+
         scroll_outer.add(inner)
         panel.pack_start(scroll_outer, True, True, 0)
 
@@ -2802,6 +3243,189 @@ class OnScreenKeyboard(Gtk.Window):
         self._apply_key_scale(scale, reposition=True)
         self._save_settings()
 
+    def _on_check_for_updates(self, _btn):
+        if self._update_status_label:
+            self._update_status_label.set_text("Checking…")
+        if self._update_btn:
+            self._update_btn.set_sensitive(False)
+        import threading
+        threading.Thread(target=self._do_update_check, daemon=True).start()
+
+    def _do_update_check(self):
+        if getattr(sys, "frozen", False):
+            self._do_update_check_exe_mode()
+            return
+        import urllib.request, urllib.error, json as _json
+        status = ""
+        can_pull = False
+        try:
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            # Get current local commit SHA
+            local_sha = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=install_dir, text=True
+            ).strip()
+            # Get remote HEAD SHA via GitHub API (anonymous HTTPS, no auth needed)
+            api_url = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/commits/main"
+            req = urllib.request.Request(api_url, headers={"User-Agent": "OSK-updater/1.0"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = _json.loads(resp.read())
+            remote_sha = data["sha"]
+
+            if local_sha == remote_sha:
+                status = "You're on the latest version."
+            else:
+                # Check if remote is SSH (can't auto-pull without credentials)
+                remote_url = subprocess.check_output(
+                    ["git", "remote", "get-url", "origin"], cwd=install_dir, text=True
+                ).strip()
+                is_ssh = remote_url.startswith("git@")
+
+                # Check if working tree is clean
+                dirty = subprocess.check_output(
+                    ["git", "status", "--porcelain"], cwd=install_dir, text=True
+                ).strip()
+
+                if is_ssh:
+                    status = (
+                        "Update available!\n"
+                        "Run in a terminal:\n"
+                        "  cd ~/onscreen_keyboard && git pull"
+                    )
+                elif dirty:
+                    status = (
+                        "Update available, but your local files have changes.\n"
+                        "Commit or stash them first, then run: git pull"
+                    )
+                else:
+                    status = "Update available — click Install to apply."
+                    can_pull = True
+        except subprocess.CalledProcessError:
+            status = "Not a git repository — cannot check for updates."
+        except urllib.error.URLError as e:
+            status = f"Network error: {e.reason}"
+        except Exception as e:
+            status = f"Check failed: {e}"
+
+        def _apply(status=status, can_pull=can_pull):
+            if self._update_status_label:
+                self._update_status_label.set_text(status)
+            if self._update_btn:
+                self._update_btn.set_sensitive(True)
+                if can_pull:
+                    self._update_btn.set_label("Install update")
+                    # Reconnect to install handler
+                    try:
+                        self._update_btn.disconnect_by_func(self._on_check_for_updates)
+                    except Exception:
+                        pass
+                    self._update_btn.connect("clicked", self._on_install_update)
+                else:
+                    self._update_btn.set_label("Check for updates")
+
+        GLib.idle_add(_apply)
+
+    def _do_update_check_exe_mode(self):
+        import urllib.request, urllib.error, json as _json, webbrowser
+        RELEASES_URL = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/releases/latest"
+        DOWNLOAD_URL = "https://github.com/Gitties67/Onscreen-keyboard/releases/latest"
+
+        version_file = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))), "VERSION")
+        local_ver = "unknown"
+        if os.path.exists(version_file):
+            with open(version_file) as f:
+                local_ver = f.read().strip()
+
+        if local_ver == "unknown":
+            status = "Cannot determine installed version — VERSION file missing."
+            show_download = False
+        else:
+            try:
+                req = urllib.request.Request(RELEASES_URL, headers={"User-Agent": "OSK-updater/1.0"})
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    data = _json.loads(resp.read())
+                latest_tag = data.get("tag_name", "unknown")
+                if local_ver == latest_tag:
+                    status = "You're on the latest version."
+                    show_download = False
+                else:
+                    status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
+                              "Click below to open the download page.")
+                    show_download = True
+            except urllib.error.URLError as e:
+                status = f"Network error: {e.reason}"
+                show_download = False
+            except Exception as e:
+                status = f"Update check failed: {e}"
+                show_download = False
+
+        def _apply(status=status, show_download=show_download):
+            if self._update_status_label:
+                self._update_status_label.set_text(status)
+            if self._update_btn:
+                self._update_btn.set_sensitive(True)
+                if show_download:
+                    self._update_btn.set_label("Download update")
+                    try:
+                        self._update_btn.disconnect_by_func(self._on_check_for_updates)
+                    except Exception:
+                        pass
+                    self._update_btn.connect(
+                        "clicked", lambda _: webbrowser.open(DOWNLOAD_URL))
+                else:
+                    self._update_btn.set_label("Check for updates")
+        GLib.idle_add(_apply)
+
+    def _on_install_update(self, _btn):
+        if self._update_status_label:
+            self._update_status_label.set_text("Applying update…")
+        if self._update_btn:
+            self._update_btn.set_sensitive(False)
+        import threading
+        threading.Thread(target=self._do_install_update, daemon=True).start()
+
+    def _do_install_update(self):
+        install_dir = os.path.dirname(os.path.abspath(__file__))
+        try:
+            subprocess.check_output(
+                ["git", "pull", "--ff-only"], cwd=install_dir,
+                text=True, stderr=subprocess.STDOUT
+            )
+            status = "Update installed! Click Restart to apply."
+            show_restart = True
+        except subprocess.CalledProcessError as e:
+            status = f"Update failed:\n{e.output.strip()}"
+            show_restart = False
+
+        def _apply(status=status, show_restart=show_restart):
+            if self._update_status_label:
+                self._update_status_label.set_text(status)
+            if self._update_btn:
+                self._update_btn.set_sensitive(True)
+                if show_restart:
+                    self._update_btn.set_label("Restart now")
+                    try:
+                        self._update_btn.disconnect_by_func(self._on_install_update)
+                    except Exception:
+                        pass
+                    self._update_btn.connect("clicked", self._on_restart_to_apply)
+                else:
+                    self._update_btn.set_label("Check for updates")
+
+        GLib.idle_add(_apply)
+
+    def _on_restart_to_apply(self, _btn):
+        if IS_WINDOWS or getattr(sys, "frozen", False):
+            # os.execv on Windows doesn't replace the process before GTK tears down;
+            # spawn a new process first, then quit cleanly.
+            subprocess.Popen([sys.executable])
+            Gtk.main_quit()
+            return
+        launch = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch.sh")
+        if os.path.exists(launch):
+            os.execv("/bin/bash", ["/bin/bash", launch])
+        else:
+            os.execv(sys.executable, [sys.executable, __file__])
+
     def _on_opacity_changed(self, scale_widget: Gtk.Scale):
         value = round(scale_widget.get_value(), 2)
         self.settings["opacity"] = value
@@ -2826,7 +3450,7 @@ class OnScreenKeyboard(Gtk.Window):
             "[Desktop Entry]\n"
             "Name=On-Screen Keyboard\n"
             "Comment=Custom GTK on-screen keyboard\n"
-            f"Exec=bash {script}\n"
+            f'Exec=bash "{script}"\n'
             "Icon=input-keyboard\n"
             "Type=Application\n"
             "Categories=Utility;Accessibility;\n"
@@ -2851,7 +3475,7 @@ class OnScreenKeyboard(Gtk.Window):
             "[Desktop Entry]\n"
             "Type=Application\n"
             "Name=On-Screen Keyboard\n"
-            f"Exec=bash {script}\n"
+            f'Exec=bash "{script}"\n'
             "Terminal=false\n"
             "Hidden=false\n"
             "NoDisplay=false\n"
@@ -2960,48 +3584,54 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_dwell_enter(self, widget, event, action: str):
         if not self.settings.get("dwell_enabled"):
             return
-        # Cancel any existing timer for this action
-        self._dwell_cancel(action)
+        # Ignore inferior crossings (pointer moving to/from a child widget)
+        if event.detail == Gdk.NotifyType.INFERIOR:
+            return
+        # Cancel any existing timer for this widget
+        self._dwell_cancel(widget)
         delay_ms = int(self.settings.get("dwell_delay", 0.8) * 1000)
         widget.get_style_context().add_class("dwell-pending")
+        wid = id(widget)
 
         def _fire():
             widget.get_style_context().remove_class("dwell-pending")
-            self._dwell_timers.pop(action, None)
+            self._dwell_timers.pop(wid, None)
             self._on_key_clicked(widget, action)
             return False
 
-        timer_id = GLib.timeout_add(delay_ms, _fire)
-        self._dwell_timers[action] = timer_id
+        self._dwell_timers[wid] = GLib.timeout_add(delay_ms, _fire)
 
     def _on_dwell_leave(self, widget, event, action: str):
-        self._dwell_cancel(action)
+        # Ignore inferior crossings (pointer moving to/from a child widget)
+        if event.detail == Gdk.NotifyType.INFERIOR:
+            return
+        self._dwell_cancel(widget)
         widget.get_style_context().remove_class("dwell-pending")
 
-    def _dwell_cancel(self, action: str):
-        tid = self._dwell_timers.pop(action, None)
+    def _dwell_cancel(self, widget):
+        tid = self._dwell_timers.pop(id(widget), None)
         if tid is not None:
             GLib.source_remove(tid)
 
     # ── Click sound ───────────────────────────────────────────────────────────
 
     def _init_click_sound(self):
-        """Generate a short click WAV to /tmp/osk_click.wav."""
+        """Generate a short click WAV to the config directory (always regenerated)."""
         try:
-            if not os.path.exists(CLICK_WAV):
-                rate, dur = 22050, 0.04
-                n = int(rate * dur)
-                with wave.open(CLICK_WAV, "w") as wf:
-                    wf.setnchannels(1)
-                    wf.setsampwidth(2)
-                    wf.setframerate(rate)
-                    frames = bytearray()
-                    for i in range(n):
-                        t = i / rate
-                        amp = 28000 * math.exp(-t * 140) * \
-                              math.sin(2 * math.pi * 1100 * t)
-                        frames += struct.pack("<h", int(amp))
-                    wf.writeframes(bytes(frames))
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            rate, dur = 22050, 0.04
+            n = int(rate * dur)
+            with wave.open(CLICK_WAV, "w") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(rate)
+                frames = bytearray()
+                for i in range(n):
+                    t = i / rate
+                    amp = 28000 * math.exp(-t * 140) * \
+                          math.sin(2 * math.pi * 1100 * t)
+                    frames += struct.pack("<h", int(amp))
+                wf.writeframes(bytes(frames))
         except Exception as exc:
             print(f"[sound] Could not generate click WAV: {exc}")
 
@@ -3010,11 +3640,19 @@ class OnScreenKeyboard(Gtk.Window):
             return
         if not os.path.exists(CLICK_WAV):
             return
+        if IS_WINDOWS:
+            try:
+                import winsound
+                winsound.PlaySound(CLICK_WAV, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+            except Exception:
+                pass
+            return
         for player in ("paplay", "aplay"):
             try:
                 subprocess.Popen(
                     [player, CLICK_WAV],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    start_new_session=True)  # start_new_session detaches; init reaps
                 return
             except FileNotFoundError:
                 continue
@@ -3079,6 +3717,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._app_mode  = True
         self._app_query = ""
         self._app_results = []
+        # Cache app list once per launcher session — Gio.AppInfo.get_all() reads
+        # all .desktop files and is too slow to call on every keystroke.
+        self._cached_apps = Gio.AppInfo.get_all()
         for btn in self._modifier_btns["win"]:
             btn.get_style_context().add_class("active")
         if self._search_label:
@@ -3090,6 +3731,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._app_mode = False
         self._app_query = ""
         self._app_results = []
+        self._cached_apps = None
         for btn in self._modifier_btns["win"]:
             btn.get_style_context().remove_class("active")
         if self._search_label:
@@ -3113,12 +3755,12 @@ class OnScreenKeyboard(Gtk.Window):
                 btn.set_label("")
                 btn.set_sensitive(False)
 
-    @staticmethod
-    def _search_apps(query: str) -> list[Gio.AppInfo]:
+    def _search_apps(self, query: str) -> list[Gio.AppInfo]:
         """Return up to 5 Gio.AppInfo objects whose display name contains query."""
         q = query.strip().lower()
         results: list[Gio.AppInfo] = []
-        for app in Gio.AppInfo.get_all():
+        app_list = self._cached_apps if self._cached_apps is not None else Gio.AppInfo.get_all()
+        for app in app_list:
             if not app.should_show():
                 continue
             name = app.get_display_name() or ""
@@ -3135,13 +3777,14 @@ class OnScreenKeyboard(Gtk.Window):
         try:
             app_info.launch([], None)
         except Exception as exc:
-            # Fallback: parse Exec= manually
+            # Fallback: parse Exec= manually (without shell=True to avoid metachar hazard)
             cmd = app_info.get_commandline() or ""
             cmd = re.sub(r"%[A-Za-z]", "", cmd).strip()
             if cmd:
                 try:
                     subprocess.Popen(
-                        cmd, shell=True, close_fds=True, start_new_session=True,
+                        shlex.split(cmd), shell=False, close_fds=True,
+                        start_new_session=True,
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     )
                 except Exception as exc2:
@@ -3196,8 +3839,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── Build word candidates for slots 0–4 ──────────────────────────────
         # slot 4 is reserved for emoji if there's a match; otherwise a 5th word.
-        # slots: (label, is_emoji, is_custom, is_fuzzy, is_macro, expansion)
-        slots: list[tuple[str, bool, bool, bool, bool, str]] = []
+        # slots: (label, is_emoji, is_custom, is_fuzzy, is_macro, expansion, is_fallback)
+        slots: list[tuple[str, bool, bool, bool, bool, str, bool]] = []
 
         # Macro exact match — highest priority, takes slot 0
         macro_match = None
@@ -3210,13 +3853,13 @@ class OnScreenKeyboard(Gtk.Window):
         if macro_match:
             exp     = macro_match.get("expansion", "")
             display = exp[:28] + ("…" if len(exp) > 28 else "")
-            slots.append((display, False, False, False, True, exp))
+            slots.append((display, False, False, False, True, exp, False))
 
         # Custom words
         custom_sugg  = self.predictor.custom_matches(w) if w else []
         custom_lower = {c.lower() for c in custom_sugg}
         for v in custom_sugg:
-            slots.append((v, False, True, False, False, ""))
+            slots.append((v, False, True, False, False, "", False))
 
         # Exact-prefix dictionary words — or next-word prediction when no prefix
         n_word_slots = 4 - len(slots)   # fill up to 4 word slots total
@@ -3232,26 +3875,27 @@ class OnScreenKeyboard(Gtk.Window):
             if len(slots) >= 4:
                 break
             if v.lower() not in seen_words:
-                slots.append((v, False, False, False, False, ""))
+                slots.append((v, False, False, False, False, "", False))
                 seen_words.add(v.lower())
 
-        # Pad to 4 word slots with common fallback words
+        # Pad to 4 word slots with common fallback words (marked as fallback so
+        # the fuzzy timer knows these aren't real predictions for the current prefix)
         fallback = self.predictor.predict_padded("", 20)
         for v in fallback:
             if len(slots) >= 4:
                 break
             if v.lower() not in seen_words:
-                slots.append((v, False, False, False, False, ""))
+                slots.append((v, False, False, False, False, "", True))
                 seen_words.add(v.lower())
 
         # Slot 4: emoji if any of the 4 word slots has an emoji match,
         # otherwise pad with a 5th word
-        emoji_slot: tuple[str, bool, bool, bool, bool, str] | None = None
+        emoji_slot: tuple[str, bool, bool, bool, bool, str, bool] | None = None
         check_words = [s[0] for s in slots[:4] if not s[1]]  # word labels only
         for word in check_words:
             hits = emoji_suggest(word, n=1)
             if hits:
-                emoji_slot = (hits[0], True, False, False, False, "")
+                emoji_slot = (hits[0], True, False, False, False, "", False)
                 break
         if emoji_slot:
             slots.append(emoji_slot)
@@ -3259,7 +3903,7 @@ class OnScreenKeyboard(Gtk.Window):
             # 5th word
             for v in fallback:
                 if v.lower() not in seen_words:
-                    slots.append((v, False, False, False, False, ""))
+                    slots.append((v, False, False, False, False, "", True))
                     seen_words.add(v.lower())
                     break
 
@@ -3273,7 +3917,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         for i, btn in enumerate(self._suggestion_btns):
             if i < len(slots):
-                val, is_emoji, is_custom, is_fuzzy, is_macro, expansion = slots[i]
+                val, is_emoji, is_custom, is_fuzzy, is_macro, expansion, _is_fb = slots[i]
                 # Store raw value; display with shift/caps casing applied
                 display = val if (is_emoji or is_macro) else self._case_word(val)
                 btn.set_label(display)
@@ -3288,9 +3932,10 @@ class OnScreenKeyboard(Gtk.Window):
                 btn.set_label("")
                 btn.set_sensitive(False)
 
-        # Schedule fuzzy spell-check to fill empty slots 250ms after typing pauses
-        n_exact = sum(1 for s in slots[:4] if not s[1] and not s[4])  # non-emoji, non-macro words
-        if w and n_exact < 4 and len(w) >= 3:
+        # Schedule fuzzy spell-check only when there are real empty word slots —
+        # fallback words don't count as real predictions for the current prefix.
+        n_real = sum(1 for s in slots[:4] if not s[1] and not s[4] and not s[6])
+        if w and n_real < 4 and len(w) >= 3:
             self._fuzzy_timer = GLib.timeout_add(250, self._run_fuzzy_update)
 
     def _run_fuzzy_update(self) -> bool:
@@ -3302,11 +3947,13 @@ class OnScreenKeyboard(Gtk.Window):
 
         custom_sugg  = self.predictor.custom_matches(w)
         custom_lower = {c.lower() for c in custom_sugg}
+        # Count macro slots first so we can correctly budget the exact-word query
+        n_macro      = sum(1 for m in self._suggestion_is_macro[:4] if m)
         # Word slots are 0–3; find which are already filled with exact matches
-        exact_sugg   = [x for x in self.predictor.predict(w, n=4)
+        exact_sugg   = [x for x in self.predictor.predict(w, n=max(1, 4 - n_macro))
                         if x not in custom_lower]
-        # Slots already occupied by custom + exact words
-        n_filled     = len(custom_sugg) + len(exact_sugg)
+        # Slots already occupied by custom + exact words + any macro slot
+        n_filled     = len(custom_sugg) + len(exact_sugg) + n_macro
         n_fuzzy_need = max(0, 4 - n_filled)
         if n_fuzzy_need <= 0:
             return False
@@ -3334,10 +3981,8 @@ class OnScreenKeyboard(Gtk.Window):
             return
 
         if self._app_mode:
-            for app_info in self._app_results:
-                if app_info.get_display_name() == label:
-                    self._launch_app(app_info)
-                    break
+            if idx < len(self._app_results):
+                self._launch_app(self._app_results[idx])
             self._close_app_mode()
             return
 
@@ -3348,7 +3993,9 @@ class OnScreenKeyboard(Gtk.Window):
                 expansion = self._suggestion_macro_expansions[idx]
             if not expansion:
                 expansion = label
-            expanded = self._expand_macro(expansion)
+            expanded = self._expand_macro(expansion)[:500]  # cap to prevent UI freeze
+            # current_word equals the trigger at this point (exact match required for
+            # macro to surface), so unconditionally erase it before typing the expansion
             for _ in range(len(self.current_word)):
                 self.typer.send_special("backspace")
             for ch in expanded:
@@ -3368,8 +4015,9 @@ class OnScreenKeyboard(Gtk.Window):
         # Custom word/phrase — backspace the partial prefix then type full entry
         # with its original casing (e.g. "Dinglebob" even if user typed "din")
         if idx < len(self._suggestion_is_custom) and self._suggestion_is_custom[idx]:
-            for _ in range(len(self.current_word)):
-                self.typer.send_special("backspace")
+            if label.lower().startswith(self.current_word.lower()):
+                for _ in range(len(self.current_word)):
+                    self.typer.send_special("backspace")
             for ch in label:
                 self.typer.type_char(ch)
             self.typer.send_special("space")
@@ -3377,7 +4025,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._refresh_suggestions()
             return
 
-        # Fuzzy spell-check suggestion — prefix doesn't match so replace in full
+        # Fuzzy spell-check suggestion — always replace in full (prefix never matches)
         if idx < len(self._suggestion_is_fuzzy) and self._suggestion_is_fuzzy[idx]:
             for _ in range(len(self.current_word)):
                 self.typer.send_special("backspace")

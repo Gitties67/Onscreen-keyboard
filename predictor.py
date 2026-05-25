@@ -6,8 +6,19 @@ for a given prefix, sorted by word length (shorter = shown first).
 """
 
 import bisect
+import sys as _sys
+import os as _os
 
-DICT_PATH = "/usr/share/dict/american-english"
+
+def _default_dict_path() -> str:
+    if getattr(_sys, "frozen", False):
+        p = _os.path.join(_sys._MEIPASS, "words.txt")
+        if _os.path.exists(p):
+            return p
+    local = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "words.txt")
+    if _os.path.exists(local):
+        return local
+    return "/usr/share/dict/american-english"
 
 
 def _osa_distance(s: str, t: str, max_dist: int) -> int:
@@ -150,10 +161,10 @@ COMMON_WORDS = {
     "does", "set", "three", "air", "play", "small", "end", "put", "home",
     "read", "port", "spell", "add", "land", "here", "must", "big", "such",
     "follow", "act", "why", "ask", "men", "change", "went", "light", "kind",
-    "off", "need", "house", "try", "again", "animal", "point", "mother",
+    "off", "house", "try", "again", "animal", "point", "mother",
     "world", "near", "build", "self", "earth", "father", "head", "stand",
     "own", "page", "should", "country", "found", "answer", "school",
-    "plant", "cover", "food", "sun", "four", "between", "state", "keep",
+    "plant", "cover", "food", "sun", "four", "state", "keep",
     "eye", "never", "last", "let", "thought", "city", "tree", "cross",
     "farm", "hard", "start", "might", "story", "saw", "far", "sea",
     "draw", "left", "late", "run", "while", "press", "close", "night",
@@ -170,7 +181,7 @@ COMMON_WORDS = {
     "happen", "complete", "ship", "area", "half", "rock", "order", "fire",
     "south", "problem", "piece", "told", "knew", "pass", "since", "top",
     "whole", "king", "space", "heard", "best", "hour", "better", "true",
-    "during", "hundred", "five", "remember", "step", "early", "hold",
+    "during", "hundred", "five", "remember", "step", "early",
     "west", "ground", "interest", "reach", "fast", "verb", "sing", "listen",
     "six", "table", "travel", "less", "morning", "ten", "simple", "several",
     "vowel", "toward", "war", "lay", "against", "pattern", "slow", "center",
@@ -178,7 +189,7 @@ COMMON_WORDS = {
     "rule", "govern", "pull", "cold", "notice", "voice", "unit", "power",
     "town", "fine", "drive", "lead", "cry", "dark", "machine", "note",
     "wait", "plan", "figure", "star", "box", "noun", "field", "rest",
-    "able", "pound", "done", "beauty", "drive", "stood", "contain",
+    "able", "pound", "done", "beauty", "stood", "contain",
     "front", "teach", "week", "final", "gave", "green", "quick", "develop",
     "ocean", "warm", "free", "minute", "strong", "special", "behind",
     "clear", "tail", "produce", "fact", "street", "inch", "multiply",
@@ -194,7 +205,7 @@ COMMON_WORDS = {
     "general", "ice", "matter", "circle", "pair", "include", "divide",
     "syllable", "felt", "perhaps", "pick", "sudden", "count", "square",
     "reason", "length", "represent", "art", "subject", "region", "energy",
-    "hunt", "probable", "bed", "brother", "egg", "ride", "cell", "believe",
+    "hunt", "probable", "bed", "brother", "egg", "ride", "cell",
     "fraction", "forest", "sit", "race", "window", "store", "summer",
     "train", "sleep", "prove", "lone", "leg", "exercise", "wall", "catch",
     "mount", "wish", "sky", "board", "joy", "winter", "sat", "written",
@@ -202,21 +213,21 @@ COMMON_WORDS = {
     "edge", "sign", "visit", "past", "soft", "fun", "bright", "gas",
     "weather", "month", "million", "bear", "finish", "happy", "hope",
     "flower", "clothe", "strange", "gone", "jump", "baby", "eight",
-    "village", "meet", "root", "buy", "raise", "solve", "metal", "whether",
+    "village", "meet", "root", "buy", "raise", "solve", "metal",
     "push", "seven", "paragraph", "third", "shall", "held", "hair",
     "describe", "cook", "floor", "either", "result", "burn", "hill",
     "safe", "cat", "century", "consider", "type", "law", "bit", "coast",
     "copy", "phrase", "silent", "tall", "sand", "soil", "roll", "temperature",
     "finger", "industry", "value", "fight", "lie", "beat", "excite",
     "natural", "view", "sense", "capital", "except", "expect", "sister",
-    "charge", "possible", "rather", "until", "mouth",
+    "charge", "rather", "mouth",
     # Frequently-misspelled words — boosted so fuzzy ranking finds them first
     "receive", "believe", "achieve", "relieve", "retrieve",
     "necessary", "separate", "definitely", "occurred", "occurrence",
     "accommodate", "beginning", "committee", "conscience", "conscientious",
     "convenient", "experience", "government", "independent", "immediately",
     "knowledge", "library", "license", "maintenance", "millennium",
-    "occasion", "occurred", "persistent", "possession", "privilege",
+    "occasion", "persistent", "possession", "privilege",
     "professional", "recommend", "referred", "relevant", "restaurant",
     "rhythm", "schedule", "secretary", "succeed", "successful",
     "surprise", "tendency", "therefore", "tomorrow", "transferred",
@@ -225,12 +236,13 @@ COMMON_WORDS = {
 
 
 class WordPredictor:
-    def __init__(self, dict_path: str = DICT_PATH):
+    def __init__(self, dict_path: str = None):
         self._words: list[str] = []
         self._common: set[str] = COMMON_WORDS
         self._custom: list[str] = []   # user-defined words/phrases (original casing)
         self._by_first: dict[str, list[str]] = {}  # first-char → word list (for fuzzy)
-        self._load(dict_path)
+        self.dict_missing: bool = False
+        self._load(dict_path if dict_path is not None else _default_dict_path())
 
     def _load(self, path: str) -> None:
         try:
@@ -238,6 +250,7 @@ class WordPredictor:
                 raw = f.read().splitlines()
         except FileNotFoundError:
             print(f"[predictor] Dictionary not found: {path}")
+            self.dict_missing = True
             return
 
         seen: set[str] = set()
@@ -288,7 +301,7 @@ class WordPredictor:
             if not w.startswith(prefix):
                 break
             candidates.append(w)
-            if len(candidates) >= 200:   # cap scan window for speed
+            if len(candidates) >= 500:   # cap scan window for speed
                 break
 
         if not candidates:

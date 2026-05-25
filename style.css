@@ -11,6 +11,16 @@
     outline-width: 0;
 }
 
+/* Restore focus rings for settings-panel interactive elements */
+.settings-choice:focus,
+#settings-toggle:focus {
+    box-shadow: 0 0 0 2px #0078d4;
+}
+window.hc .settings-choice:focus,
+window.hc #settings-toggle:focus {
+    box-shadow: 0 0 0 2px #ffff00;
+}
+
 /* ── Suggestion bar ────────────────────────────────────────── */
 #suggestion-bar {
     padding: 0 4px;
@@ -78,16 +88,28 @@
     background-image: none;
     border-color: #0078d4;
 }
+window.hc .dwell-pending {
+    background-color: #ffdd00;
+    border-color: #cc9900;
+}
+window.dark .dwell-pending,
+window.midnight .dwell-pending {
+    background-color: #1a8fe8;
+    border-color: #1070c0;
+}
 
 /* ── Drag handle ───────────────────────────────────────────── */
-#drag-handle { background-color: transparent; padding: 0 4px; }
-#drag-label  { color: #555555; font-size: 16px; }
-#drag-handle:hover #drag-label { color: #888888; }
 
-/* ── Resize grip ───────────────────────────────────────────── */
+/* ── Resize grip (always-visible bottom-right corner handle) ── */
 #resize-grip { background-color: transparent; }
-#resize-label { color: #444444; font-size: 14px; padding: 0 2px; }
-#resize-grip:hover #resize-label { color: #777777; }
+#resize-label {
+    color: #666666;
+    font-size: 15px;
+    padding: 0 1px 1px 0;
+}
+#resize-grip:hover #resize-label { color: #aaaaaa; }
+window.hc #resize-label { color: #ffffff; }
+window.hc #resize-grip:hover #resize-label { color: #ffdd00; }
 
 /* ── Close button ──────────────────────────────────────────── */
 #close-btn {
@@ -96,13 +118,28 @@
     font-size: 13px;
     font-weight: 600;
     padding: 2px 8px;
-    min-height: 30px;
+    min-height: 26px;
     min-width: 36px;
     box-shadow: none;
     text-shadow: none;
 }
 #close-btn:hover  { background-image: none; }
 #close-btn:active { background-image: none; }
+
+/* ── Minimize / collapse button (Windows 11-style window control) ── */
+#minimize-btn {
+    background-image: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 8px;
+    min-height: 26px;
+    min-width: 36px;
+    box-shadow: none;
+    text-shadow: none;
+}
+#minimize-btn:hover  { background-image: none; }
+#minimize-btn:active { background-image: none; }
 
 /* ── Settings gear button ──────────────────────────────────── */
 #settings-btn {
@@ -179,3 +216,22 @@
 }
 #settings-toggle:active { background-image: none; }
 /* #settings-toggle:checked — theme-driven (see _make_theme_css) */
+
+/* ── Title bar ─────────────────────────────────────────────── */
+#title-bar {
+    min-height: 26px;
+    padding: 0 6px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+#titlebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 4px;
+}
+#version-badge {
+    font-size: 10px;
+    color: #666666;
+    margin-left: 4px;
+    margin-right: 2px;
+}

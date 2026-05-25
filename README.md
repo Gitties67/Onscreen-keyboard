@@ -1,263 +1,121 @@
 # On-Screen Keyboard
 
-A full-featured on-screen keyboard for Linux, built with Python 3 and GTK3. Designed for Linux Mint Cinnamon but compatible with any X11 desktop (XFCE, MATE, etc.).
+A full-featured on-screen keyboard for Linux and Windows, built with Python 3 and GTK3. Designed for Linux Mint Cinnamon but compatible with any X11 desktop (XFCE, MATE, etc.) and Windows 10/11.
 
 ---
 
-## Features
+## Windows — Download and run
 
-- **Reliable typing** via XTEST — works in browsers, terminals, and all GTK/Qt apps without stealing focus
-- **Full key layout** — function keys (F1–F12), Esc, Del, Home, End, PrtScn, arrows, and standard QWERTY
-- **Lowercase labels** with shifted-symbol hints in the corner of each key
-- **Sticky modifiers** — Ctrl, Alt, and optionally Shift latch on click; configurable auto-release after one keypress or persistent toggle
-- **Key repeat** — hold any key to continuously send it (400 ms delay, 50 ms interval)
-- **Word prediction** — 5 suggestions always shown; draws from system dictionary, custom dictionary, and next-word bigram model
-- **Next-word prediction** — after pressing space, predicts likely next words based on what you just typed
-- **Spell-check prediction** — fuzzy matching catches common misspellings (transpositions, missing/extra letters); correct spelling appears in the suggestion bar ~250 ms after you pause
-- **Suggestion casing** — suggestion bar capitalises words when Shift is active; uppercases when Caps Lock is on
-- **Emoji in suggestions** — 5th suggestion slot shows a relevant emoji when the predicted words have one
-- **Custom dictionary** — add your own words and phrases (names, slang, abbreviations) that appear first in suggestions
-- **Macros** — define trigger→expansion pairs with dynamic `{date}` / `{time}` tokens; triggered from the suggestion bar
-- **Clipboard history** — 📋 button shows the last 20 clipboard entries; click any to type it
-- **Emoji panel** — browsable grid with live search; emoji suggestions appear in the suggestion bar automatically
-- **PrtScn snipping tool** — launches the best available screenshot tool (flameshot → gnome-screenshot → fallbacks)
-- **DIY theme builder** — 6-step colour wizard with live preview; custom themes saved and selectable like built-in ones
-- **4 built-in themes** — Dark, Light, Midnight, High Contrast — with theme-aware active/modifier colours
-- **Adjustable font size** — 10–22 px, applied live
-- **Font family** — choose from Ubuntu, Noto Sans, DejaVu Sans, or Monospace
-- **Key layout** — switch between QWERTY, AZERTY, and QWERTZ
-- **Key size scaling** — scale keys from 0.3× to 1.5× via settings or by dragging any window edge/corner
-- **Window opacity** — adjustable from 30% to 100%
-- **Dwell click** — hover-to-click accessibility mode with adjustable delay
-- **Click sound** — optional audible feedback
-- **Drag to move** and **free resize** — drag any edge or corner to resize; buttons scale to fit automatically
-- **Remembers size and position** — restores last window geometry on reopen
-- **Standalone app** — run `install.sh` once to add to the app menu and autostart on login (no terminal needed)
-- **Pin to Cinnamon panel** — one-click shortcut from inside the settings panel
+**No installation required.**
+
+1. Go to the [Releases page](https://github.com/Gitties67/Onscreen-keyboard/releases/latest)
+2. Download **`OnScreenKeyboard.exe`**
+3. Double-click it
+
+That's it. No Python, no GTK, no dependencies to install.
+
+> **First launch takes ~10 seconds** while the app unpacks its resources. Subsequent launches are faster.
+>
+> **Windows SmartScreen warning:** Click **More info → Run anyway**. This appears because the exe isn't code-signed yet.
 
 ---
 
-## Requirements
+## Linux
 
-### Linux (required)
+### Requirements
 
 | Package | Purpose | Install |
 |---|---|---|
-| `python3` | Runtime | Usually pre-installed |
 | `python3-gi` | GTK3 bindings | `sudo apt install python3-gi` |
 | `python3-xlib` | XTEST key synthesis (primary typing method) | `sudo apt install python3-xlib` |
 | `gir1.2-gtk-3.0` | GTK3 GObject introspection | `sudo apt install gir1.2-gtk-3.0` |
 | `at-spi2-core` | AT-SPI2 fallback typing | `sudo apt install at-spi2-core` |
+| `xdotool` | Emoji insertion | `sudo apt install xdotool` |
+| `flameshot` | PrtScn snipping tool | `sudo apt install flameshot` |
 
-### Linux (recommended)
-
-| Package | Purpose | Install |
-|---|---|---|
-| `xdotool` | Emoji insertion (Unicode typing) | `sudo apt install xdotool` |
-| `xprop` | Reads live AT-SPI2 bus address | `sudo apt install x11-utils` |
-| `flameshot` | Best snipping tool experience for PrtScn | `sudo apt install flameshot` |
-
-### Optional screenshot tools (PrtScn fallback chain)
-
-The PrtScn key tries these in order — install whichever you prefer:
-
-```
-sudo apt install flameshot          # recommended — annotate before saving
-sudo apt install gnome-screenshot   # ships with many distros already
-sudo apt install scrot              # lightweight CLI option
-```
-
----
-
-## Windows installation
-
-The keyboard runs on Windows 10/11 using GTK3 (via MSYS2) and pynput for key synthesis.
-
-### 1. Install MSYS2
-
-Download and run the installer from [msys2.org](https://www.msys2.org/), then open the **MSYS2 MINGW64** terminal and install Python + GTK3:
-
-```bash
-pacman -Syu
-pacman -S mingw-w64-x86_64-python \
-          mingw-w64-x86_64-python-gobject \
-          mingw-w64-x86_64-gtk3
-```
-
-### 2. Install pynput
-
-pynput handles key synthesis on Windows (replaces XTEST):
-
-```bash
-pip install pynput
-```
-
-### 3. Clone the repo and run
-
-```bash
-git clone https://github.com/Gitties67/Onscreen-keyboard.git
-cd Onscreen-keyboard
-python keyboard.py
-```
-
-Or double-click **`launch.bat`**.
-
-> **Note:** The keyboard window is set to `WS_EX_NOACTIVATE` so it never steals focus from the window you are typing into. If a click still activates the keyboard window, try right-clicking the taskbar button and choosing "Always on top".
-
----
-
-## Installation
-
-### 1. Clone the repository
+### Installation
 
 ```bash
 git clone git@github.com:Gitties67/Onscreen-keyboard.git ~/onscreen_keyboard
 cd ~/onscreen_keyboard
+sudo apt install python3-gi python3-xlib gir1.2-gtk-3.0 at-spi2-core xdotool flameshot
+bash install.sh
 ```
 
-### 2. Install dependencies
+`install.sh` creates an app menu entry and configures autostart on login. After that, launch from your app menu — no terminal needed.
 
-```bash
-sudo apt install python3 python3-gi python3-xlib gir1.2-gtk-3.0 \
-                 at-spi2-core xdotool x11-utils flameshot
-```
-
-### 3. Make the launch script executable
-
-```bash
-chmod +x ~/onscreen_keyboard/launch.sh
-```
-
-### 4. Update the path in launch.sh
-
-Open `launch.sh` and update the last line to match where you cloned the repo:
-
-```bash
-exec python3 /home/YOUR_USERNAME/onscreen_keyboard/keyboard.py
-```
-
----
-
-## Running
-
-### Option A — Run once to install, then never use a terminal again
-
-```bash
-bash ~/onscreen_keyboard/install.sh
-```
-
-This creates an app menu entry and configures autostart on login. After running it once, launch the keyboard from your app menu or let it start automatically — no terminal needed.
-
-### Option B — Launch from a terminal
-
-Always use `launch.sh` — it auto-detects the X display, Xauthority, D-Bus session address, and AT-SPI2 bus before starting the keyboard.
+### Running manually
 
 ```bash
 bash ~/onscreen_keyboard/launch.sh
 ```
 
-> **Do not run `python3 keyboard.py` directly from a remote or SSH terminal** — GTK requires an active X display session. Open a terminal inside your desktop and run from there.
+Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI2 bus before starting.
+
+> Do not run `python3 keyboard.py` directly from SSH or a remote terminal — GTK requires an active desktop session.
 
 ---
 
-## Autostart (launch on login)
+## Features
 
-### Option A — Autostart .desktop file
-
-```bash
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/osk.desktop << EOF
-[Desktop Entry]
-Type=Application
-Name=On-Screen Keyboard
-Exec=bash /home/$USER/onscreen_keyboard/launch.sh
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-EOF
-```
-
-The keyboard will now launch automatically whenever you log in.
-
-### Option B — Pin to panel (easiest on Cinnamon)
-
-1. Launch the keyboard manually first
-2. Click the **⚙ Settings** button in the suggestion bar
-3. Find the **Taskbar** row and click **Pin to panel**
-
-This writes the `.desktop` file to `~/.local/share/applications/` and adds a launcher icon directly to your Cinnamon panel. The panel updates live — no restart needed.
+- **Reliable typing** — XTEST on Linux (works in browsers, terminals, all apps without stealing focus); pynput on Windows
+- **Full key layout** — F1–F12, Esc, Del, Home, End, PrtScn, arrows, QWERTY/AZERTY/QWERTZ
+- **Word prediction** — 5 suggestions from system dictionary, custom words, and bigram next-word model
+- **Spell-check** — fuzzy matching catches common misspellings; correction appears ~250 ms after you pause
+- **Emoji panel** — browsable grid with live search; emoji suggestions in the suggestion bar
+- **Custom dictionary** — add names, slang, abbreviations; they appear first in suggestions
+- **Macros** — trigger → expansion pairs with `{date}` / `{time}` tokens
+- **Clipboard history** — 📋 shows last 20 clipboard entries; click any to type it
+- **Sticky modifiers** — Ctrl, Alt latch on click; configurable auto-release or persistent toggle
+- **DIY theme builder** — 6-step colour wizard with live preview
+- **4 built-in themes** — Dark, Light, Midnight, High Contrast
+- **Dwell click** — hover-to-click accessibility mode with adjustable delay (0.3–2.0 s)
+- **Click sound** — audible feedback on each keypress
+- **Adjustable key size, font, opacity** — all live, all remembered on restart
+- **Free resize** — drag any edge or corner; keys scale to fit
+- **App launcher** — Win/⊞ button opens built-in app search (Linux) or Start menu (Windows)
+- **Updates** — built-in update checker in ⚙ Settings
 
 ---
 
 ## Settings
 
-Click the **⚙** button in the suggestion bar to open the settings panel.
+Click **⚙** in the suggestion bar to open settings.
 
 | Setting | Description |
 |---|---|
-| **Theme** | Dark / Light / Midnight / High Contrast + custom themes via the DIY wizard |
+| **Theme** | Dark / Light / Midnight / High Contrast + custom themes |
 | **Layout** | QWERTY / AZERTY / QWERTZ |
 | **Font** | Ubuntu / Noto Sans / DejaVu Sans / Monospace |
-| **Font size** | Key label size from 10–22 px, adjusted with − and + buttons, applied live |
-| **Key size** | Scale all keys from 0.3× to 1.5× with − and + buttons (or drag a window edge) |
-| **Opacity** | Window transparency from 30% to 100% |
-| **Dwell click** | Hover-to-click — enable the toggle and set the delay (0.3–2.0 s) |
-| **Click sound** | Audible click feedback on each keypress |
-| **Modifier keys** | **Auto-release** — Ctrl/Alt clear after one keypress. **Sticky** — stay active until clicked again |
-| **Shift key** | **One-shot** — releases after each keypress (default). **Sticky** — stays latched like Ctrl/Alt |
-| **Taskbar** | Creates a `.desktop` launcher, pins to the Cinnamon panel, and enables autostart on login |
-| **Custom dictionary** | Add and manage your own words and phrases — see below |
-| **Macros** | Add trigger→expansion pairs; `{date}` and `{time}` insert today's date/time |
+| **Font size** | 10–22 px, live |
+| **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
+| **Opacity** | 30% – 100% |
+| **Dwell click** | Hover-to-click with adjustable delay |
+| **Click sound** | Audible key feedback |
+| **Modifier keys** | Auto-release or sticky |
+| **Shift key** | One-shot or sticky |
+| **Taskbar** | Pin to Cinnamon panel + autostart (Linux) |
+| **Custom dictionary** | Add/remove personal words and phrases |
+| **Macros** | Trigger → expansion pairs |
+| **Updates** | Check for updates; install or download latest version |
 
-Settings are saved to `~/.config/onscreen_keyboard/settings.json` and restored automatically on next launch.
+Settings saved to `~/.config/onscreen_keyboard/settings.json` (Linux) or `~\.config\onscreen_keyboard\settings.json` (Windows).
 
 ---
 
 ## Custom dictionary
 
-The built-in dictionary covers standard English words, but it won't know your friend's nickname, your company name, a street address, or any other personal vocabulary. The custom dictionary lets you add anything you like.
+Add your own words so they appear first in suggestions.
 
-### Adding a word or phrase
+1. Open **⚙ Settings → Custom dictionary → + Add word or phrase**
+2. Type your entry using the keys (Shift works normally)
+3. Press **↵** to save
 
-1. Open **⚙ Settings** and scroll to the **Custom dictionary** section
-2. Click **+ Add word or phrase**
-3. The keyboard switches to capture mode — the suggestion bar shows:
-   ```
-   + type word/phrase, ↵ to save
-   ```
-4. Type your entry using the keys. Shift works normally for capitals and symbols
-5. Press **↵** to save, or **Esc** / backspace to empty to cancel
+**Example:** Add `Dinglebob` — typing `din` will offer it as the first suggestion. Click it and the keyboard backtracks the prefix and types `Dinglebob ` with the correct capital.
 
-**Example:** Your friend is called Dinglebob. Type `D` (Shift + d), `i`, `n`, `g`, `l`, `e`, `b`, `o`, `b`, then press ↵. From now on, typing `din` will show **Dinglebob** as the first suggestion in the bar — click it and the keyboard backtracks the partial prefix and types `Dinglebob` with the correct capital D.
+Phrases work the same way. Add `See you later` and typing `see` offers the full phrase.
 
-Phrases work the same way. Add `See you later` and typing `see` will offer the full phrase as a suggestion.
-
-### Removing a word
-
-Open **⚙ Settings → Custom dictionary** and click the **×** button next to the entry you want to remove.
-
-### How suggestions work
-
-Custom entries always appear **before** standard dictionary words in the suggestion bar. When you click a custom suggestion:
-
-- The partially typed prefix is automatically backspaced
-- The full custom entry is typed with its original casing
-- A space is appended
-
-So if you typed `din` and click `Dinglebob`, the result in your document is `Dinglebob ` — not `dinGlebob`.
-
-### Storage
-
-Custom words are saved to `~/.config/onscreen_keyboard/custom_words.json` as a plain JSON array, so you can also edit the file directly if you want to bulk-import entries:
-
-```json
-[
-  "Dinglebob",
-  "See you later",
-  "Acme Corp",
-  "R2D2"
-]
-```
+Custom words are stored in `~/.config/onscreen_keyboard/custom_words.json` — you can also edit it directly to bulk-import entries.
 
 ---
 
@@ -272,26 +130,14 @@ Caps  a  s  d  f  g  h  j  k  l  ;  '  ↵
 Ctrl  ⊞  Alt  [         Space         ]  Alt  Ctrl  ←  ↑  ↓  →
 ```
 
-### Special keys
-
 | Key | Behaviour |
 |---|---|
-| **⇧ Shift** | One-shot — capitalises next keypress then auto-releases |
+| **⇧ Shift** | One-shot — capitalises next keypress then auto-releases (configurable) |
 | **Caps** | Persistent uppercase toggle |
-| **Ctrl / Alt** | Sticky — latch on click; release behaviour set by Modifier keys setting |
-| **⊞ Win** | Opens the built-in app launcher — type to search installed apps, click to launch |
-| **😊** | Opens the emoji panel |
-| **PrtScn** | Launches your installed snipping/screenshot tool |
-
----
-
-## How typing works
-
-Key events are sent via **XTEST** (python-xlib), which injects keystrokes directly at the X11 level. This is the most compatible approach — it works in browsers (including Google Docs/Chrome), terminals, Electron apps, and all native apps without stealing focus from the target window.
-
-AT-SPI2 is initialised as a fallback for systems where python-xlib is unavailable.
-
-Emoji are typed via `xdotool type --clearmodifiers` which handles arbitrary Unicode codepoints.
+| **Ctrl / Alt** | Sticky — latch on click; release set by Modifier keys setting |
+| **⊞ Win** | App launcher (Linux) / opens Start menu (Windows) |
+| **😊** | Emoji panel |
+| **PrtScn** | Screenshot tool (Linux) |
 
 ---
 
@@ -299,34 +145,67 @@ Emoji are typed via `xdotool type --clearmodifiers` which handles arbitrary Unic
 
 ```
 onscreen_keyboard/
-├── keyboard.py      # Main GTK3 window and all UI logic
-├── predictor.py     # Dictionary word predictor + next-word bigram model
-├── emojis.py        # Emoji data, search, and suggestion ranking
-├── style.css        # Structural GTK CSS (layout, radii, transitions)
-├── launch.sh        # Environment setup script — always use this to launch
-├── install.sh       # One-time setup: app menu entry + autostart on login
-└── CLAUDE.md        # Architecture notes for AI-assisted development
+├── keyboard.py          # Main GTK3 window and all UI logic
+├── predictor.py         # Dictionary word predictor + bigram model
+├── emojis.py            # Emoji data, search, and suggestion ranking
+├── style.css            # GTK CSS (layout, themes, transitions)
+├── words.txt            # Bundled English dictionary (used by Windows exe)
+├── VERSION              # Current version string (read by update checker)
+├── launch.sh            # Linux: env setup + launch
+├── launch.bat           # Windows: run from source via MSYS2
+├── install.sh           # Linux: app menu entry + autostart setup
+├── osk.spec             # PyInstaller spec — builds the Windows exe
+├── rthook_gtk.py        # PyInstaller runtime hook — sets GTK env vars in exe
+└── .github/
+    └── workflows/
+        └── build-windows.yml   # GitHub Actions: auto-builds exe on every push
 ```
+
+---
+
+## How the Windows exe is built
+
+Every push to `main` triggers a GitHub Actions build on a Windows runner. It:
+
+1. Installs MSYS2 + GTK3 + Python (MINGW64)
+2. Installs PyInstaller and pynput
+3. Runs `pyinstaller osk.spec` — bundles everything into a single exe
+4. Uploads `OnScreenKeyboard.exe` as a build artifact
+
+When a version tag (`v*`) is pushed, the exe is also attached to a GitHub Release automatically.
+
+**To trigger a release:**
+
+```bash
+git tag v0.1.0-beta
+git push origin v0.1.0-beta
+```
+
+The Actions workflow runs, builds the exe, and publishes it to the Releases page.
 
 ---
 
 ## Troubleshooting
 
-**Keyboard launches but nothing is typed**
-- Ensure `python3-xlib` is installed: `sudo apt install python3-xlib`
-- Make sure you launched via `launch.sh`, not directly with `python3`
+**Windows: nothing is typed when I press keys**
+- Run as Administrator if typing into elevated windows (Task Manager, UAC dialogs)
+- pynput cannot inject into some protected system windows — this is a Windows security constraint
 
-**Emoji buttons do nothing**
+**Windows: first launch is slow**
+- Normal — the exe is unpacking GTK on first run. Subsequent launches are faster.
+
+**Windows: SmartScreen blocks the exe**
+- Click **More info → Run anyway**. The exe is not signed yet.
+
+**Linux: keyboard launches but nothing is typed**
+- Ensure `python3-xlib` is installed: `sudo apt install python3-xlib`
+- Launch via `launch.sh`, not directly with `python3`
+
+**Linux: emoji buttons do nothing**
 - Install xdotool: `sudo apt install xdotool`
 
-**PrtScn button does nothing**
-- Install a screenshot tool: `sudo apt install flameshot`
-
-**"Could not connect to a display" error**
-- Open a terminal inside your desktop session and run `launch.sh` from there, not from SSH
-
-**Keyboard appears behind other windows**
-- This should not happen with the DOCK window type hint; if it does, try toggling keep-above in your window manager
+**Linux: "Could not connect to a display" error**
+- Open a terminal inside your desktop session; do not run from SSH
 
 **Settings not saving**
 - Check write permissions: `ls -la ~/.config/onscreen_keyboard/`

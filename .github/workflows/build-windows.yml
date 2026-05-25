@@ -1,0 +1,67 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MSYS2 + GTK3 + Python
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gtk3
+            mingw-w64-x86_64-python3
+            mingw-w64-x86_64-python3-pip
+            mingw-w64-x86_64-python3-gobject
+            mingw-w64-x86_64-python3-cairo
+            mingw-w64-x86_64-adwaita-icon-theme
+
+      - name: Install Python dependencies
+        shell: msys2 {0}
+        run: pip install pyinstaller pynput
+
+      - name: Regenerate pixbuf loaders cache
+        shell: msys2 {0}
+        run: |
+          gdk-pixbuf-query-loaders > $MINGW_PREFIX/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+
+      - name: Build single-file exe
+        shell: msys2 {0}
+        run: pyinstaller osk.spec
+
+      - name: Upload exe as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OnScreenKeyboard-windows
+          path: dist/OnScreenKeyboard.exe
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: dist/OnScreenKeyboard.exe
+          body: |
+            ## On-Screen Keyboard ${{ github.ref_name }}
+
+            ### Windows
+            Download **OnScreenKeyboard.exe** and double-click to run.
+            No installation required. Windows SmartScreen may appear on first launch — click **More info → Run anyway**.
+
+            ### Linux
+            ```bash
+            git pull
+            bash launch.sh
+            ```
