@@ -27,12 +27,10 @@ jobs:
             mingw-w64-x86_64-python-cairo
             mingw-w64-x86_64-adwaita-icon-theme
 
-      - name: Bootstrap pip and install dependencies
+      - name: Install PyInstaller and pynput
         shell: msys2 {0}
         run: |
-          python3 -m ensurepip --upgrade
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pyinstaller pynput
+          python3 -m pip install --break-system-packages pyinstaller pynput
 
       - name: Regenerate pixbuf loaders cache
         shell: msys2 {0}
