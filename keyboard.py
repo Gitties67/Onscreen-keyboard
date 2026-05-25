@@ -61,6 +61,238 @@ def _win_focus_restore() -> None:
     except Exception:
         pass
 
+
+# ── Windows direct message injection (focus-independent typing) ───────────────
+#
+# Why this exists: every attempt to keep keyboard *focus* on the target app while
+# clicking the OSK has failed (WS_EX_NOACTIVATE, WM_MOUSEACTIVATE→MA_NOACTIVATE,
+# WM_SETFOCUS/WM_ACTIVATE intercepts, WH_CBT HCBT_SETFOCUS cancel).  The reasons
+# they fail are structural, not tuning issues:
+#   • WH_CBT on GetCurrentThreadId() only sees focus changes whose target HWND
+#     belongs to *our* thread's queue — it never observes the target app losing
+#     focus, and HCBT_SETFOCUS's return value is not a reliable veto anyway.
+#   • SetForegroundWindow from a background process is silently rate-limited by
+#     Windows (since Vista) unless we own recent input — so "restore focus" is a
+#     coin flip at the instant SendInput fires.
+#   • SendInput injects into the focused control of the *foreground thread*; if
+#     foreground is even momentarily wrong, the keystroke lands nowhere useful.
+#
+# The fix: stop fighting focus.  PostMessage WM_KEYDOWN/WM_CHAR/WM_KEYUP straight
+# to the focused child control of the target process.  This needs neither focus
+# nor foreground.  The one subtlety prior rounds would have missed: the message
+# must go to the *focused control inside the target's thread*, found via
+# AttachThreadInput+GetFocus / GetGUIThreadInfo — NOT the top-level window.
+
+_WIN_DEBUG_LOG = r"C:\Users\Public\osk_debug.log"
+_win_protos_ready = False
+
+def _win_log(msg: str) -> None:
+    """Append a diagnostic line to a world-writable log (EXE has console=False)."""
+    if not IS_WINDOWS:
+        return
+    try:
+        with open(_WIN_DEBUG_LOG, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
+    except Exception:
+        pass
+
+def _win_setup_protos() -> None:
+    """Pin restype/argtypes on the user32 calls we use so 64-bit HWNDs are not
+    truncated to 32 bits.  ctypes defaults every return value and untyped pointer
+    argument to C int; on Win64 a handle silently loses its top 32 bits, which is
+    a notorious source of "the call returns garbage / posts to nothing" bugs."""
+    global _win_protos_ready
+    if _win_protos_ready or not IS_WINDOWS:
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+        u = ctypes.windll.user32
+        u.GetWindowThreadProcessId.restype  = wintypes.DWORD
+        u.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.c_void_p]
+        u.GetGUIThreadInfo.restype  = wintypes.BOOL
+        u.GetGUIThreadInfo.argtypes = [wintypes.DWORD, ctypes.c_void_p]
+        u.GetFocus.restype          = wintypes.HWND
+        u.AttachThreadInput.restype = wintypes.BOOL
+        u.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+        u.MapVirtualKeyW.restype    = wintypes.UINT
+        u.MapVirtualKeyW.argtypes   = [wintypes.UINT, wintypes.UINT]
+        u.PostMessageW.restype      = wintypes.BOOL
+        u.PostMessageW.argtypes     = [wintypes.HWND, wintypes.UINT,
+                                       ctypes.c_size_t, ctypes.c_ssize_t]
+        u.GetForegroundWindow.restype = wintypes.HWND
+        _win_protos_ready = True
+    except Exception as exc:
+        _win_log(f"setup_protos error: {exc}")
+
+
+# Virtual-key codes for the named special keys we expose.
+_WIN_VK = {
+    "backspace": 0x08, "tab": 0x09, "return": 0x0D, "escape": 0x1B,
+    "space": 0x20, "delete": 0x2E, "home": 0x24, "end": 0x23,
+    "left": 0x25, "up": 0x26, "right": 0x27, "down": 0x28,
+    "prtscn": 0x2C,
+    "f1": 0x70, "f2": 0x71, "f3": 0x72, "f4": 0x73, "f5": 0x74, "f6": 0x75,
+    "f7": 0x76, "f8": 0x77, "f9": 0x78, "f10": 0x79, "f11": 0x7A, "f12": 0x7B,
+}
+# Extended-key VKs need bit 24 set in the WM_KEY* lParam so the target app reads
+# the correct scan code (arrows, nav cluster, etc. live on the extended block).
+_WIN_EXTENDED_VK = {0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x2D, 0x2E, 0x2C}
+
+# Window messages / constants
+_WM_KEYDOWN, _WM_KEYUP, _WM_CHAR = 0x0100, 0x0101, 0x0102
+
+
+def _win_target_focus_hwnd():
+    """Return the HWND that should receive keystrokes: the focused control inside
+    the last non-OSK foreground window's thread, or the top-level as a fallback.
+
+    We AttachThreadInput to the target's GUI thread so GetFocus() can read that
+    thread's focused control (GetFocus is per-thread; without attaching it only
+    reports our own thread's focus).  GetGUIThreadInfo is tried first because it
+    does not require attaching and reports hwndFocus directly."""
+    target = _win_last_target[0]
+    if not target:
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        _win_setup_protos()
+
+        target_tid = user32.GetWindowThreadProcessId(target, None)
+
+        # ── Attempt 1: GetGUIThreadInfo (no attach needed) ──────────────────
+        class GUITHREADINFO(ctypes.Structure):
+            _fields_ = [
+                ("cbSize", wintypes.DWORD),
+                ("flags", wintypes.DWORD),
+                ("hwndActive", wintypes.HWND),
+                ("hwndFocus", wintypes.HWND),
+                ("hwndCapture", wintypes.HWND),
+                ("hwndMenuOwner", wintypes.HWND),
+                ("hwndMoveSize", wintypes.HWND),
+                ("hwndCaret", wintypes.HWND),
+                ("rcCaret", wintypes.RECT),
+            ]
+        gti = GUITHREADINFO()
+        gti.cbSize = ctypes.sizeof(GUITHREADINFO)
+        if user32.GetGUIThreadInfo(target_tid, ctypes.byref(gti)) and gti.hwndFocus:
+            return gti.hwndFocus
+
+        # ── Attempt 2: AttachThreadInput + GetFocus ─────────────────────────
+        our_tid = user32.GetCurrentThreadId()
+        focused = None
+        if user32.AttachThreadInput(our_tid, target_tid, True):
+            try:
+                focused = user32.GetFocus()
+            finally:
+                user32.AttachThreadInput(our_tid, target_tid, False)
+        if focused:
+            return focused
+    except Exception as exc:
+        _win_log(f"focus_hwnd error: {exc}")
+    # Fall back to the top-level foreground window — works for simple apps where
+    # the top-level window is itself the edit surface.
+    return target
+
+
+def _win_make_lparam(vk: int, key_up: bool) -> int:
+    """Build the WM_KEYDOWN/WM_KEYUP lParam: repeat count, scan code, extended
+    bit, and the transition/previous-state bits for the up message."""
+    import ctypes
+    user32 = ctypes.windll.user32
+    MAPVK_VK_TO_VSC = 0
+    scan = user32.MapVirtualKeyW(vk, MAPVK_VK_TO_VSC) & 0xFF
+    lparam = 1 | (scan << 16)
+    if vk in _WIN_EXTENDED_VK:
+        lparam |= (1 << 24)          # extended-key flag
+    if key_up:
+        lparam |= (1 << 30) | (1 << 31)  # previous-down + transition (release)
+    return lparam
+
+
+def _win_post_char(hwnd: int, ch: str) -> bool:
+    """Deliver a single printable character via WM_CHAR.
+
+    WM_CHAR carries the already-translated character, so it reproduces the exact
+    glyph (including shifted symbols and case) without us having to model the
+    keyboard layout or hold a Shift key in the target's input state.  This is the
+    reliable path for plain text in Edit/RichEdit/most browser text fields."""
+    try:
+        import ctypes
+        import struct
+        user32 = ctypes.windll.user32
+        # WM_CHAR wParam is a single UTF-16 code unit. Astral chars (emoji beyond
+        # the BMP) must be sent as their surrogate pair — one WM_CHAR per 16-bit
+        # code unit.  Decode the UTF-16-LE byte stream into raw code units so an
+        # astral codepoint becomes two messages, not one out-of-range wParam.
+        raw = ch.encode("utf-16-le")
+        units = struct.unpack(f"<{len(raw) // 2}H", raw)
+        for unit in units:
+            user32.PostMessageW(hwnd, _WM_CHAR, unit, 1)
+        return True
+    except Exception as exc:
+        _win_log(f"post_char {ch!r} error: {exc}")
+        return False
+
+
+def _win_post_vk(hwnd: int, vk: int) -> bool:
+    """Deliver a non-text virtual key (arrows, F-keys, backspace, Enter, etc.)
+    as a WM_KEYDOWN/WM_KEYUP pair with a correctly-built lParam."""
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.PostMessageW(hwnd, _WM_KEYDOWN, vk, _win_make_lparam(vk, False))
+        user32.PostMessageW(hwnd, _WM_KEYUP,   vk, _win_make_lparam(vk, True))
+        return True
+    except Exception as exc:
+        _win_log(f"post_vk {vk:#x} error: {exc}")
+        return False
+
+
+def _win_inject_char(char: str, mods: list[str]) -> bool:
+    """Try to deliver a printable character via PostMessage (focus-independent).
+
+    Returns True if handled here, False if the caller should fall back to pynput.
+    Modified combos (Ctrl/Alt) are deliberately NOT handled here: WM_CHAR carries
+    no modifier state and the target thread's async key state isn't shared with
+    us, so Ctrl+C posted as messages would type a literal 'c'.  Those go to
+    pynput, which uses real SendInput against the (focus-restored) target."""
+    if mods:
+        return False
+    hwnd = _win_target_focus_hwnd()
+    if not hwnd:
+        _win_log(f"inject_char {char!r}: no target hwnd")
+        return False
+    ok = _win_post_char(hwnd, char)
+    _win_log(f"inject_char {char!r} -> hwnd={hwnd:#x} ok={ok}")
+    return ok
+
+
+def _win_inject_special(name: str, mods: list[str]) -> bool:
+    """Try to deliver a named special key via PostMessage WM_KEYDOWN/UP.
+
+    Unmodified navigation/editing keys post cleanly.  Modified combos fall back
+    to pynput for the same reason as _win_inject_char."""
+    if mods:
+        return False
+    vk = _WIN_VK.get(name)
+    if vk is None:
+        return False
+    hwnd = _win_target_focus_hwnd()
+    if not hwnd:
+        _win_log(f"inject_special {name!r}: no target hwnd")
+        return False
+    # space is a real character to text controls — send WM_CHAR so it lands in
+    # the edit buffer even on controls that ignore VK_SPACE key messages.
+    if name == "space":
+        ok = _win_post_char(hwnd, " ")
+    else:
+        ok = _win_post_vk(hwnd, vk)
+    _win_log(f"inject_special {name!r} vk={vk:#x} -> hwnd={hwnd:#x} ok={ok}")
+    return ok
+
 # ── pynput — cross-platform key synthesis (primary on Windows) ────────────────
 PYNPUT_OK      = False
 PYNPUT_KEY_MAP: dict = {}
@@ -646,8 +878,12 @@ class KeyTyper:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def type_char(self, char: str, mods: list[str] | None = None) -> None:
-        # Windows — restore focus to the target window then use pynput
+        # Windows — primary path is focus-independent PostMessage injection.
+        # Only modified combos (Ctrl/Alt) or apps where injection fails fall
+        # through to the focus-restore + pynput path.
         if IS_WINDOWS:
+            if _win_inject_char(char, mods or []):
+                return
             _win_focus_restore()
             if PYNPUT_OK:
                 self._pynput_type_char(char, mods or [])
@@ -669,8 +905,10 @@ class KeyTyper:
             self._pynput_type_char(char, mods or [])
 
     def send_special(self, name: str, mods: list[str] | None = None) -> None:
-        # Windows — restore focus to the target window then use pynput
+        # Windows — focus-independent PostMessage injection first, pynput fallback.
         if IS_WINDOWS:
+            if _win_inject_special(name, mods or []):
+                return
             _win_focus_restore()
             if PYNPUT_OK:
                 self._pynput_send_special(name, mods or [])
@@ -754,10 +992,23 @@ class KeyTyper:
 
     def type_emoji(self, emoji_str: str) -> None:
         """Type an emoji / arbitrary Unicode string."""
+        # Windows — focus-independent WM_CHAR injection first (handles surrogate
+        # pairs); fall back to focus-restore + pynput.type() if injection fails.
+        if IS_WINDOWS:
+            hwnd = _win_target_focus_hwnd()
+            if hwnd and _win_post_char(hwnd, emoji_str):
+                _win_log(f"emoji {emoji_str!r} -> hwnd={hwnd:#x} ok")
+                return
+            _win_focus_restore()
+            if PYNPUT_OK:
+                try:
+                    _pynput_ctrl.type(emoji_str)
+                    return
+                except Exception as exc:
+                    print(f"[pynput] emoji type error: {exc}")
+            return
         # pynput.type() handles arbitrary Unicode on all platforms
         if PYNPUT_OK and (IS_WINDOWS or not XDOTOOL_OK):
-            if IS_WINDOWS:
-                _win_focus_restore()
             try:
                 _pynput_ctrl.type(emoji_str)
                 return
@@ -1074,6 +1325,16 @@ class OnScreenKeyboard(Gtk.Window):
             import ctypes
 
             user32 = ctypes.windll.user32
+
+            # Fresh diagnostic log each session (EXE has console=False, so this
+            # is the only way the user can see what the typing path is doing).
+            try:
+                with open(_WIN_DEBUG_LOG, "w", encoding="utf-8") as f:
+                    f.write(f"=== OSK {__version__} session start "
+                            f"{time.strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+            except Exception:
+                pass
+            _win_setup_protos()
 
             # ── 1. Obtain the HWND ──────────────────────────────────────────
             gdk_win = self.get_window()
