@@ -1023,20 +1023,118 @@ class OnScreenKeyboard(Gtk.Window):
         self.connect("button-release-event", self._on_resize_release)
 
     def _on_realized_windows(self, _win):
-        """Windows only: set WS_EX_NOACTIVATE so the OSK never steals focus."""
+        """Windows only: prevent the OSK from stealing focus on click.
+
+        Two complementary mechanisms are required:
+          1. WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW on the extended window style.
+          2. A WM_MOUSEACTIVATE subclass that returns MA_NOACTIVATE — without
+             this, GDK's Win32 backend can still process activation even when
+             WS_EX_NOACTIVATE is set.
+        """
         try:
             import ctypes
+
+            user32 = ctypes.windll.user32
+
+            # ── 1. Obtain the HWND ──────────────────────────────────────────
+            gdk_win = self.get_window()
+            hwnd = gdk_win.get_handle() if gdk_win is not None else None
+            if not hwnd:
+                print("[windows] Could not obtain HWND from GDK — focus-steal prevention skipped")
+                return
+
+            self._win_hwnd = hwnd
+            print(f"[windows] HWND: {hwnd:#010x}")
+
+            # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────────
             GWL_EXSTYLE      = -20
             WS_EX_NOACTIVATE = 0x08000000
             WS_EX_TOOLWINDOW = 0x00000080
-            hwnd  = self.get_window().get_handle()
-            style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-            ctypes.windll.user32.SetWindowLongW(
+
+            cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            user32.SetWindowLongW(
                 hwnd, GWL_EXSTYLE,
-                style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+                cur_style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
             )
+            print("[windows] WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW applied")
+
+            # ── 3. Subclass the window procedure to handle WM_MOUSEACTIVATE ─
+            #
+            # WM_MOUSEACTIVATE fires before a click is processed. Returning
+            # MA_NOACTIVATE prevents activation even when the extended style
+            # alone is insufficient (GDK's backend calling DefWindowProc).
+            #
+            # WNDPROC: LRESULT CALLBACK(HWND, UINT, WPARAM, LPARAM)
+            # LRESULT is LONG_PTR — 64 bits on 64-bit Windows; c_ssize_t matches.
+            WNDPROCTYPE = ctypes.WINFUNCTYPE(
+                ctypes.c_ssize_t,  # LRESULT (LONG_PTR — pointer-sized)
+                ctypes.c_void_p,   # HWND
+                ctypes.c_uint,     # UINT  (message id)
+                ctypes.c_void_p,   # WPARAM
+                ctypes.c_void_p,   # LPARAM
+            )
+
+            WM_MOUSEACTIVATE = 0x0021
+            MA_NOACTIVATE    = 3
+            GWLP_WNDPROC     = -4
+
+            # Use the Ptr variants for 64-bit safety; fall back on 32-bit builds.
+            try:
+                GetWindowLongPtr = user32.GetWindowLongPtrW
+                SetWindowLongPtr = user32.SetWindowLongPtrW
+            except AttributeError:
+                GetWindowLongPtr = user32.GetWindowLongW
+                SetWindowLongPtr = user32.SetWindowLongW
+                print("[windows] SetWindowLongPtrW unavailable — using 32-bit variant")
+
+            original_wndproc_addr = GetWindowLongPtr(hwnd, GWLP_WNDPROC)
+            if not original_wndproc_addr:
+                print("[windows] GetWindowLongPtr(GWLP_WNDPROC) returned 0 — subclass aborted")
+                return
+
+            # Store the raw address for safe teardown; wrap as callable for chain.
+            self._win_original_addr = original_wndproc_addr
+            original_wndproc = ctypes.cast(
+                ctypes.c_void_p(original_wndproc_addr), WNDPROCTYPE
+            )
+
+            def _wndproc(hwnd_, msg, wparam, lparam):
+                if msg == WM_MOUSEACTIVATE:
+                    return MA_NOACTIVATE
+                return original_wndproc(hwnd_, msg, wparam, lparam)
+
+            # Keep a strong reference — the GC must not free this function pointer
+            # while the window exists, or Windows will call into freed memory.
+            self._win_wndproc = WNDPROCTYPE(_wndproc)
+
+            SetWindowLongPtr(hwnd, GWLP_WNDPROC,
+                             ctypes.cast(self._win_wndproc, ctypes.c_void_p).value)
+            print("[windows] WM_MOUSEACTIVATE subclass installed")
+
+            # Restore original wndproc before GTK tears down the window so we
+            # never leave a dangling C function pointer in the HWND slot.
+            self.connect("destroy", self._on_windows_destroy)
+
         except Exception as exc:
-            print(f"[windows] Could not set WS_EX_NOACTIVATE: {exc}")
+            print(f"[windows] Could not set WS_EX_NOACTIVATE / subclass wndproc: {exc}")
+
+    def _on_windows_destroy(self, _widget):
+        """Restore the original wndproc before the window is torn down."""
+        try:
+            import ctypes
+            hwnd = getattr(self, "_win_hwnd", None)
+            addr = getattr(self, "_win_original_addr", None)
+            if not hwnd or not addr:
+                return
+            user32 = ctypes.windll.user32
+            GWLP_WNDPROC = -4
+            try:
+                SetWindowLongPtr = user32.SetWindowLongPtrW
+            except AttributeError:
+                SetWindowLongPtr = user32.SetWindowLongW
+            SetWindowLongPtr(hwnd, GWLP_WNDPROC, addr)
+        except Exception as exc:
+            print(f"[windows] Could not restore original wndproc: {exc}")
 
     # ── CSS ──────────────────────────────────────────────────────────────────
 
@@ -3301,8 +3399,13 @@ class OnScreenKeyboard(Gtk.Window):
                     can_pull = True
         except subprocess.CalledProcessError:
             status = "Not a git repository — cannot check for updates."
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                status = "Could not reach the update server (404). The repository may be private or the branch may have moved."
+            else:
+                status = f"Update server returned HTTP {e.code} {e.reason}."
         except urllib.error.URLError as e:
-            status = f"Network error: {e.reason}"
+            status = f"Network error — check your internet connection.\n({e.reason})"
         except Exception as e:
             status = f"Check failed: {e}"
 
@@ -3351,8 +3454,14 @@ class OnScreenKeyboard(Gtk.Window):
                     status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
                               "Click below to open the download page.")
                     show_download = True
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    status = "No releases have been published yet — this build is the latest."
+                else:
+                    status = f"Update server returned HTTP {e.code} {e.reason}."
+                show_download = False
             except urllib.error.URLError as e:
-                status = f"Network error: {e.reason}"
+                status = f"Network error — check your internet connection.\n({e.reason})"
                 show_download = False
             except Exception as e:
                 status = f"Update check failed: {e}"
