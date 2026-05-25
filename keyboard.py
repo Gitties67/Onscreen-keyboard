@@ -30,6 +30,19 @@ from gi.repository import Gtk, Gdk, GLib, Gio
 
 IS_WINDOWS = platform.system() == "Windows"
 
+# Windows focus-restoration: keeps track of the last non-OSK foreground window
+# so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
+_win_last_target: list[int] = [0]  # mutable so the SetWinEventHook closure can write it
+
+def _win_focus_restore() -> None:
+    hwnd = _win_last_target[0]
+    if hwnd:
+        try:
+            import ctypes
+            ctypes.windll.user32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+
 # ── pynput — cross-platform key synthesis (primary on Windows) ────────────────
 PYNPUT_OK      = False
 PYNPUT_KEY_MAP: dict = {}
@@ -615,8 +628,9 @@ class KeyTyper:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def type_char(self, char: str, mods: list[str] | None = None) -> None:
-        # Windows — always use pynput
+        # Windows — restore focus to the target window then use pynput
         if IS_WINDOWS:
+            _win_focus_restore()
             if PYNPUT_OK:
                 self._pynput_type_char(char, mods or [])
             return
@@ -637,8 +651,9 @@ class KeyTyper:
             self._pynput_type_char(char, mods or [])
 
     def send_special(self, name: str, mods: list[str] | None = None) -> None:
-        # Windows — always use pynput
+        # Windows — restore focus to the target window then use pynput
         if IS_WINDOWS:
+            _win_focus_restore()
             if PYNPUT_OK:
                 self._pynput_send_special(name, mods or [])
             return
@@ -723,6 +738,8 @@ class KeyTyper:
         """Type an emoji / arbitrary Unicode string."""
         # pynput.type() handles arbitrary Unicode on all platforms
         if PYNPUT_OK and (IS_WINDOWS or not XDOTOOL_OK):
+            if IS_WINDOWS:
+                _win_focus_restore()
             try:
                 _pynput_ctrl.type(emoji_str)
                 return
@@ -1025,11 +1042,14 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_realized_windows(self, _win):
         """Windows only: prevent the OSK from stealing focus on click.
 
-        Two complementary mechanisms are required:
-          1. WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW on the extended window style.
-          2. A WM_MOUSEACTIVATE subclass that returns MA_NOACTIVATE — without
-             this, GDK's Win32 backend can still process activation even when
-             WS_EX_NOACTIVATE is set.
+        Three complementary mechanisms:
+          1. WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW — tells Windows not to activate
+             the window when clicked.
+          2. WM_MOUSEACTIVATE subclass — returns MA_NOACTIVATE so GDK's backend
+             can't activate the window even via DefWindowProc.
+          3. SetWinEventHook — tracks the last non-OSK foreground window so
+             KeyTyper.type_char/send_special can restore focus before each
+             SendInput call, making typing work even if 1+2 fail.
         """
         try:
             import ctypes
@@ -1039,102 +1059,142 @@ class OnScreenKeyboard(Gtk.Window):
             # ── 1. Obtain the HWND ──────────────────────────────────────────
             gdk_win = self.get_window()
             hwnd = gdk_win.get_handle() if gdk_win is not None else None
+
             if not hwnd:
-                print("[windows] Could not obtain HWND from GDK — focus-steal prevention skipped")
-                return
+                # get_handle() absent or unimplemented in this PyGObject build —
+                # enumerate visible top-level windows by our own PID instead.
+                our_pid = os.getpid()
+                found: list[int] = []
+                EnumWindowsProc = ctypes.WINFUNCTYPE(
+                    ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p
+                )
+                def _enum_cb(h, _):
+                    pid = ctypes.c_ulong()
+                    user32.GetWindowThreadProcessId(h, ctypes.byref(pid))
+                    if pid.value == our_pid and user32.IsWindowVisible(h):
+                        found.append(h)
+                    return True
+                _cb = EnumWindowsProc(_enum_cb)
+                user32.EnumWindows(_cb, 0)
+                hwnd = found[0] if found else None
 
-            self._win_hwnd = hwnd
-            print(f"[windows] HWND: {hwnd:#010x}")
+            if not hwnd:
+                print("[windows] Could not obtain HWND — WS_EX_NOACTIVATE/subclass skipped")
+                # Focus tracking (step 3) still works without an HWND, so continue.
+            else:
+                self._win_hwnd = hwnd
+                print(f"[windows] HWND: {hwnd:#010x}")
 
-            # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────────
-            GWL_EXSTYLE      = -20
-            WS_EX_NOACTIVATE = 0x08000000
-            WS_EX_TOOLWINDOW = 0x00000080
+            if hwnd:
+                # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────
+                GWL_EXSTYLE      = -20
+                WS_EX_NOACTIVATE = 0x08000000
+                WS_EX_TOOLWINDOW = 0x00000080
 
-            cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-            user32.SetWindowLongW(
-                hwnd, GWL_EXSTYLE,
-                cur_style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+                cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+                user32.SetWindowLongW(
+                    hwnd, GWL_EXSTYLE,
+                    cur_style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+                )
+                print("[windows] WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW applied")
+
+                # ── 3. Subclass WNDPROC to handle WM_MOUSEACTIVATE ──────────
+                # WNDPROC: LRESULT CALLBACK(HWND, UINT, WPARAM, LPARAM)
+                # LRESULT is LONG_PTR — 64 bits on 64-bit Windows; c_ssize_t matches.
+                WNDPROCTYPE = ctypes.WINFUNCTYPE(
+                    ctypes.c_ssize_t,  # LRESULT (LONG_PTR — pointer-sized)
+                    ctypes.c_void_p,   # HWND
+                    ctypes.c_uint,     # UINT  (message id)
+                    ctypes.c_void_p,   # WPARAM
+                    ctypes.c_void_p,   # LPARAM
+                )
+
+                WM_MOUSEACTIVATE = 0x0021
+                MA_NOACTIVATE    = 3
+                GWLP_WNDPROC     = -4
+
+                try:
+                    GetWindowLongPtr = user32.GetWindowLongPtrW
+                    SetWindowLongPtr = user32.SetWindowLongPtrW
+                except AttributeError:
+                    GetWindowLongPtr = user32.GetWindowLongW
+                    SetWindowLongPtr = user32.SetWindowLongW
+                    print("[windows] SetWindowLongPtrW unavailable — using 32-bit variant")
+
+                original_wndproc_addr = GetWindowLongPtr(hwnd, GWLP_WNDPROC)
+                if original_wndproc_addr:
+                    self._win_original_addr = original_wndproc_addr
+                    original_wndproc = ctypes.cast(
+                        ctypes.c_void_p(original_wndproc_addr), WNDPROCTYPE
+                    )
+
+                    def _wndproc(hwnd_, msg, wparam, lparam):
+                        if msg == WM_MOUSEACTIVATE:
+                            return MA_NOACTIVATE
+                        return original_wndproc(hwnd_, msg, wparam, lparam)
+
+                    self._win_wndproc = WNDPROCTYPE(_wndproc)
+                    SetWindowLongPtr(hwnd, GWLP_WNDPROC,
+                                     ctypes.cast(self._win_wndproc, ctypes.c_void_p).value)
+                    print("[windows] WM_MOUSEACTIVATE subclass installed")
+                else:
+                    print("[windows] GetWindowLongPtr(GWLP_WNDPROC) returned 0 — subclass skipped")
+
+            # ── 4. Track last non-OSK foreground window (focus restoration) ─
+            # SetWinEventHook fires in this thread via the GLib message pump.
+            # _win_focus_restore() reads _win_last_target[0] before each SendInput
+            # call so keys always land in the right window even if focus was stolen.
+            WINEVENT_OUTOFCONTEXT    = 0x0000
+            EVENT_SYSTEM_FOREGROUND = 0x0003
+            our_hwnd = getattr(self, "_win_hwnd", None)
+
+            WinEventProc = ctypes.WINFUNCTYPE(
+                None,
+                ctypes.c_void_p,  # hWinEventHook
+                ctypes.c_uint,    # event
+                ctypes.c_void_p,  # hwnd
+                ctypes.c_long,    # idObject
+                ctypes.c_long,    # idChild
+                ctypes.c_ulong,   # dwEventThread
+                ctypes.c_ulong,   # dwmsEventTime
             )
-            print("[windows] WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW applied")
 
-            # ── 3. Subclass the window procedure to handle WM_MOUSEACTIVATE ─
-            #
-            # WM_MOUSEACTIVATE fires before a click is processed. Returning
-            # MA_NOACTIVATE prevents activation even when the extended style
-            # alone is insufficient (GDK's backend calling DefWindowProc).
-            #
-            # WNDPROC: LRESULT CALLBACK(HWND, UINT, WPARAM, LPARAM)
-            # LRESULT is LONG_PTR — 64 bits on 64-bit Windows; c_ssize_t matches.
-            WNDPROCTYPE = ctypes.WINFUNCTYPE(
-                ctypes.c_ssize_t,  # LRESULT (LONG_PTR — pointer-sized)
-                ctypes.c_void_p,   # HWND
-                ctypes.c_uint,     # UINT  (message id)
-                ctypes.c_void_p,   # WPARAM
-                ctypes.c_void_p,   # LPARAM
+            def _on_fg_change(hook, event, fg_hwnd, id_obj, id_child, thread, evt_time):
+                if fg_hwnd and fg_hwnd != our_hwnd:
+                    _win_last_target[0] = fg_hwnd
+
+            self._win_event_proc = WinEventProc(_on_fg_change)
+            self._win_event_hook = user32.SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
+                None, self._win_event_proc, 0, 0, WINEVENT_OUTOFCONTEXT,
             )
+            print("[windows] foreground-window tracking hook installed")
 
-            WM_MOUSEACTIVATE = 0x0021
-            MA_NOACTIVATE    = 3
-            GWLP_WNDPROC     = -4
-
-            # Use the Ptr variants for 64-bit safety; fall back on 32-bit builds.
-            try:
-                GetWindowLongPtr = user32.GetWindowLongPtrW
-                SetWindowLongPtr = user32.SetWindowLongPtrW
-            except AttributeError:
-                GetWindowLongPtr = user32.GetWindowLongW
-                SetWindowLongPtr = user32.SetWindowLongW
-                print("[windows] SetWindowLongPtrW unavailable — using 32-bit variant")
-
-            original_wndproc_addr = GetWindowLongPtr(hwnd, GWLP_WNDPROC)
-            if not original_wndproc_addr:
-                print("[windows] GetWindowLongPtr(GWLP_WNDPROC) returned 0 — subclass aborted")
-                return
-
-            # Store the raw address for safe teardown; wrap as callable for chain.
-            self._win_original_addr = original_wndproc_addr
-            original_wndproc = ctypes.cast(
-                ctypes.c_void_p(original_wndproc_addr), WNDPROCTYPE
-            )
-
-            def _wndproc(hwnd_, msg, wparam, lparam):
-                if msg == WM_MOUSEACTIVATE:
-                    return MA_NOACTIVATE
-                return original_wndproc(hwnd_, msg, wparam, lparam)
-
-            # Keep a strong reference — the GC must not free this function pointer
-            # while the window exists, or Windows will call into freed memory.
-            self._win_wndproc = WNDPROCTYPE(_wndproc)
-
-            SetWindowLongPtr(hwnd, GWLP_WNDPROC,
-                             ctypes.cast(self._win_wndproc, ctypes.c_void_p).value)
-            print("[windows] WM_MOUSEACTIVATE subclass installed")
-
-            # Restore original wndproc before GTK tears down the window so we
-            # never leave a dangling C function pointer in the HWND slot.
             self.connect("destroy", self._on_windows_destroy)
 
         except Exception as exc:
-            print(f"[windows] Could not set WS_EX_NOACTIVATE / subclass wndproc: {exc}")
+            print(f"[windows] Focus setup failed: {exc}")
 
     def _on_windows_destroy(self, _widget):
-        """Restore the original wndproc before the window is torn down."""
+        """Tear down Win32 hooks before the window is destroyed."""
         try:
             import ctypes
+            user32 = ctypes.windll.user32
+
+            hook = getattr(self, "_win_event_hook", None)
+            if hook:
+                user32.UnhookWinEvent(hook)
+
             hwnd = getattr(self, "_win_hwnd", None)
             addr = getattr(self, "_win_original_addr", None)
-            if not hwnd or not addr:
-                return
-            user32 = ctypes.windll.user32
-            GWLP_WNDPROC = -4
-            try:
-                SetWindowLongPtr = user32.SetWindowLongPtrW
-            except AttributeError:
-                SetWindowLongPtr = user32.SetWindowLongW
-            SetWindowLongPtr(hwnd, GWLP_WNDPROC, addr)
+            if hwnd and addr:
+                GWLP_WNDPROC = -4
+                try:
+                    user32.SetWindowLongPtrW(hwnd, GWLP_WNDPROC, addr)
+                except AttributeError:
+                    user32.SetWindowLongW(hwnd, GWLP_WNDPROC, addr)
         except Exception as exc:
-            print(f"[windows] Could not restore original wndproc: {exc}")
+            print(f"[windows] Teardown failed: {exc}")
 
     # ── CSS ──────────────────────────────────────────────────────────────────
 
