@@ -1198,6 +1198,39 @@ class OnScreenKeyboard(Gtk.Window):
             self._win_poll_timer = GLib.timeout_add(50, _win_poll_foreground)
             print("[windows] foreground-window polling started")
 
+            # ── 5. WH_CBT hook — cancels SetFocus before it completes ──────────
+            # WM_SETFOCUS is a notification sent AFTER focus changed — returning 0
+            # from it doesn't undo the steal.  HCBT_SETFOCUS fires BEFORE SetFocus
+            # completes; returning non-zero cancels it, keeping focus on the target.
+            WH_CBT        = 5
+            HCBT_SETFOCUS = 9
+            CBT_HOOKPROC  = ctypes.WINFUNCTYPE(
+                ctypes.c_ssize_t,  # LRESULT
+                ctypes.c_int,      # nCode
+                ctypes.c_void_p,   # wParam — HWND gaining focus
+                ctypes.c_void_p,   # lParam — HWND losing focus
+            )
+
+            def _cbt_proc(nCode, wParam, lParam):
+                if nCode == HCBT_SETFOCUS and wParam:
+                    pid = ctypes.c_ulong()
+                    user32.GetWindowThreadProcessId(wParam, ctypes.byref(pid))
+                    if pid.value == _win_our_pid:
+                        return 1  # cancel: don't let focus come to our window
+                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+            self._win_cbt_proc = CBT_HOOKPROC(_cbt_proc)
+            self._win_cbt_hook = user32.SetWindowsHookExW(
+                WH_CBT,
+                self._win_cbt_proc,
+                None,                          # no DLL needed for same-thread hook
+                user32.GetCurrentThreadId(),
+            )
+            if self._win_cbt_hook:
+                print("[windows] WH_CBT focus-block hook installed")
+            else:
+                print("[windows] WH_CBT hook failed — focus steal may occur")
+
             self.connect("destroy", self._on_windows_destroy)
 
         except Exception as exc:
@@ -1212,6 +1245,11 @@ class OnScreenKeyboard(Gtk.Window):
 
             import ctypes
             user32 = ctypes.windll.user32
+
+            cbt_hook = getattr(self, "_win_cbt_hook", None)
+            if cbt_hook:
+                user32.UnhookWindowsHookEx(cbt_hook)
+
             hwnd = getattr(self, "_win_hwnd", None)
             addr = getattr(self, "_win_original_addr", None)
             if hwnd and addr:
