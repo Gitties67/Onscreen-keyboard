@@ -33,15 +33,30 @@ IS_WINDOWS = platform.system() == "Windows"
 # Windows focus-restoration: keeps track of the last non-OSK foreground window
 # so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
 _win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 200ms poll
+_win_our_pid: int = os.getpid()    # cached once; used to detect when OSK owns the foreground
 
 def _win_focus_restore() -> None:
-    hwnd = _win_last_target[0]
-    if hwnd:
-        try:
-            import ctypes
-            ctypes.windll.user32.SetForegroundWindow(hwnd)
-        except Exception:
-            pass
+    """Restore focus to the last target window — but ONLY if the OSK itself currently
+    owns the foreground (i.e. WS_EX_NOACTIVATE failed to prevent the steal).
+    If any other process (Chrome, Notepad, …) already has the foreground, leave it
+    completely alone — calling SetForegroundWindow would pull the wrong window to the
+    front or disrupt that app's internal focus state."""
+    target = _win_last_target[0]
+    if not target:
+        return
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        current = user32.GetForegroundWindow()
+        if not current or current == target:
+            return  # target already has focus, nothing to do
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(current, ctypes.byref(pid))
+        if pid.value != _win_our_pid:
+            return  # another app has focus — leave it, pynput will send there
+        user32.SetForegroundWindow(target)
+    except Exception:
+        pass
 
 # ── pynput — cross-platform key synthesis (primary on Windows) ────────────────
 PYNPUT_OK      = False
@@ -153,7 +168,7 @@ DEFAULT_MACROS = [
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
