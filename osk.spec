@@ -2,11 +2,12 @@
 # Build from MSYS2 MINGW64 shell:
 #   pyinstaller osk.spec
 import os, glob
-from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-MINGW = os.environ.get("MINGW_PREFIX", r"C:\msys64\mingw64")
+# MINGW_PREFIX_WIN is set by the CI workflow to the Windows-style path.
+# Locally, fall back to the standard MSYS2 install location.
+MINGW = os.environ.get("MINGW_PREFIX_WIN", r"C:\msys64\mingw64")
 MINGW_BIN   = os.path.join(MINGW, "bin")
 MINGW_LIB   = os.path.join(MINGW, "lib")
 MINGW_SHARE = os.path.join(MINGW, "share")

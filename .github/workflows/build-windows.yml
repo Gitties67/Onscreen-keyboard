@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Python dependencies
         shell: msys2 {0}
-        run: pip install pyinstaller pynput
+        run: python3 -m pip install pyinstaller pynput
 
       - name: Regenerate pixbuf loaders cache
         shell: msys2 {0}
@@ -39,7 +39,9 @@ jobs:
 
       - name: Build single-file exe
         shell: msys2 {0}
-        run: pyinstaller osk.spec
+        env:
+          MINGW_PREFIX_WIN: "C:/msys64/mingw64"
+        run: python3 -m PyInstaller osk.spec
 
       - name: Upload exe as artifact
         uses: actions/upload-artifact@v4
