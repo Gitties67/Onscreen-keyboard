@@ -19,7 +19,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          update: true
+          update: false
           install: >-
             mingw-w64-x86_64-gtk3
             mingw-w64-x86_64-python3
@@ -27,21 +27,23 @@ jobs:
             mingw-w64-x86_64-python3-gobject
             mingw-w64-x86_64-python3-cairo
             mingw-w64-x86_64-adwaita-icon-theme
+            mingw-w64-x86_64-python-pyinstaller
 
-      - name: Install Python dependencies
+      - name: Install pynput
         shell: msys2 {0}
-        run: python3 -m pip install pyinstaller pynput
+        run: python3 -m pip install pynput
 
       - name: Regenerate pixbuf loaders cache
         shell: msys2 {0}
         run: |
-          gdk-pixbuf-query-loaders > $MINGW_PREFIX/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+          gdk-pixbuf-query-loaders.exe > "${MINGW_PREFIX}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 
       - name: Build single-file exe
         shell: msys2 {0}
         env:
           MINGW_PREFIX_WIN: "C:/msys64/mingw64"
-        run: python3 -m PyInstaller osk.spec
+        run: |
+          python3 -m PyInstaller --clean --noconfirm osk.spec
 
       - name: Upload exe as artifact
         uses: actions/upload-artifact@v4
