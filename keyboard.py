@@ -20,6 +20,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import time
 import wave
 import gi
 
@@ -32,7 +33,7 @@ IS_WINDOWS = platform.system() == "Windows"
 
 # Windows focus-restoration: keeps track of the last non-OSK foreground window
 # so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
-_win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 200ms poll
+_win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 50ms poll
 _win_our_pid: int = os.getpid()    # cached once; used to detect when OSK owns the foreground
 
 def _win_focus_restore() -> None:
@@ -55,6 +56,8 @@ def _win_focus_restore() -> None:
         if pid.value != _win_our_pid:
             return  # another app has focus — leave it, pynput will send there
         user32.SetForegroundWindow(target)
+        # Give Windows time to process the foreground change before SendInput fires.
+        time.sleep(0.02)
     except Exception:
         pass
 
@@ -1126,6 +1129,12 @@ class OnScreenKeyboard(Gtk.Window):
                 )
 
                 WM_MOUSEACTIVATE = 0x0021
+                WM_ACTIVATE      = 0x0006
+                WM_NCACTIVATE    = 0x0086
+                # GDK can call SetFocus() internally on button-press even after
+                # WM_MOUSEACTIVATE returns MA_NOACTIVATE; intercepting WM_SETFOCUS
+                # here and returning 0 prevents that steal from completing.
+                WM_SETFOCUS      = 0x0007
                 MA_NOACTIVATE    = 3
                 GWLP_WNDPROC     = -4
 
@@ -1147,6 +1156,18 @@ class OnScreenKeyboard(Gtk.Window):
                     def _wndproc(hwnd_, msg, wparam, lparam):
                         if msg == WM_MOUSEACTIVATE:
                             return MA_NOACTIVATE
+                        if msg == WM_SETFOCUS:
+                            # Return 0 without passing to DefWindowProc — prevents
+                            # GDK from registering that we received keyboard focus.
+                            return 0
+                        if msg == WM_ACTIVATE:
+                            # WA_INACTIVE == 0; intercept only when being activated.
+                            if (wparam & 0xFFFF) != 0:
+                                return 0
+                        if msg == WM_NCACTIVATE:
+                            # Forward with wParam=0 so GDK sees a deactivation event,
+                            # lParam=-1 prevents DefWindowProc from calling RedrawWindow.
+                            return original_wndproc(hwnd_, WM_NCACTIVATE, 0, -1)
                         return original_wndproc(hwnd_, msg, wparam, lparam)
 
                     self._win_wndproc = WNDPROCTYPE(_wndproc)
@@ -1157,7 +1178,7 @@ class OnScreenKeyboard(Gtk.Window):
                     print("[windows] GetWindowLongPtr(GWLP_WNDPROC) returned 0 — subclass skipped")
 
             # ── 4. Track last non-OSK foreground window (focus restoration) ─
-            # Poll every 200 ms via GLib — more reliable than SetWinEventHook
+            # Poll every 50 ms via GLib — more reliable than SetWinEventHook
             # which requires Win32 message pumping that GLib doesn't guarantee.
             # Filters by process ID so our own window never overwrites the target.
             our_pid = os.getpid()
@@ -1174,7 +1195,7 @@ class OnScreenKeyboard(Gtk.Window):
                     pass
                 return True  # keep the timeout alive
 
-            self._win_poll_timer = GLib.timeout_add(200, _win_poll_foreground)
+            self._win_poll_timer = GLib.timeout_add(50, _win_poll_foreground)
             print("[windows] foreground-window polling started")
 
             self.connect("destroy", self._on_windows_destroy)
