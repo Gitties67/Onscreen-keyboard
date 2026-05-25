@@ -153,7 +153,7 @@ DEFAULT_MACROS = [
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
