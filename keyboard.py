@@ -168,7 +168,7 @@ DEFAULT_MACROS = [
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -953,6 +953,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._close_btn:      Gtk.Button | None  = None
         self._update_status_label: Gtk.Label | None  = None
         self._update_btn:          Gtk.Button | None = None
+        self._update_etag:         str | None        = None  # ETag for conditional requests
         self._titlebar:       Gtk.EventBox | None = None
         self._suggestion_bar: Gtk.Box | None     = None
         self._top_strip:      Gtk.EventBox | None = None
@@ -3505,14 +3506,18 @@ class OnScreenKeyboard(Gtk.Window):
         if local_ver == "unknown":
             status = "Cannot determine installed version — VERSION file missing."
             asset_url = None
+            new_etag = self._update_etag
         else:
+            headers = {"User-Agent": "OSK-updater/1.0"}
+            if self._update_etag:
+                headers["If-None-Match"] = self._update_etag
             try:
-                req = urllib.request.Request(RELEASES_URL, headers={"User-Agent": "OSK-updater/1.0"})
+                req = urllib.request.Request(RELEASES_URL, headers=headers)
                 with urllib.request.urlopen(req, timeout=8) as resp:
+                    new_etag = resp.headers.get("ETag", self._update_etag)
                     data = _json.loads(resp.read())
                 latest_tag = data.get("tag_name", "unknown")
 
-                # Find the direct download URL for the exe asset
                 asset_url = None
                 for asset in data.get("assets", []):
                     if asset.get("name", "").lower().endswith(".exe"):
@@ -3526,21 +3531,34 @@ class OnScreenKeyboard(Gtk.Window):
                     status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
                               "Click below to download and install automatically.")
                 else:
-                    status = (f"Update available ({latest_tag}) but no .exe found in release assets.")
+                    status = f"Update available ({latest_tag}) but no .exe found in release assets."
             except urllib.error.HTTPError as e:
-                if e.code == 404:
-                    status = "No releases have been published yet — this build is the latest."
+                new_etag = self._update_etag
+                if e.code == 304:
+                    # Not Modified — our cached ETag matched, no API quota used
+                    status = "You're on the latest version."
+                    asset_url = None
+                elif e.code == 404:
+                    status = "No releases published yet — this build is the latest."
+                    asset_url = None
+                elif e.code in (403, 429):
+                    status = ("GitHub rate limit reached — you can only check a few times per hour.\n"
+                              "Try again later.")
+                    asset_url = None
                 else:
                     status = f"Update server returned HTTP {e.code} {e.reason}."
-                asset_url = None
+                    asset_url = None
             except urllib.error.URLError as e:
+                new_etag = self._update_etag
                 status = f"Network error — check your internet connection.\n({e.reason})"
                 asset_url = None
             except Exception as e:
+                new_etag = self._update_etag
                 status = f"Update check failed: {e}"
                 asset_url = None
 
-        def _apply(status=status, asset_url=asset_url):
+        def _apply(status=status, asset_url=asset_url, etag=new_etag):
+            self._update_etag = etag
             if self._update_status_label:
                 self._update_status_label.set_text(status)
             if self._update_btn:
