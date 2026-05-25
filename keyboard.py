@@ -32,7 +32,7 @@ IS_WINDOWS = platform.system() == "Windows"
 
 # Windows focus-restoration: keeps track of the last non-OSK foreground window
 # so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
-_win_last_target: list[int] = [0]  # mutable so the SetWinEventHook closure can write it
+_win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 200ms poll
 
 def _win_focus_restore() -> None:
     hwnd = _win_last_target[0]
@@ -153,7 +153,7 @@ DEFAULT_MACROS = [
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -1141,34 +1141,25 @@ class OnScreenKeyboard(Gtk.Window):
                     print("[windows] GetWindowLongPtr(GWLP_WNDPROC) returned 0 — subclass skipped")
 
             # ── 4. Track last non-OSK foreground window (focus restoration) ─
-            # SetWinEventHook fires in this thread via the GLib message pump.
-            # _win_focus_restore() reads _win_last_target[0] before each SendInput
-            # call so keys always land in the right window even if focus was stolen.
-            WINEVENT_OUTOFCONTEXT    = 0x0000
-            EVENT_SYSTEM_FOREGROUND = 0x0003
-            our_hwnd = getattr(self, "_win_hwnd", None)
+            # Poll every 200 ms via GLib — more reliable than SetWinEventHook
+            # which requires Win32 message pumping that GLib doesn't guarantee.
+            # Filters by process ID so our own window never overwrites the target.
+            our_pid = os.getpid()
 
-            WinEventProc = ctypes.WINFUNCTYPE(
-                None,
-                ctypes.c_void_p,  # hWinEventHook
-                ctypes.c_uint,    # event
-                ctypes.c_void_p,  # hwnd
-                ctypes.c_long,    # idObject
-                ctypes.c_long,    # idChild
-                ctypes.c_ulong,   # dwEventThread
-                ctypes.c_ulong,   # dwmsEventTime
-            )
+            def _win_poll_foreground():
+                try:
+                    hwnd = user32.GetForegroundWindow()
+                    if hwnd:
+                        pid = ctypes.c_ulong()
+                        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                        if pid.value != our_pid:
+                            _win_last_target[0] = hwnd
+                except Exception:
+                    pass
+                return True  # keep the timeout alive
 
-            def _on_fg_change(hook, event, fg_hwnd, id_obj, id_child, thread, evt_time):
-                if fg_hwnd and fg_hwnd != our_hwnd:
-                    _win_last_target[0] = fg_hwnd
-
-            self._win_event_proc = WinEventProc(_on_fg_change)
-            self._win_event_hook = user32.SetWinEventHook(
-                EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
-                None, self._win_event_proc, 0, 0, WINEVENT_OUTOFCONTEXT,
-            )
-            print("[windows] foreground-window tracking hook installed")
+            self._win_poll_timer = GLib.timeout_add(200, _win_poll_foreground)
+            print("[windows] foreground-window polling started")
 
             self.connect("destroy", self._on_windows_destroy)
 
@@ -1176,15 +1167,14 @@ class OnScreenKeyboard(Gtk.Window):
             print(f"[windows] Focus setup failed: {exc}")
 
     def _on_windows_destroy(self, _widget):
-        """Tear down Win32 hooks before the window is destroyed."""
+        """Tear down Win32 resources before the window is destroyed."""
         try:
+            timer = getattr(self, "_win_poll_timer", None)
+            if timer:
+                GLib.source_remove(timer)
+
             import ctypes
             user32 = ctypes.windll.user32
-
-            hook = getattr(self, "_win_event_hook", None)
-            if hook:
-                user32.UnhookWinEvent(hook)
-
             hwnd = getattr(self, "_win_hwnd", None)
             addr = getattr(self, "_win_original_addr", None)
             if hwnd and addr:
@@ -3488,9 +3478,8 @@ class OnScreenKeyboard(Gtk.Window):
         GLib.idle_add(_apply)
 
     def _do_update_check_exe_mode(self):
-        import urllib.request, urllib.error, json as _json, webbrowser
+        import urllib.request, urllib.error, json as _json
         RELEASES_URL = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/releases/latest"
-        DOWNLOAD_URL = "https://github.com/Gitties67/Onscreen-keyboard/releases/latest"
 
         version_file = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))), "VERSION")
         local_ver = "unknown"
@@ -3500,49 +3489,121 @@ class OnScreenKeyboard(Gtk.Window):
 
         if local_ver == "unknown":
             status = "Cannot determine installed version — VERSION file missing."
-            show_download = False
+            asset_url = None
         else:
             try:
                 req = urllib.request.Request(RELEASES_URL, headers={"User-Agent": "OSK-updater/1.0"})
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     data = _json.loads(resp.read())
                 latest_tag = data.get("tag_name", "unknown")
+
+                # Find the direct download URL for the exe asset
+                asset_url = None
+                for asset in data.get("assets", []):
+                    if asset.get("name", "").lower().endswith(".exe"):
+                        asset_url = asset.get("browser_download_url")
+                        break
+
                 if local_ver == latest_tag:
                     status = "You're on the latest version."
-                    show_download = False
-                else:
+                    asset_url = None
+                elif asset_url:
                     status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
-                              "Click below to open the download page.")
-                    show_download = True
+                              "Click below to download and install automatically.")
+                else:
+                    status = (f"Update available ({latest_tag}) but no .exe found in release assets.")
             except urllib.error.HTTPError as e:
                 if e.code == 404:
                     status = "No releases have been published yet — this build is the latest."
                 else:
                     status = f"Update server returned HTTP {e.code} {e.reason}."
-                show_download = False
+                asset_url = None
             except urllib.error.URLError as e:
                 status = f"Network error — check your internet connection.\n({e.reason})"
-                show_download = False
+                asset_url = None
             except Exception as e:
                 status = f"Update check failed: {e}"
-                show_download = False
+                asset_url = None
 
-        def _apply(status=status, show_download=show_download):
+        def _apply(status=status, asset_url=asset_url):
             if self._update_status_label:
                 self._update_status_label.set_text(status)
             if self._update_btn:
                 self._update_btn.set_sensitive(True)
-                if show_download:
-                    self._update_btn.set_label("Download update")
+                if asset_url:
+                    self._update_btn.set_label("Download & install update")
                     try:
                         self._update_btn.disconnect_by_func(self._on_check_for_updates)
                     except Exception:
                         pass
                     self._update_btn.connect(
-                        "clicked", lambda _: webbrowser.open(DOWNLOAD_URL))
+                        "clicked", lambda _, u=asset_url: self._on_download_update(u))
                 else:
                     self._update_btn.set_label("Check for updates")
         GLib.idle_add(_apply)
+
+    def _on_download_update(self, asset_url: str):
+        if self._update_status_label:
+            self._update_status_label.set_text("Starting download…")
+        if self._update_btn:
+            self._update_btn.set_sensitive(False)
+        import threading
+        threading.Thread(target=self._do_download_update, args=(asset_url,), daemon=True).start()
+
+    def _do_download_update(self, asset_url: str):
+        import urllib.request, urllib.error
+        try:
+            current_exe = sys.executable
+            exe_dir = os.path.dirname(current_exe)
+            tmp_path = os.path.join(exe_dir, "OnScreenKeyboard_update.exe")
+
+            req = urllib.request.Request(asset_url, headers={"User-Agent": "OSK-updater/1.0"})
+            with urllib.request.urlopen(req) as resp:
+                total = int(resp.headers.get("Content-Length", 0))
+                downloaded = 0
+                with open(tmp_path, "wb") as f:
+                    while True:
+                        chunk = resp.read(65536)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total:
+                            pct = int(downloaded * 100 / total)
+                            GLib.idle_add(
+                                lambda p=pct: self._update_status_label and
+                                self._update_status_label.set_text(f"Downloading… {p}%") and False
+                            )
+
+            # Write a batch script that waits for us to exit, swaps the exe, then restarts.
+            bat_path = os.path.join(exe_dir, "osk_update.bat")
+            with open(bat_path, "w") as f:
+                f.write(
+                    f'@echo off\r\n'
+                    f'timeout /t 2 /nobreak > nul\r\n'
+                    f'move /y "{tmp_path}" "{current_exe}"\r\n'
+                    f'start "" "{current_exe}"\r\n'
+                    f'del "%~f0"\r\n'
+                )
+
+            def _finish():
+                if self._update_status_label:
+                    self._update_status_label.set_text("Download complete — restarting…")
+                subprocess.Popen(
+                    ["cmd", "/c", bat_path],
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                Gtk.main_quit()
+            GLib.idle_add(_finish)
+
+        except Exception as exc:
+            def _err(msg=str(exc)):
+                if self._update_status_label:
+                    self._update_status_label.set_text(f"Download failed: {msg}")
+                if self._update_btn:
+                    self._update_btn.set_sensitive(True)
+                    self._update_btn.set_label("Download & install update")
+            GLib.idle_add(_err)
 
     def _on_install_update(self, _btn):
         if self._update_status_label:
