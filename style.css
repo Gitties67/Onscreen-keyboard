@@ -24,7 +24,7 @@ window.hc #settings-toggle:focus {
 /* ── Suggestion bar ────────────────────────────────────────── */
 #suggestion-bar {
     padding: 0 4px;
-    min-height: 36px;
+    min-height: 44px;
 }
 
 .suggestion-btn {
@@ -87,15 +87,22 @@ window.hc #settings-toggle:focus {
     background-color: #005a9e;
     background-image: none;
     border-color: #0078d4;
+    color: #ffffff;
 }
 window.hc .dwell-pending {
     background-color: #ffdd00;
     border-color: #cc9900;
+    color: #000000;
 }
 window.dark .dwell-pending,
 window.midnight .dwell-pending {
     background-color: #1a8fe8;
     border-color: #1070c0;
+    color: #000000;
+}
+window.light .dwell-pending {
+    background-color: #005a9e;
+    border-color: #004a85;
 }
 
 /* ── Drag handle ───────────────────────────────────────────── */
@@ -103,7 +110,7 @@ window.midnight .dwell-pending {
 /* ── Resize grip (always-visible bottom-right corner handle) ── */
 #resize-grip { background-color: transparent; }
 #resize-label {
-    color: #666666;
+    color: #808080;
     font-size: 15px;
     padding: 0 1px 1px 0;
 }
@@ -173,8 +180,8 @@ window.hc #resize-grip:hover #resize-label { color: #ffdd00; }
     border-radius: 6px;
     font-size: 20px;
     padding: 1px;
-    min-height: 40px;
-    min-width: 40px;
+    min-height: 44px;
+    min-width: 44px;
     box-shadow: none;
     text-shadow: none;
 }
@@ -234,4 +241,12 @@ window.hc #resize-grip:hover #resize-label { color: #ffdd00; }
     color: #666666;
     margin-left: 4px;
     margin-right: 2px;
+}
+
+/* ── Keyboard-nav focus rings (inactive by default; enable via window.keyboard-nav) ── */
+window.keyboard-nav .key-btn:focus {
+    box-shadow: 0 0 0 2px #0078d4;
+}
+window.keyboard-nav.hc .key-btn:focus {
+    box-shadow: 0 0 0 3px #ffff00;
 }

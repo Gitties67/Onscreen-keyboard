@@ -446,7 +446,7 @@ DEFAULT_MACROS = [
 
 FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -479,7 +479,7 @@ THEME_COLORS: dict[str, dict] = {
         "choice_bg": "#2d2d2d", "choice_fg": "#d0d0d0",
         "choice_border": "#404040", "choice_bot": "#111111",
         "toggle_fg": "#888888",
-        "sublabel_fg": "#666666",
+        "sublabel_fg": "#999999",
         "active_bg": "#0078d4", "active_fg": "#ffffff",
         "active_border": "#005a9e", "active_bot": "#003c6a",
         "active_hover": "#1a8ae0",
@@ -493,17 +493,17 @@ THEME_COLORS: dict[str, dict] = {
         "special_bg": "#dcdcdc", "special_fg": "#444444",
         "special_border": "#bbbbbb", "special_bot": "#888888",
         "special_hover": "#ebebeb",
-        "sugg_fg": "#0066aa", "sugg_hover": "#cccccc", "sugg_divider": "#bbbbbb",
+        "sugg_fg": "#005490", "sugg_hover": "#cccccc", "sugg_divider": "#bbbbbb",
         "search_fg": "#111111",
-        "close_bg": "#f0d0d0", "close_fg": "#cc2200",
+        "close_bg": "#f0d0d0", "close_fg": "#aa1a00",
         "close_border": "#ddaaaa", "close_bot": "#cc9999",
         "close_hover_bg": "#cc2200", "close_hover_fg": "#ffffff",
         "settings_bg": "#dcdcdc", "settings_fg": "#555555",
         "settings_border": "#bbbbbb", "settings_bot": "#999999",
         "choice_bg": "#ffffff", "choice_fg": "#333333",
         "choice_border": "#c0c0c0", "choice_bot": "#999999",
-        "toggle_fg": "#666666",
-        "sublabel_fg": "#aaaaaa",
+        "toggle_fg": "#5a5a5a",
+        "sublabel_fg": "#767676",
         "active_bg": "#0063b1", "active_fg": "#ffffff",
         "active_border": "#004f8e", "active_bot": "#003570",
         "active_hover": "#1a75c4",
@@ -527,8 +527,8 @@ THEME_COLORS: dict[str, dict] = {
         "choice_bg": "#1a2332", "choice_fg": "#c9d1d9",
         "choice_border": "#30404d", "choice_bot": "#060a0f",
         "toggle_fg": "#7a9ab8",
-        "sublabel_fg": "#4a6080",
-        "active_bg": "#1f6fbd", "active_fg": "#e6f0ff",
+        "sublabel_fg": "#8899bb",
+        "active_bg": "#1f6fbd", "active_fg": "#ffffff",
         "active_border": "#155090", "active_bot": "#0d3868",
         "active_hover": "#2d82d0",
     },
@@ -761,6 +761,15 @@ KEYSYMS = {
     "prtscn": 0xFF61,  # fallback if no snipping tool found
 }
 
+ACCESSIBLE_KEY_NAMES = {
+    "shift": "Shift", "caps": "Caps Lock", "tab": "Tab",
+    "backspace": "Backspace", "return": "Enter", "escape": "Escape",
+    "ctrl": "Control", "alt": "Alt", "win": "Windows key",
+    "space": "Space bar", "delete": "Delete", "home": "Home", "end": "End",
+    "left": "Left arrow", "right": "Right arrow",
+    "up": "Up arrow", "down": "Down arrow", "prtscn": "Print Screen",
+}
+
 SHIFT_MAP = {
     "1": "!", "2": "@", "3": "#", "4": "$", "5": "%",
     "6": "^", "7": "&", "8": "*", "9": "(", "0": ")",
@@ -773,7 +782,7 @@ SHIFT_MAP = {
 # Base key dimensions — used as the reference for proportional scaling
 BASE_KEY_W  = 52
 BASE_KEY_H  = 52
-SUGGESTION_H = 38   # height of the suggestion bar row
+SUGGESTION_H = 44   # height of the suggestion bar row
 TITLEBAR_H   = 26   # height of the custom title-bar strip
 STRIP_H      = 11   # height of the top/bottom resize strips
 MIN_W        = 400  # minimum window width during resize
@@ -1902,6 +1911,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._close_btn.set_name("close-btn")
         self._close_btn.set_size_request(40, TITLEBAR_H)
         self._close_btn.connect("clicked", lambda _: self._quit())
+        self._close_btn.get_accessible().set_name("Close keyboard")
         hbox.pack_end(self._close_btn, False, False, 4)
 
         # Minimize / collapse button — directly left of the close button.
@@ -1911,6 +1921,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._minimize_btn.set_tooltip_text("Collapse / expand keyboard")
         self._minimize_btn.set_size_request(40, TITLEBAR_H)
         self._minimize_btn.connect("clicked", lambda _: self._toggle_collapse())
+        self._minimize_btn.get_accessible().set_name("Collapse or expand keyboard")
         hbox.pack_end(self._minimize_btn, False, False, 2)
 
         return bar
@@ -1976,6 +1987,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._clipboard_btn.set_name("settings-btn")
         self._clipboard_btn.set_size_request(36, SUGGESTION_H)
         self._clipboard_btn.connect("clicked", lambda _: self._toggle_clipboard_mode())
+        self._clipboard_btn.get_accessible().set_name("Open clipboard history")
         bar.pack_end(self._clipboard_btn, False, False, 2)
 
         # Emoji toggle button
@@ -1983,6 +1995,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._emoji_btn.set_name("settings-btn")   # reuse settings-btn style
         self._emoji_btn.set_size_request(36, SUGGESTION_H)
         self._emoji_btn.connect("clicked", lambda _: self._toggle_emoji_mode())
+        self._emoji_btn.get_accessible().set_name("Open emoji panel")
         bar.pack_end(self._emoji_btn, False, False, 2)
 
         # Settings (gear) button
@@ -1990,6 +2003,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._settings_btn.set_name("settings-btn")
         self._settings_btn.set_size_request(36, SUGGESTION_H)
         self._settings_btn.connect("clicked", lambda _: self._toggle_settings())
+        self._settings_btn.get_accessible().set_name("Open settings panel")
         bar.pack_end(self._settings_btn, False, False, 2)
 
         return bar
@@ -2019,6 +2033,10 @@ class OnScreenKeyboard(Gtk.Window):
             self._symbol_btns[action] = (main_lbl, sub_lbl)
         else:
             btn.set_label(label)
+
+        acc_name = ACCESSIBLE_KEY_NAMES.get(action)
+        if acc_name:
+            btn.get_accessible().set_name(acc_name)
 
         ctx = btn.get_style_context()
         ctx.add_class("key-btn")
@@ -3363,6 +3381,16 @@ class OnScreenKeyboard(Gtk.Window):
             if self._settings_btn:
                 self._settings_btn.get_style_context().remove_class("active")
 
+    def _settings_section_header(self, text: str, is_first: bool = False) -> Gtk.Label:
+        lbl = Gtk.Label()
+        lbl.set_markup(f"<small><b>{text}</b></small>")
+        lbl.set_xalign(0.0)
+        lbl.set_name("settings-label")
+        lbl.set_margin_top(0 if is_first else 8)
+        lbl.set_margin_bottom(2)
+        lbl.set_margin_start(4)
+        return lbl
+
     def _build_settings_panel(self) -> Gtk.Box:
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         panel.set_name("settings-panel")
@@ -3382,6 +3410,8 @@ class OnScreenKeyboard(Gtk.Window):
         inner.set_margin_end(0)
         inner.set_margin_top(0)
         inner.set_margin_bottom(0)
+
+        inner.pack_start(self._settings_section_header("Appearance", is_first=True), False, False, 0)
 
         # ── 1. Theme row ───────────────────────────────────────────────────
         theme_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -3519,6 +3549,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         inner.pack_start(opacity_row, False, False, 0)
 
+        inner.pack_start(self._settings_section_header("Input"), False, False, 0)
+
         # ── 7. Dwell row ───────────────────────────────────────────────────
         dwell_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         lbl2 = Gtk.Label(label="Dwell click")
@@ -3533,6 +3565,7 @@ class OnScreenKeyboard(Gtk.Window):
         dwell_toggle.set_active(self.settings["dwell_enabled"])
         dwell_toggle.set_label("On" if self.settings["dwell_enabled"] else "Off")
         dwell_toggle.connect("toggled", self._on_dwell_toggled, dwell_toggle)
+        dwell_toggle.get_accessible().set_description("Hover over a key to activate it without clicking")
         dwell_row.pack_start(dwell_toggle, False, False, 0)
 
         lbl3 = Gtk.Label(label="Delay:")
@@ -3541,8 +3574,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         dec_btn = Gtk.Button(label="−")
         dec_btn.get_style_context().add_class("settings-choice")
-        dec_btn.set_size_request(36, -1)
+        dec_btn.set_size_request(44, -1)
         dec_btn.connect("clicked", self._on_dwell_delay, -0.1)
+        dec_btn.get_accessible().set_name("Decrease dwell delay")
         dwell_row.pack_start(dec_btn, False, False, 0)
 
         self._dwell_label = Gtk.Label(
@@ -3553,8 +3587,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         inc_btn = Gtk.Button(label="+")
         inc_btn.get_style_context().add_class("settings-choice")
-        inc_btn.set_size_request(36, -1)
+        inc_btn.set_size_request(44, -1)
         inc_btn.connect("clicked", self._on_dwell_delay, +0.1)
+        inc_btn.get_accessible().set_name("Increase dwell delay")
         dwell_row.pack_start(inc_btn, False, False, 0)
 
         inner.pack_start(dwell_row, False, False, 0)
@@ -3573,6 +3608,7 @@ class OnScreenKeyboard(Gtk.Window):
         sound_toggle.set_size_request(60, -1)
         sound_toggle.set_active(self.settings["click_sound"])
         sound_toggle.connect("toggled", self._on_sound_toggled, sound_toggle)
+        sound_toggle.get_accessible().set_description("Play a click sound on each key press")
         sound_row.pack_start(sound_toggle, False, False, 0)
 
         inner.pack_start(sound_row, False, False, 0)
@@ -3591,6 +3627,7 @@ class OnScreenKeyboard(Gtk.Window):
         mod_toggle.set_size_request(100, -1)
         mod_toggle.set_active(auto_release)
         mod_toggle.connect("toggled", self._on_mod_release_toggled, mod_toggle)
+        mod_toggle.get_accessible().set_description("Ctrl and Alt release automatically after the next keypress")
         mod_row.pack_start(mod_toggle, False, False, 0)
 
         mod_hint = Gtk.Label(
@@ -3648,6 +3685,8 @@ class OnScreenKeyboard(Gtk.Window):
             shortcut_row.pack_start(self._pin_status_label, False, False, 4)
 
             inner.pack_start(shortcut_row, False, False, 0)
+
+        inner.pack_start(self._settings_section_header("Data"), False, False, 0)
 
         # ── 11. Custom dictionary section ──────────────────────────────────
         dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -3768,7 +3807,7 @@ class OnScreenKeyboard(Gtk.Window):
         panel.set_name("emoji-panel")
 
         # Search label at top
-        self._emoji_label = Gtk.Label(label="😊  Type to search • click an emoji to insert")
+        self._emoji_label = Gtk.Label(label="Type to search, click an emoji to insert")
         self._emoji_label.set_name("emoji-search-label")
         self._emoji_label.set_xalign(0.0)
         self._emoji_label.set_margin_start(8)
@@ -4431,7 +4470,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._emoji_panel_ready = True
 
         if self._emoji_label:
-            self._emoji_label.set_text("😊  Type to search • click an emoji to insert")
+            self._emoji_label.set_text("Type to search, click an emoji to insert")
         if self._emoji_flowbox:
             self._emoji_flowbox.invalidate_filter()
         if self._emoji_btn:
@@ -4459,7 +4498,7 @@ class OnScreenKeyboard(Gtk.Window):
             if self._emoji_query:
                 self._emoji_label.set_text(f"🔍  {self._emoji_query}▏")
             else:
-                self._emoji_label.set_text("😊  Type to search • click an emoji to insert")
+                self._emoji_label.set_text("Type to search, click an emoji to insert")
         if self._emoji_flowbox:
             self._emoji_flowbox.invalidate_filter()
 
