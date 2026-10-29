@@ -171,6 +171,13 @@ def _win_setup_protos() -> None:
         u.CallNextHookEx.argtypes    = [ctypes.c_void_p, ctypes.c_int,
                                         ctypes.c_size_t, ctypes.c_ssize_t]
         u.GetForegroundWindow.argtypes = []
+        # Minimize/restore path (HWND must not be truncated to C int).
+        u.ShowWindow.restype         = wintypes.BOOL
+        u.ShowWindow.argtypes        = [wintypes.HWND, ctypes.c_int]
+        u.IsIconic.restype           = wintypes.BOOL
+        u.IsIconic.argtypes          = [wintypes.HWND]
+        u.SetForegroundWindow.restype  = wintypes.BOOL
+        u.SetForegroundWindow.argtypes = [wintypes.HWND]
         _win_protos_ready = True
     except Exception as exc:
         _win_log(f"setup_protos error: {exc}")
@@ -1354,6 +1361,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._min_watch_id    = 0     # GLib timer: detects restore / WM refusal
         self._min_started     = 0.0
         self._min_saw_iconic  = False
+        self._restore_timer_id = 0    # GLib timer: post-restore activation settle
         # Height of the collapsed strip: title bar + suggestion bar + top resize
         # strip + chrome.  The collapsed state now keeps the title bar AND
         # suggestion bar visible; the title bar is the only way to expand again.
@@ -1466,8 +1474,16 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Real minimize (taskbar / window list) ────────────────────────────────
 
     def _minimize_window(self):
-        """Minimize to the taskbar.  The OSK normally has no taskbar entry, so
-        we temporarily give it one and revert after restore (_finish_restore)."""
+        """Minimize to the taskbar, entirely through GDK.
+
+        Design (see the v0.1.x freeze): we NEVER call ShowWindow / SetWindowLong
+        on GDK's HWND here.  GDK owns the window's mapped/iconified bookkeeping;
+        hiding or re-styling the HWND behind its back (while the taskbar click
+        that activated us was still in flight) desynced it and could block the
+        main thread.  Instead: drop the skip-taskbar hint so GDK gives the window
+        a taskbar button, then ask GDK to iconify.  Restore is detected from the
+        'window-state-event' (see _on_window_state) and finished by a settle
+        timer (_finish_restore)."""
         if self._minimized:
             return
         # Persist geometry NOW: while iconic, get_position() is bogus (-32000).
@@ -1490,35 +1506,25 @@ class OnScreenKeyboard(Gtk.Window):
             _win_log("minimize: failed — aborting, window stays visible")
             self._finish_restore("minimize-failed")
             return
-        self._min_watch_id = GLib.timeout_add(150, self._minimize_watch)
+        # Slow safety net only (1 s): refusal detection + missed state event.
+        # It never makes Win32 calls; the state event is the primary path.
+        self._min_watch_id = GLib.timeout_add(1000, self._minimize_watch)
 
     def _win_minimize(self) -> bool:
-        import ctypes
-        user32 = ctypes.windll.user32
-        hwnd = getattr(self, "_win_hwnd", None) or self._win_get_hwnd()
-        if not hwnd:
-            return False
-        self._win_hwnd = hwnd
-        GWL_EXSTYLE, WS_EX_TOOLWINDOW, WS_EX_APPWINDOW = -20, 0x80, 0x40000
-        SW_HIDE, SW_SHOWMINNOACTIVE = 0, 7
+        # Let the taskbar click activate/restore us (WNDPROC + CBT pass-through).
         _win_allow_activate[0] = True
-        # Style change only reaches the taskbar across a hide/show cycle.
-        _win_log("minimize: step SW_HIDE")
-        user32.ShowWindow(hwnd, SW_HIDE)
-        ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        _win_log(f"minimize: step SetWindowLongW ex={ex:#x}")
-        user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
-                              (ex & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW)
-        _win_log("minimize: step SW_SHOWMINNOACTIVE")
-        user32.ShowWindow(hwnd, SW_SHOWMINNOACTIVE)
-        _win_log(f"minimize: APPWINDOW set, SW_SHOWMINNOACTIVE; iconic="
-                 f"{bool(user32.IsIconic(hwnd))}")
-        return bool(user32.IsIconic(hwnd))
+        _win_log("minimize: step set_skip_taskbar_hint(False)")
+        self.set_skip_taskbar_hint(False)
+        _win_log("minimize: step iconify")
+        self.iconify()
+        _win_log("minimize: step iconify returned")
+        return True
 
     def _linux_minimize(self) -> bool:
         # DOCK windows can't be iconified and never appear in the window list.
         # The WM re-reads _NET_WM_WINDOW_TYPE only on (re)map, so: hide,
-        # switch to NORMAL + taskbar-visible, show, iconify.  _minimize_watch
+        # switch to NORMAL + taskbar-visible, show, iconify.  This runs from the
+        # button handler (not from a window-state handler).  _minimize_watch
         # reverts to DOCK if the WM refuses.
         self.hide()
         self.set_type_hint(Gdk.WindowTypeHint.NORMAL)
@@ -1530,10 +1536,7 @@ class OnScreenKeyboard(Gtk.Window):
         return True
 
     def _is_iconic(self) -> bool:
-        if IS_WINDOWS:
-            import ctypes
-            hwnd = getattr(self, "_win_hwnd", None)
-            return bool(hwnd and ctypes.windll.user32.IsIconic(hwnd))
+        """GDK's own view of the iconified state (no Win32 calls)."""
         gw = self.get_window()
         return bool(gw and gw.get_state() & Gdk.WindowState.ICONIFIED)
 
@@ -1546,16 +1549,32 @@ class OnScreenKeyboard(Gtk.Window):
             return False
         if event.new_window_state & Gdk.WindowState.ICONIFIED:
             self._min_saw_iconic = True
+            # Re-minimized during the settle window: abandon the pending restore.
+            self._cancel_restore_timer()
         elif self._min_saw_iconic:
             _win_log("minimize: window-state ICONIFIED cleared")
-            # Defer: restoring hides/re-styles this window, which shouldn't
-            # happen inside GDK's own state-change dispatch.
-            GLib.idle_add(lambda: self._finish_restore("window-state") and False)
+            # Do NOTHING else inside GDK's dispatch: just arm the settle timer.
+            self._schedule_restore("window-state")
         return False
 
+    def _cancel_restore_timer(self):
+        if self._restore_timer_id:
+            GLib.source_remove(self._restore_timer_id)
+            self._restore_timer_id = 0
+
+    def _schedule_restore(self, why: str):
+        """Finish the restore after activation has settled (~250 ms)."""
+        if self._restore_timer_id:
+            return
+        def _go():
+            self._restore_timer_id = 0
+            self._finish_restore(why)
+            return False
+        self._restore_timer_id = GLib.timeout_add(250, _go)
+
     def _minimize_watch(self):
-        """Poll for restore (taskbar click) or WM refusal.  Never leave the
-        keyboard invisible: if it never became iconic, revert."""
+        """Slow (1 s) safety net: WM refusal, or a missed state event.  Reads
+        GDK state only; never calls Win32."""
         if not self._minimized:
             self._min_watch_id = 0
             return False
@@ -1563,10 +1582,10 @@ class OnScreenKeyboard(Gtk.Window):
             self._min_saw_iconic = True
             return True
         if self._min_saw_iconic:
-            self._min_watch_id = 0
-            self._finish_restore("poll")
-            return False
-        if time.monotonic() - self._min_started > 1.0:   # slow/remote sessions
+            _win_log("minimize: watch saw restore (state event missed)")
+            self._schedule_restore("watch")      # no-op if already armed
+            return True
+        if time.monotonic() - self._min_started > 0.95:
             _win_log("minimize: WM never iconified within 1s — reverting")
             self._min_watch_id = 0
             self._finish_restore("refused")
@@ -1578,15 +1597,16 @@ class OnScreenKeyboard(Gtk.Window):
         if not self._minimized:
             return
         self._minimized = False
+        self._cancel_restore_timer()
         if self._min_watch_id:
             GLib.source_remove(self._min_watch_id)
             self._min_watch_id = 0
         _win_log(f"restore: finishing ({why})")
-        _win_allow_activate[0] = False  # also covers failure paths
         try:
             if IS_WINDOWS:
                 self._win_finish_restore()
             else:
+                _win_allow_activate[0] = False
                 self.hide()
                 self.set_type_hint(Gdk.WindowTypeHint.DOCK)
                 self.set_skip_taskbar_hint(True)
@@ -1594,38 +1614,59 @@ class OnScreenKeyboard(Gtk.Window):
                 self.show()
         except Exception as exc:
             _win_log(f"restore: error ({exc})")
-        # Put geometry back exactly (hide/show may let the WM re-place us).
+        _win_allow_activate[0] = False   # also covers failure paths
+        # Put geometry back exactly (the WM may re-place us).
         x, y = self.settings.get("win_x"), self.settings.get("win_y")
         if x is not None and y is not None:
             self.move(int(x), int(y))
         _win_log("restore: done")
 
     def _win_finish_restore(self):
+        """Runs ~250 ms after GDK reported ICONIFIED cleared.  No ShowWindow, no
+        SetWindowLong (beyond the read-first NOACTIVATE check), no sleep."""
         import ctypes
         user32 = ctypes.windll.user32
-        hwnd = self._win_hwnd
-        GWL_EXSTYLE, WS_EX_TOOLWINDOW, WS_EX_APPWINDOW = -20, 0x80, 0x40000
-        SW_HIDE, SW_SHOWNOACTIVATE, SW_RESTORE = 0, 4, 9
-        _win_log(f"restore: step begin fg={user32.GetForegroundWindow():#x} "
-                 f"ours={hwnd:#x} collapsed={self._collapsed}")
-        if user32.IsIconic(hwnd):
-            _win_log("restore: step SW_RESTORE")
-            user32.ShowWindow(hwnd, SW_RESTORE)   # refused/abort path
-        _win_log("restore: step SW_HIDE")
-        user32.ShowWindow(hwnd, SW_HIDE)
-        # Re-block activation BEFORE re-showing so the show can't take focus.
+        hwnd = getattr(self, "_win_hwnd", None)
+        _win_log(f"restore: step begin fg={(user32.GetForegroundWindow() or 0):#x} "
+                 f"ours={(hwnd or 0):#x} collapsed={self._collapsed}")
+        _win_log("restore: step set_skip_taskbar_hint(True)")
+        self.set_skip_taskbar_hint(True)
+        # Re-block activation now that the taskbar click has settled.
         _win_allow_activate[0] = False
-        _win_log("restore: step apply_styles")
-        self._win_apply_styles(hwnd)              # adds NOACTIVATE|TOOLWINDOW
+        if hwnd:
+            _win_log("restore: step ensure_noactivate")
+            self._win_ensure_noactivate(hwnd)
+        _win_log("restore: step handback_foreground")
+        self._win_handback_foreground()
+        _win_log("restore: step handback_foreground returned")
+
+    def _win_ensure_noactivate(self, hwnd):
+        """GDK's skip-taskbar handling may rewrite the extended style.  Re-add
+        WS_EX_NOACTIVATE only if it is actually missing (style bits only: no
+        show/hide, so the taskbar and GDK's mapped state are untouched)."""
+        import ctypes
+        user32 = ctypes.windll.user32
+        GWL_EXSTYLE, WS_EX_NOACTIVATE = -20, 0x08000000
         ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        _win_log(f"restore: step SetWindowLongW ex={ex:#x}")
-        user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_APPWINDOW)
-        _win_log("restore: step SW_SHOWNOACTIVATE")
-        user32.ShowWindow(hwnd, SW_SHOWNOACTIVATE)
-        # Taskbar click activated us briefly: hand foreground back to the app.
-        _win_log("restore: step focus_restore")
-        _win_focus_restore()
-        _win_log("restore: step focus_restore returned")
+        if not ex & WS_EX_NOACTIVATE:
+            _win_log(f"restore: NOACTIVATE missing (ex={ex:#x}) — re-adding")
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex | WS_EX_NOACTIVATE)
+
+    def _win_handback_foreground(self):
+        """Give foreground back to the previously tracked target IF we hold it.
+        Single SetForegroundWindow; no sleep, no AttachThreadInput."""
+        import ctypes
+        user32 = ctypes.windll.user32
+        target = _win_last_target[0]
+        cur = user32.GetForegroundWindow()
+        if not target or not cur or cur == target:
+            return
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(cur, ctypes.byref(pid))
+        if pid.value != _win_our_pid:
+            return   # someone else already has foreground — leave it alone
+        ok = user32.SetForegroundWindow(target)
+        _win_log(f"restore: SetForegroundWindow({int(target):#x}) -> {bool(ok)}")
 
     def _win_get_hwnd(self):
         """Return this window's native Win32 HWND, or None.
@@ -1701,7 +1742,7 @@ class OnScreenKeyboard(Gtk.Window):
             return None
 
     def _win_apply_styles(self, hwnd):
-        """Apply WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW and install the WNDPROC
+        """Apply WS_EX_NOACTIVATE and install the WNDPROC
         subclass on hwnd.  Idempotent: a second call (e.g. from the 'map'
         handler after realize failed to get the HWND) re-applies the style but
         re-subclasses only if we haven't already, so we never chain our own
@@ -1709,18 +1750,19 @@ class OnScreenKeyboard(Gtk.Window):
         import ctypes
         user32 = ctypes.windll.user32
 
-        # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────────
+        # ── 2. Set WS_EX_NOACTIVATE ────────────────────────────────────
+        # WS_EX_TOOLWINDOW is deliberately NOT set here: "no taskbar button" is
+        # GDK's job (set_skip_taskbar_hint), so minimize/restore can flip it
+        # through GDK instead of re-styling the HWND behind GDK's back.
         GWL_EXSTYLE      = -20
         WS_EX_NOACTIVATE = 0x08000000
-        WS_EX_TOOLWINDOW = 0x00000080
 
         cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        user32.SetWindowLongW(
-            hwnd, GWL_EXSTYLE,
-            cur_style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
-        )
-        _win_log(f"styles: WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW applied "
-                 f"(was {cur_style:#x})")
+        if cur_style & WS_EX_NOACTIVATE:
+            _win_log(f"styles: WS_EX_NOACTIVATE already set ({cur_style:#x})")
+        else:
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, cur_style | WS_EX_NOACTIVATE)
+            _win_log(f"styles: WS_EX_NOACTIVATE applied (was {cur_style:#x})")
 
         if getattr(self, "_win_wndproc", None) is not None:
             _win_log("styles: WNDPROC already subclassed — skipping re-subclass")
@@ -1821,8 +1863,8 @@ class OnScreenKeyboard(Gtk.Window):
         if not IS_WINDOWS:
             return
         if self._minimized:
-            # Minimized-to-taskbar styles (APPWINDOW, no TOOLWINDOW) are
-            # managed by _win_minimize / _finish_restore; don't clobber them.
+            # Minimized state is managed via GDK in _win_minimize /
+            # _finish_restore; don't touch the window while it is in flux.
             _win_log("map: skipped style re-apply (minimized)")
             return
         # Ensure HWND is obtained (no-op if already found at realize time).
@@ -1831,8 +1873,10 @@ class OnScreenKeyboard(Gtk.Window):
         hwnd = getattr(self, "_win_hwnd", None)
         if hwnd:
             try:
+                import ctypes
                 self._win_apply_styles(hwnd)
-                _win_log("map: styles re-applied after ShowWindow")
+                _win_log("map: styles re-applied after ShowWindow; "
+                         f"exstyle={ctypes.windll.user32.GetWindowLongW(hwnd, -20):#x}")
             except Exception as exc:
                 _win_log(f"map: re-apply styles error ({exc})")
 
@@ -1846,7 +1890,7 @@ class OnScreenKeyboard(Gtk.Window):
                the HWND can't be obtained.  _win_last_target[0] is the linchpin
                of PostMessage typing; if the poll never starts, every keystroke
                falls through to pynput and lands in the OSK itself.
-          1.   WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW — best-effort: don't activate
+          1.   WS_EX_NOACTIVATE (taskbar-skip is GDK's set_skip_taskbar_hint) — best-effort: don't activate
                on click.  Needs the HWND.
           2.   WM_MOUSEACTIVATE / WM_SETFOCUS subclass — best-effort focus-steal
                suppression.  Needs the HWND.
