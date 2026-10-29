@@ -166,6 +166,8 @@ def _win_setup_protos() -> None:
         # 3rd arg and return are LONG_PTR — default int would truncate the proc
         # pointer on Win64 and corrupt the subclass.  Present only on 64-bit
         # builds; guarded because the 32-bit fallback uses the non-Ptr names.
+        u.GetClassNameW.restype  = ctypes.c_int
+        u.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
         if hasattr(u, "GetWindowLongPtrW"):
             u.GetWindowLongPtrW.restype  = ctypes.c_ssize_t
             u.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
@@ -1610,6 +1612,8 @@ class OnScreenKeyboard(Gtk.Window):
             proxy.show()
             _win_log("minimize: step proxy.iconify")
             proxy.iconify()
+            # GDK may still hold ICONIFIED from last time, so no transition fires
+            self._min_saw_iconic = self._iconic(proxy)
             _win_log("minimize: step proxy.iconify returned")
         except Exception as exc:
             _win_log(f"minimize: error ({exc})")
@@ -1641,9 +1645,28 @@ class OnScreenKeyboard(Gtk.Window):
             _win_log(f"proxy: icon error ({exc})")
         p.connect("window-state-event", self._on_proxy_state)
         p.connect("delete-event", self._on_proxy_delete)
+        if IS_WINDOWS:
+            p.connect("realize", self._on_proxy_realize)
         self._proxy = p
         _win_log("proxy: created")
         return p
+
+    def _on_proxy_realize(self, proxy):
+        """WS_EX_APPWINDOW guarantees the proxy a taskbar button whatever else
+        GDK sets; without a button a minimized keyboard could not come back."""
+        try:
+            import ctypes
+            _win_setup_protos()
+            u = ctypes.windll.user32
+            hwnd = int(proxy.get_window().get_handle())
+            GWL_EXSTYLE = -20
+            ex = u.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+            new = (ex | 0x00040000) & ~(0x08000000 | 0x00000080)  # +APPWINDOW -NOACTIVATE -TOOLWINDOW
+            if new != ex:
+                u.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new)
+            _win_log(f"proxy: exstyle {ex & 0xFFFFFFFF:#x} -> {new & 0xFFFFFFFF:#x}")
+        except Exception as exc:
+            _win_log(f"proxy: realize style error ({exc})")
 
     @staticmethod
     def _iconic(win) -> bool:
@@ -1739,21 +1762,23 @@ class OnScreenKeyboard(Gtk.Window):
             self._min_watch_id = 0
         _win_log(f"restore: finishing ({why})")
         try:
+            if IS_WINDOWS:
+                # Before hiding the proxy: while it holds the foreground,
+                # SetForegroundWindow to the user's app is still allowed.
+                _win_log("restore: step handback_foreground")
+                self._win_handback_foreground()
+                _win_log("restore: step handback_foreground returned")
             if self._proxy is not None:
                 _win_log("restore: step proxy.hide")
                 self._proxy.hide()
+            x, y = self.settings.get("win_x"), self.settings.get("win_y")
+            if x is not None and y is not None:
+                _win_log("restore: step move")
+                self.move(int(x), int(y))   # before show: applied at map, no jump
             _win_log("restore: step osk.show")
             if self._iconic(self):
                 self.deiconify()
             self.show()          # not show_all: keeps collapsed children hidden
-            x, y = self.settings.get("win_x"), self.settings.get("win_y")
-            if x is not None and y is not None:
-                _win_log("restore: step move")
-                self.move(int(x), int(y))
-            if IS_WINDOWS:
-                _win_log("restore: step handback_foreground")
-                self._win_handback_foreground()
-                _win_log("restore: step handback_foreground returned")
         except Exception as exc:
             _win_log(f"restore: error ({exc})")
         _win_log("restore: done")
@@ -2060,7 +2085,9 @@ class OnScreenKeyboard(Gtk.Window):
                     if hwnd:
                         pid = ctypes.c_ulong()
                         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-                        if pid.value != our_pid:
+                        cls = ctypes.create_unicode_buffer(64)
+                        user32.GetClassNameW(hwnd, cls, 64)
+                        if pid.value != our_pid and cls.value not in _WIN_SHELL_CLASSES:
                             prev = _win_last_target[0]
                             _win_last_target[0] = hwnd
                             # Log only on change so the linchpin's health is
@@ -6046,6 +6073,14 @@ def _start_hang_watchdog() -> None:
 _instance_keepalive: list = []   # mutex handle / listening socket, process lifetime
 
 
+# Taskbar / shell windows that briefly take the foreground when the user
+# clicks the taskbar; typing should keep going to the app before them.
+_WIN_SHELL_CLASSES = frozenset({
+    "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "NotifyIconOverflowWindow",
+    "Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow",
+})
+
+
 def _win_single_instance_or_exit() -> None:
     """Windows: named mutex; if another instance owns it, broadcast OSK_SHOW_v1
     (its WNDPROC re-shows the keyboard) and exit."""
@@ -6067,6 +6102,15 @@ def _win_single_instance_or_exit() -> None:
     if handle and err == 183:   # ERROR_ALREADY_EXISTS
         _win_log("single-instance: already running — asking it to show, exiting")
         u32.PostMessageW(0xFFFF, msg, 0, 0)   # HWND_BROADCAST
+        # Fallback that doesn't depend on our WNDPROC subclass: restore the
+        # minimized taskbar proxy through Windows' own SC_RESTORE path.
+        u32.FindWindowW.restype = wintypes.HWND
+        u32.FindWindowW.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR]
+        u32.IsIconic.argtypes = [wintypes.HWND]
+        # GDK's class name, so Windows' own "On-Screen Keyboard" (osk.exe) is never matched
+        proxy = u32.FindWindowW("gdkWindowToplevel", "On-Screen Keyboard")
+        if proxy and u32.IsIconic(proxy):
+            u32.PostMessageW(proxy, 0x0112, 0xF120, 0)   # WM_SYSCOMMAND, SC_RESTORE
         sys.exit(0)
     _instance_keepalive.append(handle)
 
