@@ -19,7 +19,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read version
         id: ver
@@ -38,6 +38,8 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
+          # TODO: migrate to UCRT64 (MSYS2 is deprecating MINGW64)
+          suppress-deprecation-warnings: msystem-mingw64
           update: false
           install: >-
             mingw-w64-x86_64-gtk3
@@ -159,7 +161,7 @@ jobs:
           Get-ChildItem release | Format-Table Name, Length
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: OnScreenKeyboard-windows-${{ steps.ver.outputs.version }}
           path: release/*
@@ -167,7 +169,7 @@ jobs:
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
