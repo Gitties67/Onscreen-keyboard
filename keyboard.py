@@ -481,6 +481,19 @@ if not IS_WINDOWS:
         print("[keyboard] xdotool not found — emoji will use pynput fallback.")
         print("           Install with: sudo apt install xdotool")
 
+UPDATE_TMP_PREFIX = "osk_update_"   # temp folders holding downloaded installers
+
+
+def _cleanup_old_update_downloads() -> bool:
+    """Delete installers left in %TEMP% by earlier self-updates (they can't
+    delete themselves while running).  GLib timeout: runs once."""
+    import glob
+    import tempfile
+    for d in glob.glob(os.path.join(tempfile.gettempdir(), UPDATE_TMP_PREFIX + "*")):
+        shutil.rmtree(d, ignore_errors=True)   # an installer still running is skipped
+    return False
+
+
 def _child_env() -> dict:
     """Environment for processes we spawn that must not inherit PyInstaller state.
 
@@ -5191,7 +5204,7 @@ class OnScreenKeyboard(Gtk.Window):
                 raise RuntimeError(f"{info['name']} not listed in SHA256SUMS.txt")
 
             # 2. installer
-            tmp_dir = tempfile.mkdtemp(prefix="osk_update_")
+            tmp_dir = tempfile.mkdtemp(prefix=UPDATE_TMP_PREFIX)
             tmp_path = os.path.join(tmp_dir, os.path.basename(info["name"]))
             digest = hashlib.sha256()
             req = urllib.request.Request(info["url"], headers={"User-Agent": "OSK-updater/1.0"})
@@ -6570,6 +6583,10 @@ def main():
 
     _start_hang_watchdog()
     win = OnScreenKeyboard()
+    if getattr(sys, "frozen", False):
+        # After a self-update the installer that relaunched us may still be
+        # exiting, so wait a minute before clearing old downloads.
+        GLib.timeout_add_seconds(60, _cleanup_old_update_downloads)
     if srv is not None:
         _linux_watch_show_requests(srv, win)
     Gtk.main()

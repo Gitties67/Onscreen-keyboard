@@ -46,6 +46,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "startup"; Description: "Start {#AppName} when I sign in"; GroupDescription: "Startup:"; Flags: unchecked
 
+[InstallDelete]
+; Upgrades install over the old version (same AppId, same folder).  Clear the
+; PyInstaller bundle first so files a newer build no longer ships don't pile up.
+; Settings live in %APPDATA%\OnScreenKeyboard and are never touched.
+Type: filesandordirs; Name: "{app}\_internal"
+
 [Files]
 Source: "..\dist\OnScreenKeyboard\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
