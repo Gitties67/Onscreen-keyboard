@@ -431,8 +431,36 @@ if not IS_WINDOWS:
         if not XLIB_OK and not PYNPUT_OK:
             print(f"[keyboard] AT-SPI2 also unavailable ({_e}) — typing disabled.")
 
-from predictor import WordPredictor, UserModel
+from predictor import WordPredictor, UserModel, DICTIONARIES, dict_path_for
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
+
+
+LANGUAGE_LABELS = {"en_AU": "English (Australia)", "en_GB": "English (UK)",
+                   "en_US": "English (US)"}
+
+
+def _detect_language() -> str:
+    """Dictionary matching the user's region: en-AU/NZ → Australian,
+    UK & most of the Commonwealth → British, anything else → US."""
+    region = ""
+    try:
+        if IS_WINDOWS:
+            import ctypes
+            buf = ctypes.create_unicode_buffer(85)
+            if ctypes.windll.kernel32.GetUserDefaultLocaleName(buf, 85):
+                region = buf.value                      # e.g. "en-AU"
+        else:
+            region = (os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES")
+                      or os.environ.get("LANG") or "")  # e.g. "en_AU.UTF-8"
+    except Exception:
+        pass
+    parts = region.replace("-", "_").split(".")[0].split("_")
+    country = parts[1].upper() if len(parts) > 1 else ""
+    if country in ("AU", "NZ"):
+        return "en_AU"
+    if country in ("GB", "IE", "ZA", "IN", "SG", "MY", "HK", "MT", "KE", "NG", "PK"):
+        return "en_GB"
+    return "en_US"
 
 
 def _resolve_dict_path() -> str:
@@ -513,7 +541,47 @@ BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
 DEFAULT_FONT_SIZE = 18     # big and clear by default
 FONT_SETTINGS_VERSION = 2  # bump to re-apply font defaults once on upgrade
-SETTINGS_LABEL_W = 140     # width of the label column on the settings page
+SETTINGS_LABEL_W = 150     # width of the label column on the settings page
+
+# What each setting does and why you'd change it (the (i) buttons in Settings).
+SETTINGS_HELP = {
+    "Theme": "The keyboard's colours. Dark is easy on the eyes, Light suits bright rooms, "
+             "and High Contrast makes every key as easy to see as possible.",
+    "Layout": "Which key arrangement to show. Pick the one that matches the language your "
+              "computer is set to type in (QWERTY for English).",
+    "Font": "The typeface on the keys. Segoe UI matches the built-in Windows on-screen "
+            "keyboard; change it only if another font is easier for you to read.",
+    "Font size": "How big the letters on the keys are. Make it bigger if the labels are hard "
+                 "to read, smaller if long labels feel cramped.",
+    "Key size": "How tall the keys are. Bigger keys are easier to hit; smaller keys take up "
+                "less of the screen. Dragging the top or bottom edge does the same thing.",
+    "Opacity": "How see-through the keyboard is. Lower it to see what's behind the keyboard "
+               "while you type.",
+    "Dictionary": "Which English spelling word suggestions and spell-check use: Australian "
+                  "and UK English say 'colour' and 'organise', US English says 'color' and "
+                  "'organize'. It starts on the one for your region.",
+    "Dwell click": "Hover over a key without clicking and it presses itself after the delay. "
+                   "Useful if clicking is hard or tiring, e.g. with a head mouse or eye tracker.",
+    "Key sound": "A sound on every key press, so you know it registered. Click is soft, Beep "
+                 "is louder, Off is silent.",
+    "Modifier keys": "How Ctrl and Alt behave. Auto-release lets go after the next key (tap "
+                     "Ctrl, then C, to copy). Sticky keeps them on until you tap them again.",
+    "Shift key": "One-shot capitalises just the next letter. Sticky keeps Shift on until you "
+                 "tap it again, handy for typing several capitals.",
+    "Taskbar": "Pins the keyboard to your panel and starts it when you log in, so it's "
+               "always one click away.",
+    "Tutorial": "Replays the four quick tips shown the first time the keyboard opened.",
+    "Learn my words": "Remembers which words you use (on this computer only, never sent "
+                      "anywhere) so they're suggested sooner. Words next to numbers or symbols, "
+                      "like emails and passwords, are never learned. Forget erases it all.",
+    "Custom words": "Your own words and phrases (names, slang, work terms). They're suggested "
+                    "first, with the capitals you gave them.",
+    "Macros": "Short triggers that expand into longer text. Type the trigger and pick it from "
+              "the suggestions; {date} and {time} fill in today's date and the time.",
+    "Custom themes": "Make your own colour scheme, step by step, with a live preview.",
+    "Rate or comment": "Opens GitHub in your browser so you can leave a star rating or a "
+                       "note. It's the best way to tell me what to fix next.",
+}
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
@@ -532,6 +600,7 @@ DEFAULT_SETTINGS: dict = {
     "learn_words":          True,     # learn word usage from what you type (local only)
     "tutorial_done":        False,    # first-run tour shown (fresh installs only; see _load_settings)
     "font_version":         FONT_SETTINGS_VERSION,
+    "language":             _detect_language(),  # en_AU | en_GB | en_US (word suggestions)
 }
 
 DEFAULT_MACROS = [
@@ -766,6 +835,12 @@ popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
 #settings-scroll undershoot.bottom, #settings-scroll undershoot.top {{ background: none; }}
 .settings-divider {{ background-color: {c['key_border']}; min-height: 1px; }}
 #settings-hint {{ color: {c['sublabel_fg']}; }}
+.info-btn {{ color: {c['sublabel_fg']}; background-color: transparent; background-image: none;
+             border: 1px solid {c['sublabel_fg']}; border-radius: 10px; box-shadow: none;
+             min-width: 18px; min-height: 18px; padding: 0; margin: 0;
+             font-size: 11px; font-weight: 700; font-style: italic; }}
+.info-btn:hover {{ color: {c['active_fg']}; background-color: {c['active_bg']};
+                   border-color: {c['active_bg']}; }}
 .settings-list {{ background-color: {c['key_bg']}; border: 1px solid {c['key_border']};
                   border-radius: 6px; }}
 .settings-list row + row {{ border-top: 1px solid {c['key_border']}; }}
@@ -1327,7 +1402,8 @@ class OnScreenKeyboard(Gtk.Window):
 
     def __init__(self):
         super().__init__()
-        self.predictor    = WordPredictor(_resolve_dict_path())
+        self.predictor    = WordPredictor(
+            dict_path_for(self._load_settings().get("language", "en_US")))
         self.typer        = KeyTyper()
         self.current_word = ""
         self._last_word   = ""   # last committed word of this sentence ("" = none)
@@ -1336,6 +1412,8 @@ class OnScreenKeyboard(Gtk.Window):
         self._learn_save_timer = None  # debounce timer for UserModel.save()
         self._forget_timer = None      # confirm-window timer for "Forget learned words"
         self._forget_armed = False
+        self._word_title = False       # first letter of current_word typed upper-case
+        self._word_upper = False       # every letter of current_word typed upper-case
         self.shift_active = False
         self.caps_lock    = False
         self._custom_words: list[str] = []
@@ -3555,6 +3633,24 @@ class OnScreenKeyboard(Gtk.Window):
         self._save_settings()
         self._refresh_font_family_buttons()
 
+    def _on_language_clicked(self, code: str):
+        if code == self.settings.get("language"):
+            return
+        self.settings["language"] = code
+        self._save_settings()
+        self.predictor.set_dictionary(dict_path_for(code))
+        self._refresh_language_buttons()
+        self._refresh_suggestions()
+
+    def _refresh_language_buttons(self):
+        current = self.settings.get("language", "en_US")
+        for code, btn in getattr(self, "_language_btns", {}).items():
+            ctx = btn.get_style_context()
+            if code == current:
+                ctx.add_class("active")
+            else:
+                ctx.remove_class("active")
+
     def _refresh_font_family_buttons(self):
         current = self.settings.get("font_family", DEFAULT_FONT)
         for family, btn in self._font_family_btns.items():
@@ -4069,6 +4165,8 @@ class OnScreenKeyboard(Gtk.Window):
             merged = {**DEFAULT_SETTINGS, **data}
             if merged.get("click_style") not in ("click", "beep"):
                 merged["click_style"] = "click"
+            if merged.get("language") not in DICTIONARIES:
+                merged["language"] = DEFAULT_SETTINGS["language"]
             for key in ("learn_words", "tutorial_done", "click_sound", "dwell_enabled"):
                 if not isinstance(merged.get(key), bool):
                     merged[key] = DEFAULT_SETTINGS[key]
@@ -4086,6 +4184,8 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _toggle_settings(self):
         self._settings_mode = not self._settings_mode
+        if getattr(self, "_help_pop", None) is not None:
+            self._help_pop.popdown()
         if self._settings_mode:
             self._close_other_panels("settings")
             self._key_stack.set_visible_child_name("settings")
@@ -4108,13 +4208,61 @@ class OnScreenKeyboard(Gtk.Window):
         box.pack_start(sep, False, False, 0)
         return box
 
-    @staticmethod
-    def _settings_row_label(text: str) -> Gtk.Label:
+    def _settings_row_label(self, text: str) -> Gtk.Box:
+        """Setting name for the label column, with an (i) button that explains
+        the setting when SETTINGS_HELP has an entry for it."""
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        box.set_size_request(SETTINGS_LABEL_W, -1)
         lbl = Gtk.Label(label=text)
         lbl.set_name("settings-label")
         lbl.set_xalign(0.0)
-        lbl.set_size_request(SETTINGS_LABEL_W, -1)
-        return lbl
+        box.pack_start(lbl, False, False, 0)
+        help_text = SETTINGS_HELP.get(text)
+        if help_text:
+            info = Gtk.Button(label="i")
+            info.get_style_context().add_class("info-btn")
+            info.set_relief(Gtk.ReliefStyle.NONE)
+            info.set_valign(Gtk.Align.CENTER)
+            info.set_tooltip_text(help_text)
+            info.get_accessible().set_name(f"About {text}")
+            info.connect("clicked", lambda b, t=text, h=help_text: self._toggle_setting_help(b, t, h))
+            box.pack_start(info, False, False, 0)
+        return box
+
+    def _toggle_setting_help(self, anchor: Gtk.Widget, title: str, text: str):
+        """Show (or hide, on a second tap) the explanation bubble for a setting."""
+        pop = getattr(self, "_help_pop", None)
+        if pop is None:
+            pop = Gtk.Popover()
+            pop.set_modal(False)          # never grab focus from the typed-into app
+            pop.get_style_context().add_class("tour-popover")
+            body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            body.set_margin_start(12); body.set_margin_end(12)
+            body.set_margin_top(10); body.set_margin_bottom(10)
+            self._help_title = Gtk.Label(xalign=0.0)
+            self._help_title.get_style_context().add_class("tour-title")
+            self._help_body = Gtk.Label(xalign=0.0)
+            self._help_body.set_line_wrap(True)
+            self._help_body.set_max_width_chars(46)
+            self._help_body.get_style_context().add_class("tour-body")
+            ok = Gtk.Button(label="Got it")
+            ok.get_style_context().add_class("tour-btn")
+            ok.get_style_context().add_class("tour-next")
+            ok.set_halign(Gtk.Align.END)
+            ok.connect("clicked", lambda _b: self._help_pop.popdown())
+            for w in (self._help_title, self._help_body, ok):
+                body.pack_start(w, False, False, 0)
+            body.show_all()
+            pop.add(body)
+            self._help_pop = pop
+        if pop.get_visible() and pop.get_relative_to() is anchor:
+            pop.popdown()
+            return
+        self._help_title.set_label(title)
+        self._help_body.set_label(text)
+        pop.set_relative_to(anchor)
+        pop.set_position(Gtk.PositionType.RIGHT)
+        pop.popup()
 
     def _build_settings_panel(self) -> Gtk.Box:
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -4138,11 +4286,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 1. Theme row ───────────────────────────────────────────────────
         theme_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl = Gtk.Label(label="Theme")
-        lbl.set_name("settings-label")
-        lbl.set_xalign(0.0)
-        lbl.set_size_request(SETTINGS_LABEL_W, -1)
-        theme_row.pack_start(lbl, False, False, 0)
+        theme_row.pack_start(self._settings_row_label("Theme"), False, False, 0)
 
         for key in THEMES:
             btn = Gtk.Button(label=THEME_LABELS[key])
@@ -4155,11 +4299,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 2. Layout row ──────────────────────────────────────────────────
         layout_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_layout = Gtk.Label(label="Layout")
-        lbl_layout.set_name("settings-label")
-        lbl_layout.set_xalign(0.0)
-        lbl_layout.set_size_request(SETTINGS_LABEL_W, -1)
-        layout_row.pack_start(lbl_layout, False, False, 0)
+        layout_row.pack_start(self._settings_row_label("Layout"), False, False, 0)
 
         for key in ("qwerty", "azerty", "qwertz"):
             btn = Gtk.Button(label=key.upper())
@@ -4172,11 +4312,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 3. Font family row ─────────────────────────────────────────────
         font_fam_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_ff = Gtk.Label(label="Font")
-        lbl_ff.set_name("settings-label")
-        lbl_ff.set_xalign(0.0)
-        lbl_ff.set_size_request(SETTINGS_LABEL_W, -1)
-        font_fam_row.pack_start(lbl_ff, False, False, 0)
+        font_fam_row.pack_start(self._settings_row_label("Font"), False, False, 0)
 
         for family in FONT_FAMILIES:
             # Use abbreviated label for common families
@@ -4192,11 +4328,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 4. Font size row ───────────────────────────────────────────────
         font_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl6 = Gtk.Label(label="Font size")
-        lbl6.set_name("settings-label")
-        lbl6.set_xalign(0.0)
-        lbl6.set_size_request(SETTINGS_LABEL_W, -1)
-        font_row.pack_start(lbl6, False, False, 0)
+        font_row.pack_start(self._settings_row_label("Font size"), False, False, 0)
 
         font_dec = Gtk.Button(label="−")
         font_dec.get_style_context().add_class("settings-choice")
@@ -4220,11 +4352,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 5. Key size row ────────────────────────────────────────────────
         key_scale_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_ks = Gtk.Label(label="Key size")
-        lbl_ks.set_name("settings-label")
-        lbl_ks.set_xalign(0.0)
-        lbl_ks.set_size_request(SETTINGS_LABEL_W, -1)
-        key_scale_row.pack_start(lbl_ks, False, False, 0)
+        key_scale_row.pack_start(self._settings_row_label("Key size"), False, False, 0)
 
         ks_dec = Gtk.Button(label="−")
         ks_dec.get_style_context().add_class("settings-choice")
@@ -4248,11 +4376,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 6. Opacity row ─────────────────────────────────────────────────
         opacity_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_op = Gtk.Label(label="Opacity")
-        lbl_op.set_name("settings-label")
-        lbl_op.set_xalign(0.0)
-        lbl_op.set_size_request(SETTINGS_LABEL_W, -1)
-        opacity_row.pack_start(lbl_op, False, False, 0)
+        opacity_row.pack_start(self._settings_row_label("Opacity"), False, False, 0)
 
         cur_opacity = self.settings.get("opacity", 1.0)
         opacity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL,
@@ -4274,13 +4398,22 @@ class OnScreenKeyboard(Gtk.Window):
 
         inner.pack_start(self._settings_section_header("Input"), False, False, 0)
 
+        # ── Dictionary (English variant for suggestions + spell-check) ──────
+        lang_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lang_row.pack_start(self._settings_row_label("Dictionary"), False, False, 0)
+        self._language_btns = {}
+        for code in ("en_AU", "en_GB", "en_US"):
+            btn = Gtk.Button(label=LANGUAGE_LABELS[code])
+            btn.get_style_context().add_class("settings-choice")
+            btn.connect("clicked", lambda _b, c=code: self._on_language_clicked(c))
+            lang_row.pack_start(btn, True, True, 0)
+            self._language_btns[code] = btn
+        inner.pack_start(lang_row, False, False, 0)
+        self._refresh_language_buttons()
+
         # ── 7. Dwell row ───────────────────────────────────────────────────
         dwell_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl2 = Gtk.Label(label="Dwell click")
-        lbl2.set_name("settings-label")
-        lbl2.set_xalign(0.0)
-        lbl2.set_size_request(SETTINGS_LABEL_W, -1)
-        dwell_row.pack_start(lbl2, False, False, 0)
+        dwell_row.pack_start(self._settings_row_label("Dwell click"), False, False, 0)
 
         dwell_toggle = Gtk.ToggleButton(label="Off")
         dwell_toggle.set_name("settings-toggle")
@@ -4319,11 +4452,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 8. Sound row ───────────────────────────────────────────────────
         sound_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl4 = Gtk.Label(label="Key sound")
-        lbl4.set_name("settings-label")
-        lbl4.set_xalign(0.0)
-        lbl4.set_size_request(SETTINGS_LABEL_W, -1)
-        sound_row.pack_start(lbl4, False, False, 0)
+        sound_row.pack_start(self._settings_row_label("Key sound"), False, False, 0)
 
         self._sound_btns: dict[str, Gtk.Button] = {}
         for key, desc in (("off",   "No sound on key press"),
@@ -4341,11 +4470,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 9. Modifier auto-release row ───────────────────────────────────
         mod_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl5 = Gtk.Label(label="Modifier keys")
-        lbl5.set_name("settings-label")
-        lbl5.set_xalign(0.0)
-        lbl5.set_size_request(SETTINGS_LABEL_W, -1)
-        mod_row.pack_start(lbl5, False, False, 0)
+        mod_row.pack_start(self._settings_row_label("Modifier keys"), False, False, 0)
 
         auto_release = self.settings.get("modifier_auto_release", True)
         mod_toggle = Gtk.ToggleButton(label="Auto-release" if auto_release else "Sticky")
@@ -4367,11 +4492,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 9b. Shift behaviour row ────────────────────────────────────────
         shift_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_sh = Gtk.Label(label="Shift key")
-        lbl_sh.set_name("settings-label")
-        lbl_sh.set_xalign(0.0)
-        lbl_sh.set_size_request(SETTINGS_LABEL_W, -1)
-        shift_row.pack_start(lbl_sh, False, False, 0)
+        shift_row.pack_start(self._settings_row_label("Shift key"), False, False, 0)
 
         shift_sticky = self.settings.get("shift_sticky", False)
         self._shift_toggle = Gtk.ToggleButton(
@@ -4393,11 +4514,7 @@ class OnScreenKeyboard(Gtk.Window):
         # ── 10. Panel shortcut row (Linux / Cinnamon only) ─────────────────
         if not IS_WINDOWS:
             shortcut_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-            lbl7 = Gtk.Label(label="Taskbar")
-            lbl7.set_name("settings-label")
-            lbl7.set_xalign(0.0)
-            lbl7.set_size_request(SETTINGS_LABEL_W, -1)
-            shortcut_row.pack_start(lbl7, False, False, 0)
+            shortcut_row.pack_start(self._settings_row_label("Taskbar"), False, False, 0)
 
             pin_btn = Gtk.Button(label="Pin to panel")
             pin_btn.get_style_context().add_class("settings-choice")
@@ -4416,11 +4533,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 10b. Tour row ──────────────────────────────────────────────────
         tour_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_tour = Gtk.Label(label="Tutorial")
-        lbl_tour.set_name("settings-label")
-        lbl_tour.set_xalign(0.0)
-        lbl_tour.set_size_request(SETTINGS_LABEL_W, -1)
-        tour_row.pack_start(lbl_tour, False, False, 0)
+        tour_row.pack_start(self._settings_row_label("Tutorial"), False, False, 0)
 
         tour_btn = Gtk.Button(label="Show tutorial")
         tour_btn.get_style_context().add_class("settings-choice")
@@ -5712,6 +5825,13 @@ class OnScreenKeyboard(Gtk.Window):
         self.typer.type_char(char, mods)
 
         if char.isalpha() and not mods:
+            # Remember how the word was typed so suggestions keep its case:
+            # "A" → "Alex", "AB" → "ABOUT".
+            if not self.current_word:
+                self._word_title = char.isupper()
+                self._word_upper = char.isupper()
+            else:
+                self._word_upper = self._word_upper and char.isupper()
             self.current_word += char.lower()
         elif mods:
             self.current_word = ""
@@ -6008,7 +6128,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Normal dictionary word-completion
         cased = self._case_word(label)
-        if self.shift_active or self.caps_lock:
+        if not cased.startswith(self._typed_prefix()):
             # Retype the whole word with casing (backspace the partial prefix first)
             for _ in range(len(self.current_word)):
                 self.typer.send_special("backspace")
@@ -6037,13 +6157,31 @@ class OnScreenKeyboard(Gtk.Window):
             if not is_emoji and not is_macro:
                 btn.set_label(self._case_word(val))
 
+    def _typed_prefix(self) -> str:
+        """current_word as the user actually typed it (case restored)."""
+        w = self.current_word
+        if not w:
+            return w
+        if self._word_upper:
+            return w.upper()
+        if self._word_title:
+            return w[0].upper() + w[1:]
+        return w
+
     def _case_word(self, word: str) -> str:
-        """Apply current shift/caps state to a suggestion word."""
+        """Casing for a suggestion: the word's natural form ("I'm", "Alex"),
+        then whatever the user typed (capital first letter, all caps) or the
+        live shift/caps state."""
         if not word:
             return word
         if self.caps_lock:
             return word.upper()
-        if self.shift_active:
+        if word == word.lower():           # custom words keep their own casing
+            word = self.predictor.display_form(word)
+        typed = len(self.current_word)
+        if typed >= 2 and self._word_upper:
+            return word.upper()
+        if self.shift_active or (typed and self._word_title):
             return word[0].upper() + word[1:]
         return word
 

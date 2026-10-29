@@ -214,5 +214,40 @@ class UserModelTests(unittest.TestCase):
         self.assertFalse(um.save())
 
 
+
+class TestRegionalDictionaries(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.au = WordPredictor(predictor.dict_path_for("en_AU"))
+        cls.us = shared_predictor()
+
+    def test_regional_spellings_only(self):
+        self.assertIn("colour", self.au.predict("colo", 5))
+        self.assertNotIn("color", self.au.predict("colo", 5))
+        self.assertIn("color", self.us.predict("colo", 5))
+        self.assertNotIn("colour", self.us.predict("colo", 5))
+
+    def test_regional_word_borrows_rank(self):
+        # "favourite" isn't in the (US-built) frequency list; it must still
+        # rank like "favorite" instead of sinking to the bottom.
+        self.assertEqual(self.au.predict("favo", 1, context=["my"]), ["favourite"])
+
+    def test_phrase_model_maps_to_local_spelling(self):
+        nxt = self.au.predict_next(["my", "favourite"], 20)
+        self.assertNotIn("color", nxt)
+
+    def test_switch_dictionary(self):
+        p = WordPredictor(predictor.dict_path_for("en_US"))
+        p.set_dictionary(predictor.dict_path_for("en_GB"))
+        self.assertIn("organise", p.predict("organis", 5))
+
+    def test_display_form(self):
+        p = self.us
+        self.assertEqual(p.display_form("i"), "I")
+        self.assertEqual(p.display_form("i'm"), "I'm")
+        self.assertEqual(p.display_form("alex"), "Alex")
+        self.assertEqual(p.display_form("the"), "the")
+
+
 if __name__ == "__main__":
     unittest.main()

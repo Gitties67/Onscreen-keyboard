@@ -34,6 +34,46 @@ def _default_dict_path() -> str:
     return _data_path("words.txt") or "/usr/share/dict/american-english"
 
 
+# Regional dictionaries (see tools/build_dicts.py).  "words.txt" is US English.
+DICTIONARIES = {
+    "en_AU": ("words_en_AU.txt", "/usr/share/dict/british-english"),
+    "en_GB": ("words_en_GB.txt", "/usr/share/dict/british-english"),
+    "en_US": ("words.txt",       "/usr/share/dict/american-english"),
+}
+
+
+def dict_path_for(language: str) -> str:
+    bundled, system = DICTIONARIES.get(language, DICTIONARIES["en_US"])
+    return _data_path(bundled) or system
+
+
+# Commonwealth → US spelling rewrites.  The frequency list and phrase model
+# were built from US-spelt data, so a word like "colour" borrows the rank of
+# "color", and "color" in the phrase model is offered as "colour".
+_US_REWRITES = [
+    (re.compile(r"our"), "or"),                   # colour, favourite, behaviour
+    (re.compile(r"is(e|ed|es|ing|ation|ations|er|ers)$"), r"iz\1"),  # organise
+    (re.compile(r"ys(e|ed|es|ing)$"), r"yz\1"),   # analyse
+    (re.compile(r"tre(s?)$"), r"ter\1"),          # centre, theatres
+    (re.compile(r"tred$"), "tered"),              # centred
+    (re.compile(r"ogue(s?)$"), r"og\1"),          # catalogue
+    (re.compile(r"ll(ed|ing|er|ers)$"), r"l\1"),  # travelled, cancelling
+    (re.compile(r"ence$"), "ense"),               # defence, licence
+    (re.compile(r"^mum(s?)$"), r"mom\1"),
+    (re.compile(r"^arse$"), "ass"),
+]
+
+
+def _us_spelling(word: str):
+    """Candidate US spellings of a (possibly) Commonwealth-spelt word."""
+    out = []
+    for rx, repl in _US_REWRITES:
+        alt = rx.sub(repl, word)
+        if alt != word:
+            out.append(alt)
+    return out
+
+
 def _load_freq_ranks() -> dict[str, int]:
     """word → rank (0 = most common) from word_freq.txt; empty if missing."""
     path = _data_path("word_freq.txt")
@@ -551,7 +591,14 @@ class WordPredictor:
         self._custom: list[str] = []   # user-defined words/phrases (original casing)
         self._by_first: dict[str, list[str]] = {}  # first-char → word list (for fuzzy)
         self.dict_missing: bool = False
+        self._cased: dict[str, str] = {}      # "alex" → "Alex" (proper nouns, acronyms)
+        self._rank_alias: dict[str, str] = {} # "colour" → "color" (borrowed rank)
+        self._local_of: dict[str, str] = {}   # "color" → "colour" (regional form)
         self._load(dict_path if dict_path is not None else _default_dict_path())
+
+    def set_dictionary(self, path: str) -> None:
+        """Switch to another word list (e.g. a different English variant)."""
+        self._load(path)
 
     def _load(self, path: str) -> None:
         try:
@@ -564,16 +611,40 @@ class WordPredictor:
 
         seen: set[str] = set()
         words: list[str] = []
-        for w in raw:
-            w = w.lower()
+        lower_forms = {w for w in raw if w and w.islower()}
+        cased: dict[str, str] = {}
+        for orig in raw:
+            w = orig.lower()
             # Keep only alphabetic words, 2–15 chars, no possessives/plurals edge cases
-            if w.isalpha() and 2 <= len(w) <= 15 and w not in seen:
-                seen.add(w)
-                words.append(w)
+            if w.isalpha() and 2 <= len(w) <= 15:
+                if orig != w and w not in lower_forms:
+                    cased.setdefault(w, orig)   # only ever capitalised: Alex, Sydney
+                if w not in seen:
+                    seen.add(w)
+                    words.append(w)
 
         self._words = sorted(words)
         self._wordset = set(self._words)
+        self._cased = cased
         self._prefix_cache.clear()
+        self._top_cache = []
+        self.dict_missing = False
+
+        # Regional spellings borrow the frequency rank of their US twin, and
+        # US-only spellings from the phrase model map to the local form.
+        alias: dict[str, str] = {}
+        local_of: dict[str, str] = {}
+        if self._rank:
+            for w in self._words:
+                if w in self._rank:
+                    continue
+                for us in _us_spelling(w):
+                    if us in self._rank and us not in self._wordset:
+                        alias[w] = us
+                        local_of.setdefault(us, w)
+                        break
+        self._rank_alias = alias
+        self._local_of = local_of
 
         # Build first-character index for fast fuzzy candidate filtering
         by_first: dict[str, list[str]] = {}
@@ -647,7 +718,7 @@ class WordPredictor:
         return cached[:n]
 
     def _p_unigram(self, w: str) -> float:
-        r = self._rank.get(w)
+        r = self._rank.get(self._rank_alias.get(w, w))
         if r is not None:
             return _ZIPF_C / (r + 20)
         pos = self._fallback_pos.get(w)
@@ -655,10 +726,23 @@ class WordPredictor:
             return 0.01 / (1 + pos)
         return 2e-6 if w in self._common else 1e-6
 
-    @staticmethod
-    def _lookup(table: dict, key: str):
+    def _lookup(self, table: dict, key: str):
         e = table.get(key)
-        return (e[0], _parse_conts(e[1])) if e else None
+        if not e:
+            return None
+        conts = _parse_conts(e[1])
+        if self._local_of:
+            # "favorite" → "favourite" for a regional dictionary
+            for us in [w for w in conts if w in self._local_of]:
+                local = self._local_of[us]
+                conts[local] = conts.get(local, 0) + conts.pop(us)
+        return (e[0], conts)
+
+    def display_form(self, word: str) -> str:
+        """Natural casing of a suggestion: "I", "I'm", "Alex", "NASA"."""
+        if word == "i" or word.startswith("i'"):
+            return "I" + word[1:]
+        return self._cased.get(word, word)
 
     def _rank_candidates(self, prefix: str, context, n: int) -> list[str]:
         """Score candidates with interpolated trigram/bigram/unigram
@@ -700,9 +784,10 @@ class WordPredictor:
             if user:
                 cands.update(user.words_with_prefix(prefix))
         else:
-            cands = set(c3)
-            cands.update(c2)
-            cands.update(self._top_words(60))
+            ok = lambda w: w in self._wordset or "'" in w or w in ("i", "a")
+            cands = {w for w in c3 if ok(w)}
+            cands.update(w for w in c2 if ok(w))
+            cands.update(self._local_of.get(w, w) for w in self._top_words(60))
             if user:
                 cands.update(user.successors(real_ctx))
         cands.discard(START)
@@ -734,7 +819,7 @@ class WordPredictor:
         return [w.lower() for w in TOP_WORDS[:k]]
 
     def _word_rank(self, w: str) -> int:
-        r = self._rank.get(w)
+        r = self._rank.get(self._rank_alias.get(w, w))
         if r is not None:
             return r
         return _UNRANKED if w in self._common else _UNRANKED + 1

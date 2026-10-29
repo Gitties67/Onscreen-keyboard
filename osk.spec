@@ -40,6 +40,9 @@ def _here(name):
 datas = [
     (_here("style.css"), "."),
     (_here("words.txt"), "."),
+    (_here("words_en_AU.txt"), "."),  # regional dictionaries (tools/build_dicts.py)
+    (_here("words_en_GB.txt"), "."),
+    (_here("THIRD_PARTY_NOTICES.txt"), "."),
     (_here("word_freq.txt"), "."),
     (_here("ngrams.txt"), "."),      # phrase model for context-aware prediction
     (_here("VERSION"), "."),
