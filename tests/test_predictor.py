@@ -302,6 +302,27 @@ class TestOtherLanguages(unittest.TestCase):
         self.assertEqual(p.predict_next(["thank"], 3)[0], "you")
         self.assertEqual(p.display_form("i"), "I")
 
+    def test_asian_languages(self):
+        cases = {"id": ("teri", "terima"), "ms": ("bol", "boleh"), "tl": ("maga", "magaling"),
+                 "vi": ("khon", "không"), "ko": ("감사", "감사합니다")}
+        for code, (typed, want) in cases.items():
+            p = WordPredictor(language=code)
+            self.assertFalse(p.dict_missing, code)
+            self.assertEqual(p.predict(typed, 3)[0], want, code)
+        vi = WordPredictor(language="vi")
+        self.assertIn("ơn", vi.predict_next(["cảm"], 3))
+        self.assertEqual(vi.predict("duong", 1), ["đường"])      # đ folds to d
+        self.assertNotIn("vietsub", vi.predict("viet", 10))
+
+    def test_korean_partial_syllable(self):
+        # A lone first consonant, or a syllable still being built, already
+        # matches the words it can grow into: ㅎ → 하지만, 하 → 하나
+        ko = WordPredictor(language="ko")
+        got = ko.predict("ㅎ", 5)
+        self.assertEqual(len(got), 5)
+        self.assertTrue(all(0xD558 <= ord(w[0]) <= 0xD7A3 for w in got), got)   # 하..힣
+        self.assertTrue(all(w.startswith("하") for w in ko.predict("하", 5)))
+
     def test_fold(self):
         self.assertEqual(predictor.fold("Straße"), "strasse")
         self.assertEqual(predictor.fold("Über"), "uber")

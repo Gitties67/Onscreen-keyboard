@@ -1,0 +1,1063 @@
+# Word phrase model (bigrams + trigrams) for the on-screen keyboard.
+# Derived from Tatoeba ind sentences, https://tatoeba.org,
+# CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
+# Regenerate with tools/build_ngrams.py / tools/build_lang.py.
+#
+# Format: a '[2]' or '[3]' section header, then one line per context:
+#   <context words, space-separated>TAB<context total>TAB<w:count w:count ...>
+# '<s>' is the sentence-start token. Context totals are counted before
+# pruning; continuations are pruned (min count, top-K) and sorted by count.
+[2]
+<s>	28622	aku:3637 dia:2077 saya:1642 kamu:787 apa:762 apakah:747 kami:532 ini:508 mereka:435 di:341 jangan:340 tidak:327 itu:325 kita:314
+ada	1172	di:203 yang:203 banyak:51 apa:29 orang:25 berapa:20 satu:16 sesuatu:15 masalah:14 waktu:14 hal:13 beberapa:12 dua:12 tiga:12
+adalah	1039	seorang:93 bahasa:42 sebuah:35 ibu:29 salah:29 orang:28 negara:23 hari:19 kota:17 yang:13 satu:11 anak:10 teman:10 tempat:9
+adik	26	laki:9 perempuan:5 perempuanku:4 saya:4
+agak	39	sakit:4
+agar	37	tidak:6
+air	106	di:13 mata:6 yang:6 mendidih:5 ini:4 itu:4 matanya:4 mineral:4
+akan	1428	pergi:86 pernah:48 datang:35 kembali:32 menjadi:32 segera:28 melakukan:25 bisa:18 mati:18 melakukannya:16 terjadi:15 tinggal:15 ada:14 kamu:14
+akhir	78	akhir:22 ini:22 pekan:21 tahun:5
+akhirnya	60	dia:5 aku:4 berhasil:4
+aku	4753	tidak:787 akan:250 ingin:203 suka:142 sudah:133 tahu:106 harus:98 bisa:81 punya:79 pikir:70 mau:60 melihat:59 belum:58 sangat:56
+alasan	26	untuk:6
+amerika	54	serikat:24
+anak	441	anak:103 laki:58 perempuan:28 itu:27 kecil:17 yang:17 anaknya:12 anakku:8 di:8 kucing:7 perempuanku:7 anda:6 bermain:6 kami:6
+anda	574	tidak:36 akan:23 bisa:23 sudah:19 ingin:18 mau:13 pernah:10 punya:10 tahu:10 di:8 harus:8 memiliki:8 lakukan:7 telah:7
+anggur	28	merah:7 putih:5
+anjing	83	itu:21 ini:6 yang:5 dan:4 hitam:4
+apa	1415	yang:544 kau:124 kamu:116 apa:114 pun:51 itu:44 saja:25 ini:20 ada:18 anda:18 lagi:14 kabar:12 di:11 nama:11
+apakah	819	kamu:240 anda:112 ada:60 ini:42 dia:28 kalian:22 itu:19 saya:15 aku:14 kau:13 mereka:10 kita:9 di:7 terdapat:6
+apapun	50	yang:25
+apel	40	ini:6 itu:6 di:4
+atas	147	meja:33 apa:4 bukit:4
+atau	165	tidak:25 kamu:5 lebih:4
+australia	28	adalah:5
+ayah	95	saya:32 dan:7 anda:4 mereka:4
+ayahku	57	tidak:14 meninggal:4
+ayo	50	kita:17 pergi:5
+baca	26	buku:6
+bagaimana	202	kamu:22 cara:21 caranya:15 kalau:14 bisa:13 kabarmu:7 cuaca:4 jika:4 kabar:4 menurutmu:4 perasaanmu:4
+bagi	64	saya:8 mereka:6 anak:4 kami:4 orang:4
+bagian	42	dari:8 yang:4
+bagus	46	untuk:10
+bahasa	735	inggris:144 prancis:94 esperanto:39 jepang:34 yang:24 jerman:22 asing:18 spanyol:15 apa:14 arab:14 indonesia:14 resmi:14 turki:14 rusia:12
+bahkan	50	tidak:25
+bahwa	255	dia:62 aku:21 kamu:14 mereka:14 ia:8 saya:8 kita:6 apa:4 tidak:4
+baik	233	baik:37 saja:29 daripada:23 untuk:13 kamu:5 ketimbang:5 aku:4 dan:4 hari:4 itu:4
+baju	33	ini:9 baru:5
+bangga	21	dengan:10
+bangun	46	pagi:13 lebih:5 pada:5 jam:4
+bangunan	24	ini:7
+banyak	428	orang:27 uang:25 yang:19 waktu:18 hal:16 teman:15 sekali:14 buku:11 bahasa:9 makanan:7 dari:5 minum:5 tentang:5 belajar:4
+barang	60	barang:11 yang:7 ini:4
+baru	170	saja:64 di:8 ini:6 itu:6 yang:5 baru:4
+bawah	61	meja:10 pohon:7 tanah:7 kursi:4 tempat:4 umur:4
+beberapa	158	orang:14 hari:11 menit:8 kali:7 hal:6 buku:5 bulan:5 jam:5 pertanyaan:4 tahun:4
+begitu	97	banyak:7 aku:4 lama:4 saja:4
+bekerja	148	di:65 dengan:8 keras:7 pada:6 sebagai:6 untuk:6 terlalu:5 dari:4 lebih:4
+belajar	286	bahasa:154 di:18 dengan:11 dari:5 untuk:5 bermain:4 lebih:4
+belas	38	tahun:16
+beli	31	di:6
+belum	260	pernah:57 datang:11 bisa:10 ada:8 makan:7 menikah:6 tahu:6 tidur:6 membaca:5 menerima:5 sampai:5 terbiasa:5 kembali:4 menyelesaikan:4
+benar	277	benar:127 tidak:14 ingin:7 sudah:4
+berada	116	di:95 dalam:5
+berangkat	41	dari:6 jam:5 ke:5 sekolah:4
+berapa	236	banyak:45 lama:43 harga:16 kali:10 kamu:8 sekarang:7 harganya:5 umurmu:5 orang:4 umurnya:4
+berarti	20	aku:7
+berasal	36	dari:35
+berat	26	badan:8
+berbahasa	74	inggris:27 prancis:18 jerman:4 perancis:4
+berbeda	21	dengan:6
+berbicara	201	bahasa:50 dengan:46 dalam:14 tentang:13 dengannya:6 denganku:5 denganmu:5 di:5 kepadaku:4
+berbohong	22	itu:4
+berdiri	35	di:18
+berenang	45	di:12 dengan:6
+berencana	21	untuk:9 pergi:6
+berharap	31	bisa:5
+berhati	20	hati:17
+berhenti	84	merokok:29 dan:5 di:5
+beri	43	tahu:18 aku:10 tahukan:4
+berikan	47	aku:9 saya:9
+berita	25	ini:5 itu:5
+berjalan	67	kaki:15 jalan:10 di:5 lancar:5
+berjanji	22	untuk:6
+berkata	116	bahwa:38 dia:15 apa:6 begitu:4 tidak:4
+berlari	42	lebih:8 keluar:5
+bermain	189	tenis:35 sepak:16 catur:13 di:13 piano:12 dengan:11 gitar:11 golf:9 ski:7 biola:5 bisbol:4
+berpikir	58	kalau:12 bahwa:11 begitu:10
+bersama	90	sama:9 kami:8 orang:7 dengan:5
+bertanya	48	pada:5 padanya:5 apakah:4 kepadaku:4 tanya:4
+bertemu	142	dengan:35 denganmu:20 dengannya:20 di:7 sebelumnya:5 lagi:4 teman:4
+berterima	21	kasih:21
+berubah	37	menjadi:10 pikiran:10
+berumur	20	dua:5 tiga:4
+berusaha	40	untuk:6
+berusia	27	tiga:5
+berwarna	58	merah:10 kuning:9 biru:8 putih:8 hijau:7 hitam:5 abu:4
+besar	85	di:16 dan:6 itu:6 daripada:4 untuk:4
+besok	96	pagi:13 aku:9 hari:9 akan:8 saya:7 dia:5 kita:5 sore:5
+biarkan	47	aku:12 saya:9 dia:7
+biasanya	56	makan:6 kamu:5 tidak:5
+bicara	45	dengan:7 bahasa:5
+bila	23	kamu:5
+bilang	113	dia:39 aku:7 begitu:7 bahwa:6 ke:6 apa:4 ia:4 mereka:4
+bill	26	tidak:6
+bintang	37	bintang:5 yang:5 di:4
+bisa	1187	berbahasa:46 melihat:34 pergi:31 bahasa:30 berbicara:30 melakukannya:25 datang:24 membaca:22 tidur:22 berenang:21 melakukan:21 hidup:15 makan:15 membantu:15
+bisakah	108	kamu:29 kau:23 anda:13 saya:12 aku:8 kita:7
+bola	33	itu:4 yang:4
+boleh	142	saya:23 aku:10 pergi:10 makan:9 pinjam:6 menggunakan:5 merokok:4
+bolehkah	57	saya:33 aku:20
+buah	48	apel:6 buahan:4
+buka	37	pintunya:5
+bukan	309	orang:11 anak:8 hanya:7 itu:7 karena:7 aku:6 bahasa:5 ide:5 pacarku:5 dokter:4 kucing:4 manusia:4 seorang:4
+bukankah	27	itu:6
+bukanlah	44	seorang:5 satu:4
+buku	315	ini:90 itu:47 yang:28 buku:25 dari:11 tentang:9 di:8 baru:5 bukunya:5 catatan:4 harry:4 pelajaran:4 tua:4
+bulan	112	depan:13 oktober:10 lalu:9 ini:8 yang:7 april:4 februari:4 januari:4 mei:4 ramadan:4
+bumi	33	itu:8
+bunga	62	mawar:8 bunga:7 ini:5 itu:5
+burung	62	burung:11 itu:9 ini:4
+bus	21	ini:4 itu:4
+butuh	85	uang:5 bantuan:4 lebih:4
+cantik	26	sekali:4
+cara	110	untuk:9 lain:4 melakukannya:4 terbaik:4 yang:4
+cepat	66	daripada:7 cepat:4
+cerita	36	ini:8 itu:8 yang:6 pendek:4
+cinta	72	dengan:9 kamu:6 pada:5 dan:4 itu:4
+cuaca	27	hari:4 yang:4
+cuacanya	23	bagus:4
+cukup	80	untuk:7 uang:6
+daerah	23	ini:8 itu:4
+daging	32	babi:6 sapi:5
+dalam	555	bahasa:82 keadaan:18 waktu:17 mobil:13 perjalanan:11 satu:11 kecelakaan:10 kamar:9 kotak:9 air:8 hal:8 masalah:7 rumah:7 jumlah:6
+dan	1106	aku:33 tidak:24 dia:16 cukai:14 saya:13 juga:11 yang:9 ibu:8 satu:8 bahasa:6 pergi:6 ayah:5 itu:5 kamu:5
+danau	20	ini:5
+dapat	212	melihat:9 melakukan:8 dipercaya:5 hidup:5 memahami:4 membantu:4 menemukan:4 tidur:4
+darah	20	di:4
+dari	868	sini:41 mana:26 rumah:9 tiga:9 yang:8 mereka:7 stasiun:7 awal:6 india:6 kata:6 kayu:6 orang:6 plastik:6 tempat:6
+daripada	177	aku:10 yang:9 bahasa:6 kamu:5 dia:4
+datang	229	ke:56 di:22 kemari:12 dari:11 terlambat:10 besok:8 tepat:8 lagi:6 dan:5 untuk:5 hari:4
+dekat	70	sini:14 dengan:11 rumahku:9 stasiun:4
+delapan	39	belas:5 puluh:5 tahun:5 jam:4
+demi	22	sedikit:5
+dengan	1201	baik:43 cepat:23 apa:21 orang:20 hal:19 sangat:19 anda:18 mereka:13 bahasa:12 kami:12 anak:11 yang:11 berjalan:10 lancar:10
+dengannya	24	di:4
+dengarkan	20	aku:6 baik:4
+depan	91	rumahku:11 stasiun:6 saya:5 umum:4
+di	3250	sini:322 mana:263 rumah:139 dalam:113 sana:99 atas:81 luar:76 depan:64 dunia:63 bawah:57 dekat:41 jepang:40 tempat:39 sekolah:34
+dia	2851	tidak:321 akan:93 sedang:65 pergi:54 sudah:54 punya:47 adalah:44 masih:42 bisa:38 ingin:38 suka:38 memiliki:37 tinggal:35 selalu:34
+dibuat	21	dari:6 oleh:5
+digunakan	34	di:13 untuk:7 dalam:4
+dilarang	20	merokok:5 di:4
+dimana	25	aku:5
+dimulai	23	pada:9
+dingin	39	sekali:5
+diri	51	sendiri:8 di:4 untuk:4
+dirinya	39	sendiri:19
+dokter	70	gigi:9 hewan:7 yang:5 dan:4 itu:4
+dua	244	puluh:28 kali:18 orang:17 belas:12 tahun:12 ekor:10 hari:9 jam:9 hal:7 tiga:7 sama:6 buah:5 saudara:5 anak:4
+duduk	86	di:57
+dulu	72	seorang:5 aku:4 bekerja:4 tinggal:4
+dulunya	24	adalah:8
+dunia	63	ini:11 adalah:4
+ekor	35	anjing:8 kucing:8
+empat	36	puluh:8
+enak	34	badan:8 sekali:7
+enam	53	bulan:10 puluh:8 belas:4
+es	26	krim:16
+esperanto	20	adalah:5
+film	69	itu:16 ini:10 yang:4
+foto	25	ini:5 foto:4 itu:4
+gadis	36	itu:10 yang:10
+gak	47	apa:6
+gambar	30	ini:9 itu:5 yang:4
+gedung	23	ini:8
+gunung	55	fuji:11 itu:9 berapi:7 tertinggi:5 aso:4 everest:4
+guru	52	bahasa:10 itu:5
+hadiah	20	yang:4
+hal	284	yang:78 itu:67 ini:44 tersebut:16 hal:10 semacam:9 lain:4 pertama:4 seperti:4
+hampir	102	tidak:19 setiap:8 saja:7 semua:5
+hanya	229	ingin:17 ada:14 bisa:12 punya:9 di:5 makan:5 sedikit:5 dengan:4 untuk:4
+harap	61	aku:10 kamu:9 dia:4 saya:4 tenang:4 tidak:4
+harga	50	yang:4
+hari	501	ini:208 senin:28 minggu:25 ulang:24 yang:17 jumat:13 rabu:10 kamis:8 libur:8 sabtu:8 selasa:8 nanti:7 itu:6 natal:6
+harus	549	pergi:34 belajar:21 melakukan:18 tetap:18 menunggu:12 dilakukan:10 aku:8 makan:8 membaca:8 berhati:7 mematuhi:7 pulang:7 bekerja:6 membeli:6
+hati	66	hati:21 jangan:4
+hewan	34	yang:6
+hidup	135	di:18 tanpa:12 itu:9 dalam:8 dengan:8 kita:7 yang:5 sehat:4 seperti:4
+hitam	35	dan:7 itu:4
+hotel	27	ini:6
+hujan	66	di:6 deras:5 terus:5 turun:5 sedang:4
+hujannya	20	berhenti:4 bertahan:4
+ia	268	tidak:21 katakan:9 akan:7 sangat:6 butuhkan:5 jatuh:5 lakukan:5 memiliki:4 menolak:4 pergi:4
+ibu	123	kota:49 saya:19 dan:4
+ibuku	38	adalah:6
+ide	30	yang:12
+ikan	56	di:7 ini:5 yang:5 itu:4
+indonesia	29	adalah:4 dengan:4
+ingat	46	apa:4 nama:4
+inggris	115	dengan:14 di:10 dan:8 adalah:7 sebaik:4 tetapi:4 tidak:4 yang:4
+ingin	776	pergi:65 menjadi:53 tahu:40 kamu:36 belajar:25 bertemu:21 aku:18 membeli:18 kau:13 berbicara:12 makan:11 minum:10 tidur:10 melihat:9
+ini	1675	adalah:110 tidak:107 bukan:56 sangat:48 aku:47 akan:37 terlalu:29 di:23 benar:19 milik:19 saya:19 sudah:19 bisa:17 hari:17
+istri	37	saya:17
+itu	1795	tidak:118 bukan:52 adalah:46 sangat:44 ada:28 benar:28 dengan:28 terjadi:22 di:21 sedang:19 akan:18 telah:18 sudah:17 yang:16
+itulah	39	yang:12 aku:8 kenapa:4
+jadi	92	apa:8 kamu:7 aku:6 saya:6
+jalan	144	jalan:19 yang:18 ini:10 itu:9 raya:7 kaki:6 di:5 ke:4 menuju:4
+jam	192	berapa:51 setengah:13 delapan:9 tangan:9 sepuluh:8 tujuh:6 enam:5 lima:5 sembilan:5 di:4 dua:4 itu:4 tiga:4
+jangan	416	lupa:21 sampai:14 sentuh:13 pernah:12 biarkan:11 pergi:11 lupakan:9 bicara:8 buat:7 makan:7 takut:7 terlalu:7 duduk:6 merokok:6
+jarang	31	berbicara:4
+jatuh	64	cinta:23 dari:13 ke:8 sakit:4
+jauh	77	lebih:29 dari:27 jauh:5
+jawab	23	atas:7
+jawaban	27	yang:6 anda:4 itu:4
+jelas	25	bahwa:4
+jepang	79	adalah:7 dan:4
+jika	180	kamu:35 aku:12 dia:11 tidak:10 ada:9 kita:9 anda:7 kau:5 saya:5
+juga	184	tidak:23 bisa:10 suka:8 akan:5 ingin:5 ya:5 berpikir:4 di:4 punya:4 sudah:4
+jumlah	22	yang:5
+jus	26	jeruk:11
+kadang	41	kadang:19 aku:4
+kakak	35	saya:10 laki:8 perempuan:6
+kalau	319	kamu:56 dia:31 aku:22 kau:17 begitu:8 mereka:7 saja:7 itu:6 tidak:6 ada:5 kita:5 sudah:5 nggak:4 saya:4
+kali	117	kamu:19 ini:10 aku:8 lipat:7 anda:4 dalam:4 saya:4 sehari:4
+kalian	210	tidak:17 semua:12 berdua:10 harus:8 punya:8 suka:8 mau:7 di:6 lakukan:6 pergi:6 sudah:5 ingin:4 lebih:4 telah:4
+kalimat	86	ini:40 yang:8 bahasa:4
+kamar	73	ini:10 mandi:10 tidur:6 di:4
+kami	774	tidak:63 akan:35 sudah:28 sedang:22 pergi:17 semua:16 telah:16 ingin:15 punya:14 berdua:11 untuk:11 memiliki:10 bisa:9 di:8
+kamu	2273	tidak:197 harus:85 bisa:80 akan:74 sudah:69 suka:68 mau:59 tahu:56 punya:51 lakukan:40 ingin:37 pernah:31 pergi:30 masih:28
+kantor	34	pos:9 saya:6
+kapan	135	kamu:38 terakhir:18 anda:7 dia:6 kita:5 pun:4 saja:4
+karena	268	aku:18 dia:16 kamu:9 ada:7 itu:7 itulah:7 kanker:7 saya:7 tidak:7 hujan:5 kekurangan:5 sakit:5 telah:5 terlalu:5
+kartu	21	kredit:6
+kasih	90	atas:25 sudah:10 telah:8 untuk:7 kepada:6 sayang:5 tahu:4
+kata	153	kata:18 ini:13 itu:11 kerja:8 pun:8 yang:8 bahasa:5 benda:4 sandinya:4 terlambat:4
+katakan	74	pada:8 padanya:6 itu:5 padaku:5 tidak:5 yang:5 apa:4
+kau	564	tidak:51 akan:27 harus:27 bisa:22 sudah:18 pernah:16 lakukan:13 tahu:12 pergi:11 katakan:10 suka:10 benar:9 mau:9 punya:9
+kaya	23	akan:6 raya:4
+ke	1077	mana:78 rumah:60 sana:59 dalam:58 sekolah:55 sini:37 luar:32 australia:24 paris:20 bioskop:19 dokter:18 pesta:18 jepang:15 arah:14
+keadaan	24	baik:7
+kebun	21	binatang:11
+kecelakaan	40	itu:17 lalu:7 mobil:6
+kecil	60	di:6 yang:5 daripada:4 itu:4 untuk:4
+kedua	52	orang:10 di:5 anak:4
+kehabisan	25	bensin:5 makanan:4
+kehidupan	26	di:8 itu:4
+kehilangan	58	kesabaran:4
+kelas	37	berapa:4
+keluar	78	dari:33 dengan:4 untuk:4
+keluarga	33	kami:5 saya:5 yang:4
+kemarin	115	aku:27 malam:12 saya:11 dia:7 dulu:5 hari:5 adalah:4
+kembali	104	ke:35 dari:13 dalam:6
+kemudian	26	dia:5
+kenapa	203	kamu:73 kau:22 dia:13 aku:10 kita:7 tidak:7 kalian:5 mereka:4
+kepada	159	saya:16 kami:8 mereka:7 orang:7 siapa:6 anda:4 ayah:4 para:4
+kepala	22	sekolah:4
+keras	33	untuk:10 kepala:6
+kereta	69	api:13 bawah:6 itu:5 akan:4 ini:4
+kerja	34	keras:5
+kesalahan	33	yang:6
+ketika	155	aku:21 dia:13 ia:9 kamu:7 saya:7 kau:5 sedang:5
+ketimbang	36	aku:6
+khawatir	20	dengan:4
+kira	49	kira:11 aku:5
+kita	770	tidak:89 harus:67 akan:55 lakukan:34 bisa:30 semua:22 makan:18 pergi:18 sudah:13 melakukannya:12 mulai:12 perlu:10 butuh:8 hanya:8
+kopi	44	ini:5
+kota	151	ini:20 itu:17 yang:12 terbesar:10 besar:7
+kotak	38	ini:10 itu:10 kotak:4
+kuat	26	seperti:4
+kucing	102	itu:26 hitam:8 di:7 bisa:6 ini:5 yang:5 punya:4
+kuda	34	itu:7 yang:5
+kupu	20	kupu:13
+kurang	47	lebih:9 ajar:4 baik:4 dari:4 seperempat:4
+kursi	26	ini:5
+laba	27	laba:18
+lagi	157	yang:16 makan:8 nanti:4
+lagu	35	ini:12 itu:6 yang:4
+lahir	64	di:38 pada:14
+lain	66	kali:9 yang:7 selain:4
+laki	194	laki:89 itu:24 lakiku:16 lakinya:10 dan:8 yang:8 lakimu:6 saya:4
+lakukan	126	di:20 dengan:10 untuk:9 adalah:5 itu:5 saja:5 hari:4 saat:4 sekarang:4
+lalu	92	lintas:36 saya:6 kami:5
+lama	103	lagi:15 kamu:13 aku:6 saya:4 waktu:4
+langit	33	dan:4
+langsung	26	dari:4
+lantai	39	dua:7 atas:5 bawah:4
+lebih	653	baik:88 banyak:44 dari:44 suka:39 awal:35 tinggi:29 cepat:27 tua:26 muda:17 besar:13 keras:11 kuat:11 penting:10 lama:9
+lelah	27	dengan:8
+lepas	23	landas:7
+lihat	69	di:5 ini:5
+lima	62	menit:9 tahun:8 belas:6 puluh:6
+luar	101	negeri:46 biasa:20 angkasa:5
+lukisan	20	ini:5
+lulus	23	ujian:9
+lupa	79	membawa:5 mengunci:5 nama:4 untuk:4
+maaf	82	saya:16 aku:9 sudah:5 tapi:5
+main	24	di:4
+maka	29	aku:5 akan:4
+makan	464	malam:63 siang:46 daging:21 di:21 nasi:18 apa:15 ikan:13 makanan:12 apel:11 pagi:10 sesuatu:8 banyak:6 ini:6 itu:6
+makanan	93	yang:15 di:6 dan:4 ini:4
+malam	141	ini:43 hari:14 bersama:6 di:6 itu:5 tahun:4
+mana	343	yang:43 kamu:31 mana:18 dia:12 aku:10 pun:10 saya:10 mereka:9 saja:9 anda:8 ya:8 kita:7 kalian:5 ia:4
+manusia	47	tidak:8 yang:5
+marah	35	ya:5 pada:4 padaku:4
+mari	125	kita:96
+masa	46	lalu:10 depan:8
+masalah	88	ini:16 yang:9 itu:6 dengan:5 besar:4
+masih	323	belum:55 ada:26 di:23 muda:20 hidup:17 tinggal:7 kecil:6 banyak:5 basah:5 marah:5 sakit:5 sangat:5 tidak:5 anak:4
+masing	20	masing:15
+masuk	80	ke:25 akal:16 sekolah:5
+mata	63	adalah:4 pelajaran:4 tertutup:4
+matahari	35	terbit:8 terbenam:7
+mati	56	di:5
+mau	355	pergi:42 makan:20 minum:11 ke:9 aku:7 coba:7 yang:7 main:6 belajar:5 berbicara:5 ikut:5 kamu:5 melakukan:5 tidur:5
+maukah	22	kamu:11 anda:7
+meja	37	itu:8 ini:7
+melakukan	308	itu:104 apa:37 hal:29 ini:29 yang:17 sesuatu:14 pekerjaan:8 apapun:6 kesalahan:5 perjalanan:5 semua:4
+melakukannya	61	lagi:8 dengan:7 hari:4 untuk:4
+melihat	350	ke:17 seekor:15 mereka:14 sesuatu:11 apa:10 hantu:7 kita:7 matahari:7 darah:5 ini:5 seorang:5 anak:4 dia:4 dirinya:4
+memakai	70	kacamata:7 sarung:5 celana:4
+memakan	60	waktu:9 daging:5
+memang	25	benar:7
+membaca	141	buku:49 novel:9 koran:7 bukunya:5 sebuah:5 surat:5 semua:4
+membantu	75	saya:9 anda:8 orang:7 kami:6 mereka:5
+membawa	44	payung:7
+membayar	29	pajak:4
+membeli	208	mobil:18 buku:17 sebuah:12 roti:8 rumah:8 baju:7 makanan:7 kamera:5 dua:4 tiket:4
+memberi	82	tahu:50 makan:6
+memberitahu	33	saya:7
+memberitahuku	25	bahwa:10 tentang:4
+membersihkan	22	kamarmu:6
+membuat	153	kesalahan:11 sebuah:9 keputusan:8 saya:8 kopi:4 kue:4
+membuatku	44	merasa:4 tertawa:4
+membuka	34	jendela:7 pintu:5
+membutuhkan	58	waktu:5 lebih:4
+memesan	24	makanan:4
+memikirkan	22	tentang:5
+memiliki	271	banyak:23 dua:10 sebuah:7 beberapa:6 tiga:6 kemampuan:5 hak:4 lebih:4 masalah:4 satu:4 suara:4 teman:4
+meminjam	26	buku:5
+meminta	65	maaf:11 bantuan:5 saya:4 uang:4
+mempelajari	36	bahasa:17 tentang:5
+mempunyai	48	banyak:4
+memutuskan	35	untuk:31
+menarik	29	napas:4
+mencari	73	pekerjaan:10 tahu:5 apa:4 sesuatu:4
+mencoba	100	untuk:16 melakukan:4
+mencuci	31	mobil:5 tangan:5 mobilnya:4
+mendapat	55	masalah:5 nilai:4
+mendapatkan	64	pekerjaan:4 uang:4
+mendengar	98	suara:14 berita:8 cerita:7 sesuatu:6 seseorang:4 tentang:4
+mendengarkan	49	musik:18 radio:9
+menemukan	116	cara:6 apa:5 sesuatu:5 sebuah:4
+menerima	54	surat:6 apa:5
+mengajar	27	bahasa:14
+mengambil	68	gambar:4
+mengapa	148	kamu:54 dia:10 tidak:9 aku:7 saya:7 anda:6 kita:5 kalian:4
+mengatakan	92	itu:15 apa:12 bahwa:10 sesuatu:8 yang:8 hal:6
+mengenakan	33	pakaian:4
+mengenal	33	mereka:5
+mengerjakan	20	pr:7
+mengerti	52	apa:8 bagaimana:4 bahasa:4 yang:4
+mengetahui	43	apa:5
+menggunakan	94	bahasa:13 mesin:4 mobil:4
+menghabiskan	39	waktu:12
+mengira	24	aku:4
+menikah	41	dengan:9
+meninggal	69	karena:12 dunia:10 pada:5
+meninggalkan	45	rumah:5
+menit	41	lagi:7 yang:6 untuk:4
+menjadi	280	seorang:30 lebih:10 dokter:8 guru:6 semakin:6 sangat:5 seperti:5 kenyataan:4 orang:4 teman:4 terkenal:4
+menjawab	29	pertanyaan:15
+menjual	40	mobil:4
+menolak	36	tawaran:4 undangan:4 untuk:4
+menonton	73	film:27 tv:18 televisi:11 pertandingan:5
+menuju	34	ke:12
+menulis	116	surat:24 buku:14 sebuah:11 dengan:7 novel:6 puisi:4
+menunggu	114	di:23 selama:8 hingga:5 sampai:5
+menunjukkan	30	bahwa:4
+menurut	21	saya:9
+menutup	29	pintu:5 pintunya:4
+menyadari	30	bahwa:5
+menyelesaikan	55	masalah:10 pekerjaan:9 pekerjaannya:6
+merah	24	dan:8 muda:5
+merasa	147	seperti:12 sangat:10 kesepian:7 sakit:7 bersalah:6 lebih:6 ingin:5 senang:5 tidak:5 ada:4 sedih:4
+mereka	689	tidak:65 akan:24 sedang:18 tinggal:17 pergi:15 yang:15 di:13 bisa:11 semua:11 adalah:10 sudah:10 telah:10 berdua:9 suka:8
+merokok	38	di:14
+merupakan	45	hobi:4 sebuah:4
+mesin	31	cuci:4 ini:4 itu:4 yang:4
+milik	55	siapa:8
+minggu	69	depan:21 ini:12 lalu:9 yang:6
+minta	35	maaf:15 tolong:4
+minum	131	kopi:21 susu:16 air:13 teh:11 apa:9 bir:8 obat:6 sake:6 anggur:4 sesuatu:4
+mirip	29	dengan:19
+mobil	133	baru:12 itu:9 yang:9 dan:7 ini:6 anda:5
+mudah	49	untuk:5 dipelajari:4
+mulai	149	belajar:13 dari:11 menangis:8 bekerja:6 besok:6 sekarang:5 turun:4
+mungkin	188	tidak:21 akan:18 dia:12 kamu:11 bisa:5 saja:5 untuk:5 aku:4 kita:4 saya:4 sudah:4
+murah	25	hati:6
+murid	27	murid:4
+musik	40	klasik:7 adalah:5 yang:5
+musim	112	panas:48 dingin:28 semi:16 gugur:9
+naik	62	pesawat:14 kereta:6 taksi:6 bus:5 ke:5 sepeda:5 mobil:4
+nama	146	saya:23 anda:15 ibu:5 lengkap:5 belakang:4 keluarga:4 yang:4
+nanti	26	malam:4
+negara	103	yang:14 ini:11 itu:7 terbesar:7 di:5 dan:4
+new	22	york:19
+nggak	50	bisa:4 ya:4
+nomor	33	telepon:7 teleponnya:5
+novel	24	ini:7 barunya:4
+obat	24	ini:8 obatan:5 yang:5
+oleh	128	orang:6 karena:5 semua:5
+orang	867	yang:127 orang:70 tua:43 lain:35 tuanya:33 di:29 itu:23 tuaku:19 jepang:16 kanada:15 anak:13 ini:13 asing:12 amerika:9
+pacar	20	saya:6
+pada	506	tahun:47 pukul:40 hari:36 tanggal:25 bulan:17 akhirnya:13 malam:9 musim:8 jam:7 saat:7 umumnya:7 apa:6 kami:6 masa:6
+padaku	30	apa:6 bahwa:4
+pagi	78	ini:21 hari:10 saya:5 pagi:4
+pak	34	guru:7
+pakaian	26	yang:6
+paling	107	tidak:8 kamu:6 anda:4 tinggi:4
+panas	59	ini:8 tahun:5 dan:4 dari:4
+pandai	26	bermain:6 memasak:6
+para	92	siswa:10 ahli:4
+pasti	77	akan:9 bisa:6 sangat:5 sudah:5
+pekerjaan	83	itu:16 ini:14 yang:7 rumah:6 anda:4 dia:4
+pelajaran	30	bahasa:5
+pemain	27	sepak:4
+penting	30	bagi:5 daripada:4 untuk:4
+penuh	25	dengan:15
+per	23	hari:6 satu:5
+percaya	87	pada:11 dengan:9 padamu:7 padaku:6 akan:5 apa:5 bahwa:4 diri:4 kamu:4
+perempuan	71	itu:26 yang:11 saya:5
+pergi	678	ke:380 keluar:26 berenang:14 tidur:14 berbelanja:10 memancing:9 dengan:8 bersama:7 sendirian:7 lebih:6 bermain:5 kemana:5 aku:4 berselancar:4
+perjalanan	23	pulang:4
+perlu	182	melakukan:7 aku:6 bantuan:6 tahu:6 pergi:5 menjawab:4 menunggu:4
+permainan	28	ini:6
+pernah	417	ke:42 pergi:27 melihat:24 makan:17 bertemu:13 aku:7 mendaki:6 mendengar:6 terjadi:6 melihatmu:5 mengatakan:5 menjadi:5 berkata:4 bisa:4
+pernahkah	30	kamu:20 anda:4 kau:4
+pertama	58	yang:11 kali:10 kalinya:6 di:4 tama:4
+pertanyaan	64	itu:13 yang:11 ini:8 pertanyaan:4
+perusahaan	26	itu:4 kami:4
+pesawat	60	itu:15 terbang:5
+pesta	29	itu:6
+pikir	118	aku:19 dia:15 kamu:14 itu:9 kita:5 kau:4
+pindah	30	ke:23
+pintu	57	masuk:7 depan:5 itu:5 kamar:4
+pintunya	22	terbuka:7
+pohon	54	pohon:5 di:4 ini:4 itu:4 yang:4
+polisi	37	menemukan:8 itu:6
+prancis	54	adalah:6 dengan:6 dan:4 di:4
+pria	74	itu:25 yang:14 ini:6 dan:4
+pukul	101	berapa:17 sepuluh:11 tujuh:8 enam:7 setengah:7 dua:5 delapan:4
+pulang	80	ke:23 lebih:9 kerumah:6 pergi:4
+pulau	33	itu:15 di:4
+puluh	92	tahun:24 menit:8 orang:8 lima:6 satu:5 dolar:4 empat:4
+pun	119	yang:21 di:8 tidak:8 bisa:5
+punya	509	banyak:34 dua:26 waktu:26 uang:25 mobil:18 pacar:17 teman:13 tiga:13 sepeda:11 cukup:9 anak:8 anjing:8 beberapa:7 pilihan:7
+putih	24	daripada:5
+rapat	29	itu:7
+rasa	80	aku:8 kita:5 dia:4 itu:4 kamu:4
+rencana	32	itu:6 ini:5 yang:5
+ruangan	67	ini:53 itu:8
+rumah	285	sakit:46 ini:25 itu:23 saya:13 yang:11 kami:9 tangga:8 baru:6 dan:5 kita:5 makan:5 mereka:5 pada:5 dengan:4
+rumahku	82	ada:15 di:10 dekat:7 berada:4 menghadap:4
+saat	225	ini:49 itu:20 aku:14 dia:10 ia:7 masih:6 musim:6 saya:6 kita:4 yang:4
+saja	204	aku:18 yang:16 kamu:6 selesai:6 kau:5 makan:5 tidak:5 berangkat:4 bisa:4 dia:4
+sakit	85	kepala:9 karena:6 perut:6 flu:4 gigi:4 yang:4
+salah	114	satu:59 dengan:7 seorang:4
+saling	39	kenal:7 mengenal:6 jatuh:4
+salju	25	di:5 turun:5
+sama	186	sekali:73 dengan:21 sama:11 seperti:10 lain:9 aku:4 denganku:4
+sampai	198	di:23 ke:15 jumpa:14 sampai:10 aku:9 jam:5 sekarang:5 stasiun:5 hari:4 kamu:4 kapan:4 seratus:4
+sana	70	selama:5 ada:4 sendirian:4
+sangat	568	suka:30 baik:23 bagus:13 mahal:11 indah:10 sulit:10 membosankan:9 senang:9 besar:8 dingin:8 lelah:8 menyukai:8 bangga:7 berbeda:7
+satu	302	satunya:37 dari:13 jam:13 hal:12 sama:10 juta:8 menit:8 orang:8 lagi:6 pun:6 dua:5 kata:5 per:5 kali:4
+satunya	39	yang:12 orang:6
+saudara	37	laki:11 kembar:5 perempuan:5
+saya	2604	tidak:398 ingin:111 akan:95 sudah:54 suka:47 harus:45 bisa:43 sedang:38 punya:35 belum:31 pergi:30 sangat:30 tahu:29 tinggal:27
+sayang	24	sekali:16
+sayangnya	22	dia:4
+sebagai	76	seorang:11 ketua:5
+sebagian	23	besar:17
+sebaiknya	46	kamu:15 kau:6 kita:5
+sebelah	36	kiri:6 sana:5
+sebelum	102	makan:8 tidur:6 pergi:4 pukul:4
+sebenarnya	28	aku:5
+sebentar	26	lagi:14
+seberapa	26	sering:8
+sebuah	294	buku:19 mobil:10 kesalahan:9 lagu:6 pesta:6 apel:5 desa:5 kota:5 batu:4 rumah:4 surat:4
+secara	71	umum:5 langsung:4 pasti:4 perlahan:4
+sedang	540	makan:32 belajar:23 mencari:20 membaca:19 menulis:19 bermain:16 kamu:16 tidur:16 sakit:15 sibuk:15 menunggu:12 berbicara:11 tidak:11 menonton:10
+sedikit	93	lebih:8 demi:5 orang:5 waktu:4
+seekor	92	kucing:17 anjing:14 burung:7 ikan:6 rusa:5 beruang:4 serigala:4
+segera	62	tiba:8 kembali:6 setelah:5 pergi:4
+seharusnya	82	tidak:17 aku:7 kamu:6
+sejak	71	kapan:10 lama:7 pagi:4 saat:4
+sekali	137	tidak:34 lagi:13 dia:5 kamu:5
+sekarang	198	jam:25 aku:23 sudah:17 pukul:13 dia:7 juga:7 kamu:7 saya:7 di:5 tinggal:5 ini:4 sedang:4
+sekitar	53	sini:8 tiga:8 jam:4
+sekolah	87	dengan:9 kami:8 hari:4 ini:4
+selain	23	allah:4
+selalu	206	dalam:7 ingin:7 ada:6 di:6 memakai:6 lupa:5 benar:4
+selama	153	tiga:20 dua:12 seminggu:11 beberapa:9 berjam:9 bertahun:6 sepuluh:6 empat:5 lima:5 ini:4 lebih:4
+selamat	103	datang:24 pagi:11 ulang:10 malam:9 tinggal:9 hari:8 siang:8 tahun:4
+selesai	45	membaca:8 makan:7
+seluruh	25	dunia:14
+semakin	49	aku:8 banyak:5
+sembilan	21	puluh:7
+semua	371	orang:116 yang:20 ini:10 anak:8 anggota:5 apel:5 buku:5 tahu:5 hal:4
+senang	82	dengan:7 bisa:6 hati:6 kamu:6 sekali:6 bertemu:5 berbicara:4
+sendiri	47	yang:5
+seorang	382	dokter:21 guru:21 yang:20 wanita:19 diri:16 anak:14 pria:13 pun:13 laki:6 siswa:6 gadis:5 pekerja:5 pengacara:5 penyanyi:5
+sepak	25	bola:25
+sepanjang	51	hari:12 jalan:8 malam:7 tahun:5
+sepatu	34	yang:5
+sepeda	44	saya:6 di:5 ini:5 motor:5 baru:4
+seperti	317	itu:58 ini:44 apa:16 yang:11 orang:10 anak:5 ayahnya:5 dia:5 di:4 kamu:4 seorang:4
+sepertinya	81	dia:11 tidak:9 aku:5 sedang:5 akan:4
+sepuluh	58	tahun:18 menit:7 ribu:6
+sering	117	pergi:9 bermain:7 kamu:7 makan:6 bertemu:4 menangis:4 tidak:4
+serius	20	episode:4
+seseorang	67	yang:10 di:7 harus:5
+sesuai	23	dengan:10 jadwal:4
+sesuatu	119	yang:47 untuk:15 di:8
+setelah	122	makan:9 ini:6 selesai:4
+setengah	45	jam:5 sebelas:4
+setiap	177	hari:83 pagi:17 orang:10 tahun:8 kali:6 musim:5 minggu:4 saat:4
+setuju	27	dengan:13 denganmu:5
+siang	50	ini:9 di:5 hari:4
+siap	21	untuk:10
+siapa	276	yang:113 nama:19 pun:17 siapa:17 kamu:10 ini:6 namamu:6 orang:5
+sibuk	36	sekarang:4
+sini	148	selama:8 untuk:8 dengan:4 kemarin:4 sangat:4 sejak:4 yang:4
+siswa	43	yang:8 di:5 sma:4
+soal	22	itu:5
+stasiun	34	kereta:9
+suara	47	yang:7 itu:5
+suatu	42	hari:16 tempat:4
+sudah	842	tidak:62 makan:25 selesai:24 lama:21 berapa:16 menikah:16 cukup:15 membaca:15 melakukan:12 pergi:12 mulai:11 siap:11 waktunya:11 menjadi:10
+suka	608	dengan:19 makan:12 membaca:12 musik:11 anggur:10 kopi:10 film:9 warna:9 yang:9 bermain:8 ikan:8 kucing:8 mendengarkan:8 bahasa:7
+sulit	45	untuk:13 bagi:4
+sungai	41	itu:9 ini:6 terpanjang:4
+sungguh	32	sungguh:4
+surat	59	itu:8 untuk:8 ini:7 dari:4 kepada:4
+tadi	58	malam:10 itu:9 pagi:5 aku:4
+tahan	23	dengan:7 lagi:4
+tahu	679	apa:104 bahwa:45 kalau:39 di:24 siapa:24 itu:21 kamu:20 cara:19 aku:17 apakah:16 bagaimana:15 dia:15 kenapa:14 mengapa:14
+tahun	290	yang:31 lalu:27 ini:23 baru:16 depan:16 lebih:7 di:4 pada:4 terakhir:4 tinggal:4
+tak	128	bisa:14 ada:13 akan:11 dapat:7 pernah:5 perlu:4 sempurna:4 seorangpun:4
+takut	65	dengan:7 akan:5 mati:5 apa:4
+tanda	28	tangan:8
+tangan	77	ini:7 yang:7 di:5 kananku:4 kiri:4
+tanpa	109	bantuan:5
+tapi	157	aku:18 dia:12 saya:11 tidak:10 itu:7 sekarang:5 kamu:4
+tas	30	ini:5 belanja:4 itu:4
+tau	23	apakah:4
+teh	26	hitam:4
+telah	340	melakukan:13 terjadi:12 membuat:10 diterjemahkan:5 mencoba:5 belajar:4 dicuri:4 mencuri:4 menikah:4 meninggal:4 menunggu:4 tiba:4
+telepon	38	itu:4
+teman	136	yang:17 temannya:13 teman:12 saya:11 temanku:11 temanmu:6 di:4 orang:4
+temanku	25	tidak:4
+tempat	148	yang:20 tidur:14 ini:9 duduk:7 seperti:7 parkir:5 tidurnya:5 untuk:5 itu:4 lain:4
+tengah	26	malam:9
+tentang	192	hal:16 itu:10 apa:7 masa:6 rencana:4
+tepat	54	waktu:29 di:4
+terakhir	44	kali:25 yang:4
+terbaik	27	di:8 yang:5 dalam:4
+terbang	20	di:6
+terbesar	33	di:22 kedua:5
+terbiasa	27	dengan:13
+terbuat	35	dari:35
+terdapat	33	banyak:10
+terima	86	kasih:83
+terjadi	98	di:20 pada:6
+terkenal	21	di:9
+terlalu	211	banyak:44 mahal:12 besar:8 keras:7 sulit:6 tua:6 mabuk:5 muda:5 pendek:5 suka:5 manis:4 sempit:4 sibuk:4
+terlambat	38	untuk:8 datang:7 ke:4
+terletak	21	di:14
+terlihat	146	seperti:27 sangat:15 lebih:4 lelah:4 sedikit:4
+tertarik	39	dengan:20 pada:8
+terus	75	bekerja:7 menerus:7 berjalan:5 turun:4
+tetap	62	di:9 tinggal:4
+tetapi	134	tidak:14 saya:11 dia:10 aku:7 itu:6 juga:5 kamu:4
+tiba	114	di:33 tiba:28 dia:5 tepat:4
+tidak	3950	bisa:417 ada:355 akan:230 tahu:227 pernah:145 suka:128 punya:124 ingin:107 mau:106 dapat:83 perlu:65 boleh:41 mengerti:35 terlalu:32
+tidur	164	di:35 nyenyak:9 karena:6 lebih:6 selama:6 dengan:5 tanpa:5 itu:4 jam:4
+tiga	221	puluh:33 tahun:32 hari:16 jam:12 ekor:11 minggu:11 kali:10 orang:9 belas:8 bulan:8 ratus:5 anak:4
+tinggal	289	di:231 bersama:16 dengan:6 selama:4 sendirian:4
+tinggi	60	daripada:10 di:9 dari:5 dan:4 dariku:4
+toko	66	itu:13 buku:12 ini:9
+tolong	242	jangan:21 ambilkan:10 berikan:10 beri:6 buka:6 katakan:6 nyalakan:6 perlihatkan:6 beritahu:5 tunjukkan:5 jelaskan:4 lepas:4 matikan:4 telepon:4
+tua	88	itu:13 dari:6 di:6 daripada:5 saya:5 untuk:4
+tuhan	49	yang:6 dan:4 memberi:4 selain:4
+tujuh	31	belas:5 tahun:4
+tunggu	22	sebentar:10
+turun	65	hujan:20 dari:8 salju:5
+tutup	29	matamu:8 pintunya:5
+uang	105	untuk:9 itu:8 yang:8 dalam:4 dan:4 kanada:4 ke:4 tunai:4
+ujian	21	itu:6 masuk:4
+ulang	69	tahun:33 tahunku:12 tahunnya:11 tahunmu:6
+umur	24	saya:9
+untuk	948	tidak:32 belajar:22 melakukan:21 makan:20 membeli:20 pergi:18 berhenti:14 hidup:11 menyelesaikan:10 apa:9 bisa:9 membuat:9 menjadi:9 anak:8
+video	20	ini:6
+waktu	196	untuk:23 yang:23 luang:11 itu:7 saya:5 dan:4 di:4 jika:4 lagi:4 satu:4 senggang:4
+waktunya	28	untuk:5
+walaupun	23	dia:4
+wanita	66	itu:15 yang:12
+warna	50	kesukaanku:4
+ya	70	ampun:5 dia:5 kan:5 saya:5 aku:4
+yakin	70	dengan:8 dia:8 kamu:7 bahwa:6 kalau:4
+yang	3315	kamu:141 bisa:94 akan:79 tidak:76 sangat:71 ingin:69 lalu:66 sedang:61 aku:60 paling:59 harus:58 baik:56 dia:53 lebih:52
+yanni	29	tidak:5
+ziri	51	melihat:4 membeli:4
+[3]
+<s> ada	284	banyak:37 yang:28 berapa:18 apa:14 di:10
+<s> akhir	18	akhir:13
+<s> aku	3637	tidak:683 akan:188 ingin:183 suka:135 sudah:116
+<s> anak	130	anak:45 laki:21 itu:13 perempuan:12 anakku:5
+<s> anda	117	tidak:13 ingin:8 akan:7 bisa:6 harus:6
+<s> anjing	33	itu:14 ini:5
+<s> apa	762	yang:237 kau:117 kamu:112 itu:35 ada:17
+<s> apakah	747	kamu:233 anda:111 ada:56 ini:40 dia:23
+<s> ayah	56	saya:23 dan:5
+<s> ayahku	45	tidak:14
+<s> ayo	44	kita:13 pergi:5
+<s> bagaimana	142	kamu:19 kalau:14 bisa:9 cara:9
+<s> bahasa	103	inggris:20 prancis:9 apa:8
+<s> banyak	36	orang:6 yang:5
+<s> beberapa	33	orang:9
+<s> belajar	18	bahasa:13
+<s> berapa	123	banyak:31 lama:22 harga:12 kali:6
+<s> beri	26	tahu:10 aku:9
+<s> berikan	20	aku:7
+<s> besok	45	aku:8 hari:6 saya:6
+<s> biarkan	26	aku:12 saya:6
+<s> bill	22	tidak:6
+<s> bisa	40	tolong:11 saya:5
+<s> bisakah	100	kamu:27 kau:23 anda:11 saya:11 aku:8
+<s> boleh	45	saya:21 aku:10
+<s> bolehkah	53	saya:30 aku:19
+<s> bukan	22	itu:6
+<s> bukankah	23	itu:6
+<s> buku	81	ini:37 itu:14 buku:10
+<s> burung	21	burung:6
+<s> dari	36	mana:13
+<s> dengan	28	siapa:6
+<s> di	341	mana:138 sini:21 depan:12 sana:11 dekat:10
+<s> dia	2077	tidak:237 sedang:48 pergi:41 punya:41 adalah:38
+<s> hal	30	ini:7 itu:6 yang:5
+<s> hanya	39	ada:8
+<s> hari	107	ini:88
+<s> hati	18	hati:14
+<s> hidup	22	itu:7
+<s> hujan	20	terus:5
+<s> ia	107	tidak:7
+<s> ibu	48	saya:11 kota:9
+<s> ini	508	adalah:75 bukan:51 tidak:24 sangat:11 buku:8
+<s> itu	325	tidak:32 bukan:31 adalah:23 sangat:13 hanya:6
+<s> itulah	22	yang:10
+<s> jadi	23	apa:6
+<s> jalan	19	yang:5
+<s> jam	32	berapa:22
+<s> jangan	340	lupa:18 sentuh:12 pernah:11 biarkan:10 sampai:10
+<s> jika	95	kamu:18 ada:9 aku:6 tidak:6 anda:5
+<s> kalau	121	kamu:26 aku:10 begitu:6 saja:6 kau:5
+<s> kalian	80	harus:8 tidak:8 sudah:5
+<s> kalimat	31	ini:16
+<s> kami	532	tidak:57 akan:27 sudah:26 sedang:18 semua:15
+<s> kamu	787	tidak:91 harus:68 bisa:36 sudah:30 akan:26
+<s> kapan	93	kamu:32 terakhir:16 anda:5
+<s> karena	53	aku:5
+<s> kata	25	ini:5
+<s> katakan	18	padaku:5
+<s> kau	172	tidak:26 harus:24 bisa:14 akan:10 seharusnya:6
+<s> ke	26	mana:19
+<s> kemarin	76	aku:25 saya:9 dia:5
+<s> kenapa	163	kamu:68 kau:21 dia:9 aku:6 tidak:6
+<s> ketika	49	aku:10
+<s> kita	314	harus:55 tidak:52 akan:22 bisa:12 semua:11
+<s> kota	17	itu:7
+<s> kucing	45	itu:12 bisa:6
+<s> lebih	24	baik:13
+<s> maaf	57	saya:12 aku:9 tapi:5
+<s> malam	16	ini:9
+<s> mari	112	kita:84
+<s> masih	26	ada:14
+<s> mau	42	pergi:11
+<s> maukah	21	kamu:10 anda:7
+<s> mengapa	117	kamu:51 tidak:8 dia:5 kita:5 saya:5
+<s> mereka	435	tidak:54 sedang:17 akan:16 pergi:11 tinggal:9
+<s> mobil	35	ini:5 itu:5
+<s> mungkin	68	kamu:8 dia:7
+<s> nama	41	saya:19
+<s> orang	121	orang:30 tua:14 yang:12 tuaku:10 itu:6
+<s> pada	53	akhirnya:10 tahun:6
+<s> pekerjaan	18	ini:6
+<s> pernahkah	30	kamu:20
+<s> pesawat	24	itu:13
+<s> polisi	22	menemukan:8
+<s> pria	32	itu:18
+<s> ruangan	18	ini:18
+<s> rumah	55	ini:18 itu:12
+<s> rumahku	44	di:9 dekat:7
+<s> saat	50	ini:12 itu:7 aku:5
+<s> salah	17	satu:15
+<s> sampai	29	jumpa:13
+<s> saya	1642	tidak:309 ingin:100 akan:64 sudah:44 suka:44
+<s> sayang	19	sekali:16
+<s> sebaiknya	25	kamu:14 kau:6 kita:5
+<s> seberapa	21	sering:8
+<s> seharusnya	16	kamu:6 aku:5
+<s> sekarang	105	jam:21 aku:16 pukul:10 dia:6 sudah:6
+<s> selamat	78	datang:20 hari:8 pagi:8 ulang:8 malam:7
+<s> semua	138	orang:77
+<s> sepertinya	56	dia:11 aku:5
+<s> setiap	40	orang:9 hari:7 kali:6
+<s> siapa	168	yang:90 nama:18 orang:5
+<s> sudah	109	berapa:16 lama:10 tidak:5
+<s> sudahkah	17	kamu:11
+<s> tadi	22	itu:7
+<s> tahukah	17	kamu:10
+<s> tahun	20	ini:6
+<s> tak	27	ada:9
+<s> terima	70	kasih:70
+<s> tidak	327	ada:210 semua:18 perlu:9 lama:6 mungkin:5
+<s> toko	19	ini:6 itu:6
+<s> tolong	206	jangan:19 berikan:9 ambilkan:8 perlihatkan:6 beri:5
+<s> untuk	26	apa:7
+<s> wanita	17	itu:10
+<s> ya	37	ampun:5 saya:5
+<s> yang	46	ini:5 kamu:5 mana:5
+ada apa	21	apa:8
+ada banyak	50	hal:6 sekali:6
+ada berapa	20	banyak:8
+ada di	203	sini:23 dalam:20 rumah:18 mana:12 atas:9
+ada orang	24	yang:16
+ada yang	203	bisa:25 tahu:17 ingin:14 salah:11 mau:8
+adalah bahasa	42	yang:11
+adalah hari	19	ulang:5
+adalah ibu	29	kota:28
+adalah kota	17	terbesar:7 yang:5
+adalah negara	23	yang:10 terbesar:6
+adalah orang	28	yang:18
+adalah salah	29	satu:27
+adalah seorang	93	yang:11 guru:6
+akan kembali	22	dalam:5
+akan melakukan	25	itu:9 apa:6
+akan pergi	73	ke:38
+akan segera	28	tiba:5
+akhir akhir	22	ini:22
+aku akan	250	pergi:25 kembali:6 membantumu:6 di:5 melakukan:5
+aku baru	25	saja:19
+aku belajar	26	bahasa:14
+aku belum	58	pernah:27
+aku benar	22	benar:22
+aku bertemu	17	dengan:5
+aku bisa	78	berenang:5 melakukannya:5
+aku di	27	sini:9
+aku hanya	42	ingin:10
+aku harap	40	aku:9
+aku harus	98	pergi:9 melakukan:6 belajar:5
+aku ingin	203	pergi:16 tahu:14 menjadi:13 membeli:11 kamu:10
+aku juga	32	tidak:9
+aku lebih	40	suka:20 memilih:5
+aku masih	37	belum:10
+aku mau	58	pergi:5
+aku melihat	58	seekor:5
+aku membeli	26	buku:5
+aku menulis	16	surat:6
+aku mulai	18	belajar:5
+aku pergi	36	ke:20
+aku pikir	70	aku:13 kamu:8 dia:5 itu:5 kita:5
+aku punya	79	dua:8 saudara:5
+aku rasa	42	aku:8
+aku sangat	56	suka:15
+aku sedang	54	belajar:8 makan:6 membaca:5 menulis:5
+aku sudah	133	tidak:23 membaca:8 menulis:7 melakukan:5 selesai:5
+aku tahu	100	kamu:12 apa:11 bahwa:11 kalau:6 itu:5
+aku tak	22	bisa:6
+aku tidak	786	bisa:123 tahu:100 akan:63 suka:49 punya:37
+aku tinggal	27	di:19
+aku yakin	21	dia:6
+anak anak	84	bermain:6 di:6 itu:5
+anak laki	58	laki:42 lakiku:6 lakinya:6
+anak perempuan	23	itu:12
+anda akan	23	pergi:5
+anda tidak	36	perlu:5
+apa apa	46	tentang:11 di:7
+apa kamu	116	mau:8 sudah:8 pernah:7 tahu:7 tidak:6
+apa kau	124	pernah:12 sudah:12 tahu:7 memiliki:6 punya:6
+apa pun	21	yang:11
+apa saja	22	yang:12
+apa yang	544	kamu:52 akan:47 terjadi:37 sedang:36 dia:29
+apakah ada	60	yang:7 sesuatu:6
+apakah anda	112	pernah:10 sudah:8 bisa:7 mau:5 memiliki:5
+apakah kamu	240	suka:24 punya:20 tahu:16 sudah:15 pernah:11
+apapun yang	25	terjadi:5
+bagaimana kamu	22	bisa:9
+bahasa inggris	85	dengan:11 di:8 adalah:7 dan:5
+bahasa prancis	32	dengan:6
+bahkan tidak	25	tahu:8
+bahwa dia	62	tidak:12 akan:8
+baik baik	33	saja:29
+banyak orang	23	yang:8
+baru saja	64	selesai:6 makan:5
+bekerja di	65	sini:14 pabrik:6 sebuah:6
+belajar bahasa	153	inggris:27 esperanto:19 prancis:18 asing:10 jepang:10
+belajar di	18	luar:5
+belum pernah	57	ke:10 melihat:10 makan:5
+benar benar	127	tidak:13 ingin:7
+berada di	95	sini:15 rumah:11 dalam:7 sana:6
+berapa banyak	42	orang:5 yang:5
+berapa lama	37	kamu:13
+berbicara bahasa	50	inggris:16 prancis:8
+berbicara dengan	46	bahasa:6 orang:5
+berdiri di	18	sana:5
+beri tahu	18	aku:6
+berkata bahwa	38	dia:17 mereka:9
+bermain sepak	16	bola:16
+bertemu dengan	35	anda:5
+bilang dia	39	tidak:10
+bisa bahasa	30	inggris:7 prancis:5
+bisa berbahasa	46	inggris:15 prancis:13
+bisa berbicara	28	bahasa:17
+bisa melakukan	21	itu:8 ini:5
+bisa pergi	25	ke:12
+bolehkah saya	33	meminjam:5
+buku buku	24	ini:9
+buku ini	63	tidak:5
+buku yang	28	aku:5
+dalam bahasa	82	prancis:22 inggris:18 jepang:6
+dalam keadaan	18	baik:7
+dan aku	32	tidak:6
+datang ke	56	sini:16 sekolah:6 jepang:5
+dengan apa	20	yang:18
+dengan hal	19	itu:9 ini:8
+dengan orang	20	lain:6
+dengan sangat	18	baik:10
+di atas	79	meja:33
+di bawah	51	meja:10 pohon:7
+di dalam	110	mobil:12 kotak:8 kamar:5 lemari:5 mobilnya:5
+di dekat	41	sini:13 rumahku:9
+di depan	62	rumahku:11 stasiun:6
+di dunia	23	ini:8
+di hari	18	ulang:8
+di kota	19	ini:7
+di lantai	25	dua:5
+di luar	47	negeri:20
+di mana	208	kamu:23 dia:10 saya:10 aku:8 mereka:8
+di ruangan	33	ini:32
+di rumah	88	sakit:17 pada:5 yang:5
+di sana	43	selama:5
+di sini	104	selama:8 untuk:6
+di tempat	38	tidur:6 seperti:5 yang:5
+dia adalah	44	seorang:16 orang:5
+dia akan	93	pergi:7 kembali:6 menjadi:5 segera:5
+dia belum	16	pernah:5
+dia berkata	16	bahwa:8
+dia bilang	19	dia:13
+dia bisa	38	berbahasa:8
+dia datang	23	ke:6
+dia lebih	24	suka:5
+dia masih	42	belum:13 di:7
+dia orang	30	yang:10
+dia pergi	48	ke:31
+dia punya	46	uang:5
+dia sedang	65	sakit:5
+dia tidak	321	bisa:38 akan:28 pernah:19 punya:14 ingin:13
+dia tinggal	31	di:25
+dua puluh	27	tahun:7
+duduk di	57	depan:6 sini:6
+hal ini	18	tidak:6
+hal yang	78	harus:9 sama:9 ingin:8 tidak:6 bisa:5
+hampir tidak	19	pernah:9 ada:6
+hari ini	118	aku:22 hari:15 saya:11 adalah:10 cuacanya:8
+hari ulang	24	tahunku:8 tahun:6 tahunnya:6
+hari yang	17	lalu:6
+harus belajar	18	bahasa:8
+harus melakukan	18	itu:7
+harus pergi	25	ke:14
+harus tetap	18	di:5
+ingin belajar	25	bahasa:18
+ingin bertemu	21	dengan:8 denganmu:5
+ingin menjadi	53	seorang:10 dokter:5
+ingin pergi	57	ke:38
+ingin tahu	33	apa:8
+ini adalah	110	hari:9 sebuah:8
+ini aku	44	tidak:7
+ini saya	19	tidak:6
+ini tidak	107	ada:12 akan:9 bisa:9 dapat:5
+itu ada	24	di:17
+itu tidak	118	ada:9 akan:9 bisa:7 masuk:6 mungkin:6
+jam berapa	27	kamu:5 sekarang:5
+jatuh cinta	16	dengan:8
+jauh dari	27	sini:6
+jauh lebih	29	baik:10 tinggi:6
+jika kamu	35	tidak:8
+kalau kamu	55	tidak:7
+kami tidak	63	punya:6 akan:5 tahu:5
+kamu akan	74	pergi:6
+kamu di	24	sini:11 mana:6
+kamu harus	85	tetap:8 belajar:5
+kamu ingin	37	pergi:10 aku:5
+kamu lakukan	29	di:5
+kamu mau	49	pergi:9
+kamu melakukan	20	itu:10
+kamu pergi	24	ke:14
+kamu pernah	31	ke:7 melihat:5
+kamu sudah	69	makan:12
+kamu suka	53	masakan:5
+kamu tahu	53	apa:8
+kamu tidak	196	bisa:17 perlu:17 akan:12 mau:10 punya:8
+kapan kamu	38	akan:5
+kapan terakhir	18	kali:17
+kau pernah	16	pergi:6 ke:5
+kau tidak	51	bisa:7
+ke dalam	52	bahasa:6
+ke luar	28	negeri:22
+ke mana	49	mana:10 pun:5 saja:5
+ke rumah	36	sakit:19
+ke sekolah	18	dengan:9
+kembali ke	35	rumah:6
+kenapa kamu	73	tidak:24
+kenapa kau	22	tidak:5
+kita akan	55	pergi:7
+kita harus	67	tetap:5
+kita lakukan	27	dengan:5
+kita pergi	17	ke:11
+kita tidak	89	bisa:27 akan:13 perlu:7
+laki laki	72	itu:24 dan:8 yang:8
+lakukan di	20	sini:7
+lebih baik	74	daripada:23 kamu:5 ketimbang:5
+lebih banyak	38	uang:5
+lebih cepat	18	daripada:7
+lebih dari	44	tiga:7
+lebih tinggi	26	daripada:10
+lebih tua	24	dari:6 daripada:5
+maaf saya	16	tidak:9
+makan di	21	luar:5
+makan malam	39	bersama:6
+makan siang	23	di:5
+mana yang	43	lebih:7 kamu:6 paling:5
+mari kita	96	lakukan:21 melakukannya:12 mulai:8
+masih di	23	sini:9
+masuk ke	25	dalam:11
+mau makan	17	apa:5
+mau pergi	38	ke:23
+melakukan apa	35	apa:13 yang:12
+melakukan hal	29	itu:11 tersebut:7
+melakukan yang	17	terbaik:5
+melihat ke	17	arah:5
+membaca buku	36	ini:12 itu:7
+membeli buku	17	itu:7 ini:6
+memutuskan untuk	31	tidak:6
+mengapa kamu	54	tidak:16
+menjadi seorang	30	guru:7
+menonton film	24	itu:7
+menunggu di	23	sini:11 luar:6
+mereka tidak	65	bisa:8 akan:7
+mirip dengan	19	ayahnya:5
+mungkin tidak	20	akan:5
+musim panas	33	ini:5 tahun:5
+orang di	29	sini:8
+orang orang	67	yang:13 di:7 tidak:6 itu:5
+orang tua	36	itu:5 saya:5
+orang yang	127	tidak:9 baik:8 bisa:8
+pada bulan	17	oktober:6
+pada hari	36	senin:11 minggu:9
+pada pukul	40	berapa:8 tujuh:5
+pergi ke	380	sana:42 mana:32 sekolah:27 bioskop:18 luar:18
+pernah makan	17	makanan:7
+pernah pergi	26	ke:25
+pulang ke	23	rumah:18
+punya banyak	33	teman:8 uang:6
+punya dua	26	orang:5 saudara:5
+punya waktu	20	untuk:12
+saja aku	18	bisa:5
+salah satu	59	dari:10
+sama sekali	41	tidak:33
+sampai di	23	rumah:5 sana:5
+satu satunya	35	yang:12 orang:6
+saya adalah	25	seorang:6
+saya akan	95	pergi:10
+saya belum	31	pernah:10
+saya harus	45	pergi:7
+saya ingin	111	tahu:11 bertemu:6 pergi:6 belajar:5 menjadi:5
+saya pergi	27	ke:12
+saya pikir	19	dia:5
+saya punya	34	banyak:5
+saya sedang	38	makan:6 mencari:5
+saya selalu	19	ingin:6
+saya tidak	397	bisa:76 tahu:36 suka:25 akan:22 mau:21
+saya tinggal	26	di:24
+sedang belajar	21	bahasa:12
+sedang makan	29	apel:5
+sedang menulis	17	surat:6
+sekarang jam	25	setengah:7
+selama tiga	20	tahun:7
+selamat datang	21	di:21
+semua orang	105	tahu:8 di:6
+sesuatu yang	47	tidak:9
+setiap hari	30	senin:7
+siapa yang	113	akan:11 lebih:7
+sudah berapa	16	lama:12
+sudah lama	20	aku:5
+sudah makan	16	malam:5 pagi:5
+sudah tidak	62	ada:7 tahan:7
+tahu apa	104	yang:71 apa:14
+tahu bahwa	45	kamu:7 aku:5 dia:5
+tahu di	24	mana:24
+tahu kalau	39	dia:6 kamu:6
+tahu kamu	20	tidak:5
+tahu siapa	24	yang:10
+tahun yang	31	lalu:29
+tapi aku	18	tidak:6
+tentang hal	16	itu:9 ini:5
+terakhir kali	25	kamu:12
+terbesar di	22	dunia:12
+terbuat dari	35	plastik:6 kayu:5
+terima kasih	68	atas:20 sudah:10 telah:8 untuk:7
+tiba di	33	sana:6
+tidak ada	341	yang:137 di:22 orang:10 apa:7 gunanya:6
+tidak akan	230	pernah:43 bisa:7 pergi:7 berhasil:6 melakukan:6
+tidak bisa	408	pergi:20 tidur:16 bahasa:13 berbahasa:13 datang:12
+tidak boleh	41	makan:7
+tidak ingin	107	pergi:12 menjadi:5
+tidak makan	25	daging:6
+tidak masuk	17	akal:11
+tidak mau	99	pergi:8 berbicara:5
+tidak melakukan	20	apa:9 itu:6
+tidak pergi	22	ke:11
+tidak pernah	143	pergi:7 makan:5
+tidak punya	123	waktu:15 uang:11 pacar:8 banyak:7 mobil:5
+tidak semua	19	orang:5
+tidak suka	123	dengan:5
+tidak tahu	210	apa:52 kalau:14 bahwa:12 apakah:10 bagaimana:9
+tidak terlalu	32	suka:5
+tidur di	35	dalam:6 lantai:5 sofa:5
+tiga puluh	28	tahun:8
+tiga tahun	20	yang:7
+tinggal di	231	sini:23 rumah:18 dekat:11 sebuah:8 australia:6
+untuk belajar	18	bahasa:6
+untuk makan	19	malam:11 siang:5
+untuk melakukan	21	itu:7 hal:5
+untuk tidak	32	pergi:7
+yang ada	38	di:30
+yang akan	79	kamu:13 terjadi:12 kita:9
+yang aku	60	katakan:6
+yang anda	41	inginkan:6 katakan:5
+yang bisa	94	saya:10 berbahasa:8
+yang dia	53	katakan:14 lakukan:5 mau:5
+yang harus	58	dilakukan:9 aku:8
+yang ia	33	katakan:7 butuhkan:5
+yang ingin	69	kamu:16 aku:7 kau:7 anda:5
+yang kamu	141	lakukan:16 suka:11 katakan:10 butuhkan:6 inginkan:6
+yang kau	41	katakan:7 inginkan:5
+yang lebih	52	baik:9 tinggi:7
+yang paling	59	kamu:6
+yang pernah	26	aku:5
+yang salah	17	dengan:7
+yang sangat	70	baik:5
+yang sedang	61	kamu:16 terjadi:7
+yang terjadi	34	di:7
+yang tidak	75	bisa:8

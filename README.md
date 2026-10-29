@@ -97,8 +97,9 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **First-run tour** — four quick tips on first launch; skip it, or replay it any time from Settings → Help
 - **Full key layout** — F1–F12, Esc, Del, Home, End, PrtScn, arrows, QWERTY/AZERTY/QWERTZ
 - **Word prediction** — 5 suggestions from the dictionary, your custom words and a phrase model, keeping the capitals you type ("A" → *Alex*, "i" → *I'm*)
-- **Your language** — English (Australian, UK or US spelling), Deutsch, Français, Español, Italiano, Português or Nederlands. It starts on your PC's language (and the matching layout: QWERTZ for German, AZERTY for French), changeable in Settings
-- **No accent hunting** — type *uber* and pick *über*, *cafe* → *café*, *manana* → *mañana*. Or hold a letter for its accents (hold **e** → é è ê ë); keys with accents have a small dot
+- **Your language** — English (Australian, UK or US spelling), Deutsch, Français, Español, Italiano, Português, Nederlands, Bahasa Indonesia, Bahasa Melayu, Filipino, Tiếng Việt or 한국어 (Korean). It starts on your PC's language (and the matching layout: QWERTZ for German, AZERTY for French), changeable in Settings
+- **No accent hunting** — type *uber* and pick *über*, *cafe* → *café*, *manana* → *mañana*. Or hold a letter for its accents (hold **e** → é è ê ë); keys with accents have a small dot. Vietnamese works the same way: type *nguoi* → *người*
+- **Korean** — the keys show Hangul (2-set layout). Letters build the syllable shown in the bar (ㅎ ㅏ ㄴ → 한), which is typed when you start the next one, press space or pick a suggestion. The **한/A** key switches to English letters and back
 - **Context-aware suggestions** — predictions take the words before into account ("thank" → *you*, "how are" → *you*); the context resets at . ! ? and Enter
 - **Learns your words** — remembers the words and word pairs you actually use, locally, to rank them higher (can be turned off or erased)
 - **Spell-check** — fuzzy matching catches common misspellings; correction appears ~250 ms after you pause
@@ -131,7 +132,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 | **Font size** | 10–22 px (default 18), live |
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
-| **Language** | English (Australia / UK / US), Deutsch, Français, Español, Italiano, Português, Nederlands; defaults to your PC's language |
+| **Language** | English (Australia / UK / US), Deutsch, Français, Español, Italiano, Português, Nederlands, Indonesia, Melayu, Filipino, Tiếng Việt, 한국어; defaults to your PC's language |
 | **Auto space** | On (default) / Off — type a space after a picked suggestion |
 | **Dwell click** | Hover-to-click with adjustable delay |
 | **Key sound** | Off / Click (default, soft tick) / Beep |
@@ -208,6 +209,7 @@ Note: the keyboard cannot tell when you are typing into a password field. Words 
 onscreen_keyboard/
 ├── keyboard.py          # Main GTK3 window and all UI logic
 ├── predictor.py         # Dictionary word predictor + phrase model + learned-words model
+├── hangul.py            # Korean: 2-set key map + syllable composition
 ├── emojis.py            # Emoji data, search, and suggestion ranking
 ├── style.css            # GTK CSS (layout, themes, transitions)
 ├── words.txt            # English (US) dictionary
@@ -302,6 +304,6 @@ The dictionaries (`words.txt`, `words_en_AU.txt`, `words_en_GB.txt`) come from [
 
 Word suggestions are ranked using [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018 English list). That data is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); the derived `word_freq.txt` is distributed under the same license. Regenerate it with `tools/build_word_freq.py`.
 
-The German, French, Spanish, Italian, Portuguese and Dutch word lists and phrase models (`words_<lang>.txt`, `ngrams_<lang>.txt`) are built by `tools/build_lang.py` from the FrequencyWords lists for those languages (CC BY-SA 4.0, so the word lists are too) and [Tatoeba](https://tatoeba.org) sentences (CC BY 2.0 FR), which also supply the capitalisation (German nouns) and filter out accent typos.
+The German, French, Spanish, Italian, Portuguese, Dutch, Indonesian, Malay, Vietnamese and Korean word lists and phrase models (`words_<lang>.txt`, `ngrams_<lang>.txt`) are built by `tools/build_lang.py` from the FrequencyWords lists for those languages (CC BY-SA 4.0, so the word lists are too) and [Tatoeba](https://tatoeba.org) sentences (CC BY 2.0 FR), which also supply the capitalisation (German nouns) and filter out accent typos. FrequencyWords has no Filipino list, so Filipino comes from Tatoeba alone.
 
 Context-aware suggestions use a bigram/trigram phrase model built from English sentences from [Tatoeba](https://tatoeba.org) (eng_sentences export), licensed [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/). `ngrams.txt` contains only aggregate word-sequence counts derived from that data; regenerate it with `tools/build_ngrams.py`.

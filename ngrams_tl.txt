@@ -1,0 +1,5445 @@
+# Word phrase model (bigrams + trigrams) for the on-screen keyboard.
+# Derived from Tatoeba tgl sentences, https://tatoeba.org,
+# CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
+# Regenerate with tools/build_ngrams.py / tools/build_lang.py.
+#
+# Format: a '[2]' or '[3]' section header, then one line per context:
+#   <context words, space-separated>TAB<context total>TAB<w:count w:count ...>
+# '<s>' is the sentence-start token. Context totals are counted before
+# pruning; continuations are pruned (min count, top-K) and sorted by count.
+[2]
+<s>	87870	hindi:6138 may:4069 ang:3703 sa:2249 gusto:1595 wala:1434 kailangan:1198 ano:1108 huwag:1031 alam:968 bakit:773 walang:714 mas:712 maraming:599
+aabutin	36	po:11 ang:5 ng:5 siya:4
+aalaga	40	sa:16 ng:14 kay:4
+aalala	62	po:9 ako:8 pa:5 ang:4 ka:4 na:4 tungkol:4
+aalis	63	ang:10 na:8 ng:8 ka:5 tayo:5 ako:4
+aaral	265	ng:62 ako:37 sa:25 niya:17 ang:15 na:15 si:12 siya:10 ka:9 kami:7 at:4 ko:4 mo:4 po:4
+aaralan	30	ko:12 ang:5
+aari	35	ko:8 niya:7 ni:5 po:4
+aaway	27	na:8 po:5 sa:5 uli:4
+abala	76	po:17 ako:16 siya:12 si:11 ang:5
+abenang	87	gatas:53 latte:10 matchang:6 malamig:4
+abilidad	34	mong:6 niya:5 mo:4
+abo	69	ang:45 po:8 at:5 sa:4
+abogado	39	ko:13 ng:7 niyang:6 ni:4
+abong	48	kastilyo:9 touque:6 langit:4
+abril	69	ng:40 ang:7 magdadalawang:4
+adil	26	na:11
+agad	61	ang:12 na:12 pong:7 si:4
+agham	52	at:13 ang:6 ng:6 ay:5 sa:5 na:4
+agila	21	bilang:4
+agosto	66	ng:59
+ahas	20	ang:4
+akala	283	ko:163 mo:15 namin:12 ng:12 ni:9 kong:8 ninyo:5 po:5
+akin	894	ang:316 kung:83 na:61 ng:60 ni:46 si:36 sa:34 ito:23 ay:19 iyon:17 iyan:16 tungkol:11 po:10 nang:9
+aking	628	mga:47 ama:16 anak:11 bahay:11 wala:9 asawa:8 kapatid:8 nobya:8 tablet:8 tatay:7 hindi:6 kaibigan:6 puso:6 sarili:6
+aklat	256	na:120 sa:24 aralin:15 ang:13 bago:7 ng:6 ko:5 mula:5 ni:5 ninyo:5 tungkol:5 ay:4
+aklatan	24	ng:7 para:4 sa:4
+ako	6845	sa:1757 ng:1484 nang:167 ni:154 para:151 ang:150 ay:125 papuntang:103 at:83 roon:81 ngayon:62 rito:60 kay:59 na:52
+akong	2892	mga:60 hindi:43 gawin:41 may:37 pakialam:37 oras:36 alam:35 mag:35 ibang:34 pumunta:32 kumain:29 pera:29 isang:28 tulungan:24
+aksidente	34	sa:11 ang:8 ay:6 ng:5
+alaga	23	sa:7 ng:4
+alagaan	56	ang:36 si:6
+alak	77	sa:11 ang:8 na:6 pa:6 po:5 ay:4 nga:4
+alala	30	sa:6 po:5
+alam	1841	ko:267 kung:253 kong:236 mo:192 ni:141 na:134 ang:87 po:64 ng:48 ba:44 niyo:38 mong:34 niya:33 tungkol:26
+alamin	22	kung:16
+alas	300	sais:32 dos:29 siyete:26 onse:24 otso:22 nuwebe:17 diyes:13 singko:13 tres:11 katorse:6 onseng:6 siyeteng:4
+aleman	38	sa:9 ang:6 at:5
+alerdyik	24	siya:11 po:6 sa:4
+alikabok	29	sa:14 ang:11
+alin	81	ang:38 sa:17 po:12
+aling	87	mga:12 plano:6 kandidato:4 koponan:4
+alis	22	ko:5 ng:5 niya:4
+alisin	22	ang:9 mo:5
+almusal	29	ka:5 ni:4
+alok	32	na:12 nila:4 niya:4
+ama	66	niya:15 sa:13 mo:8 ang:5 ko:5
+amerika	49	ang:7 noong:5 at:4 tumatakbo:4
+amerikano	45	ang:14 ka:7 po:4 sa:4
+amerindiyo	31	sa:7
+amerindiyong	39	cree:17 wika:7
+amin	101	ang:20 kung:19 ng:11 ni:9 si:7 na:5
+aming	146	mga:18 bahay:7 dalawa:6 bayan:5 sang:5 sumang:5 kinatawan:4 laboratoryo:4
+amo	45	mo:12 ko:9 ni:6 ninyo:5
+amoy	100	ng:27 na:14 ang:8 alak:5
+anak	451	na:91 ko:70 niya:48 niyang:36 mo:27 kong:22 ni:22 ng:20 ninyo:9 siya:9 namin:8 si:8 ang:6 mong:6
+ang	39022	mga:4698 kanyang:774 lahat:752 isang:313 aking:288 pangalan:231 sabi:226 gusto:221 sarili:209 buhay:182 buhok:178 bahay:176 pag:161 sasakyan:157
+angkop	43	na:13 ang:8 po:8 ba:7 sa:5
+anglo	45	sahona:15 sahonang:12 sahon:10 sahong:6
+anim	61	na:51
+animismo	34	ay:8 ang:5 at:5
+animista	28	ako:10 budista:6 at:4
+animnapung	28	taong:8 katao:6 segundo:5
+ano	1573	ang:980 po:188 ba:117 pa:53 sa:34 na:25 kaya:23 iyon:17 ito:13 iyan:12 pong:11 bang:9 man:9 pang:9
+anong	556	oras:70 klase:25 klaseng:23 gusto:18 gagawin:16 uri:15 ginagawa:14 ginawa:14 ibig:13 nangyari:13 mga:12 sinabi:12 katibayan:10 kulay:10
+antigong	84	panahon:11 gusali:5 pilipinas:4
+antonio	27	ang:14 ng:9
+anu	24	ano:20 anong:4
+anuman	31	ang:20
+anumang	58	emerhensiya:7 oras:5 bagay:4 pagbabanta:4
+anyos	26	na:18
+aparatong	20	ito:20
+apartment	21	ko:6 na:4 ni:4
+apat	113	na:94 ng:6 ang:4
+apelyido	40	ni:16 ko:4 mo:4 ng:4
+apo	20	niya:4
+aral	189	ng:100 ako:15 siya:12 ka:10 sa:10 nang:9 para:6 si:4
+aralan	42	ang:17 ko:6 niya:5
+aralin	60	kapalit:12 ko:10 niya:6 mo:5 ni:4 si:4
+araw	951	araw:182 na:124 ng:102 ang:79 sa:78 nang:38 akong:24 ay:24 po:21 ko:19 at:13 ngayon:12 may:8 mo:8
+ari	112	ng:72 arian:21
+ariel	97	ng:29 hanggang:24 ang:14 papuntang:12 sa:11
+armas	31	ang:6 niya:4 po:4
+artikulo	27	ninyo:10 niyo:10 mo:5
+artipisyal	70	na:63
+artista	27	po:6 sa:6
+asawa	231	ko:54 niya:44 ni:24 mo:15 ang:11 at:11 ay:11 niyang:10 ng:9 sa:8 dahil:5
+asawang	27	si:5 taga:5
+asin	27	at:16 ang:5
+aso	265	ko:36 sa:35 ni:27 ang:24 mo:21 niya:19 ng:12 ay:7 namin:6 kaya:5 si:5 siya:5 at:4 ba:4
+asong	45	ito:11 babae:4 palaging:4
+aspekto	31	ng:27
+astronomiya	22	at:7 sa:4
+asukal	45	at:15 sa:15 ang:11
+asul	145	na:74 ang:28 at:9 berde:9 po:4 sa:4
+at	5609	ang:314 si:199 mga:143 sa:121 may:120 isang:108 hindi:89 ng:75 iba:68 itlog:55 saka:51 kulay:46 itim:38 puti:35
+atay	21	ang:5 atay:5 ng:5
+ate	73	ko:40 mo:9 niya:7
+atin	79	ang:10 ng:10 kung:7 lang:7 ni:7 si:6 atin:5 ay:5
+ating	228	mga:33 tiyera:18 araw:14 sistemang:11 dalawa:7 mundo:7 bayan:5 galaksiyang:5 imahinasyon:5 likas:4 pananaw:4 sansinukob:4
+australia	71	ang:15 sa:12 si:7 po:6 noong:5 kasama:4 nang:4
+away	32	sa:7 kay:4
+awit	20	na:12
+awto	51	ng:13 ko:8 mo:5 si:5
+ay	4770	ang:392 isang:294 may:265 hindi:230 nasa:136 mga:124 si:113 parang:105 isa:82 mas:69 maaaring:45 naging:44 sa:38 walang:34
+ayaw	640	kong:169 ko:163 mo:52 ni:37 na:27 po:26 niyang:20 mong:14 ninyo:11 niya:11 nilang:10 ng:8 umandar:8 kitang:7
+ayon	172	sa:78 kaming:21 ako:15 kami:9 kay:8 po:6 dito:4 si:4 siya:4
+ayos	75	lang:27 ng:9 ba:6 ka:6 naman:4 sapat:4 tama:4
+ayskrim	23	si:9 na:6 ni:4
+ayusin	35	ang:20 mo:7 ito:4
+ba	4807	ang:906 kayo:420 ninyo:420 sa:261 kayong:216 ng:202 si:185 ninyong:148 ito:144 akong:143 ako:138 kung:127 siya:124 iyon:97
+baba	25	niya:6
+bababa	36	sa:23 ako:4
+babae	320	sa:66 ang:49 ay:25 ng:17 si:16 na:14 at:12 ka:10 kaysa:8 sina:8 ni:6 po:5 pong:5 roon:5
+babaeng	214	iyon:28 ito:16 iyan:15 nakikipag:8 nakilala:6 kalahati:4 masyadong:4 may:4 nagngangalang:4 nars:4 pulis:4 pumunta:4
+babalik	62	ako:14 siya:11 dito:8 ka:5 daw:4 po:4
+babayaran	25	ang:5 ko:5
+baboy	50	na:10 at:8 sa:8 si:6
+badyet	38	natin:11 namin:10 ng:6
+bag	21	doon:5 na:5
+bagay	348	na:151 sa:48 ang:19 bagay:18 ay:17 si:10 ng:9 po:9 ni:8 at:4 online:4
+bago	463	pa:72 mag:47 ang:39 ako:21 magdilim:20 kong:19 niyang:19 ka:16 mo:10 dumilim:9 ko:9 gumaling:8 panoorin:8 at:7
+bagong	459	kotse:27 sasakyan:22 taon:13 awto:12 modelo:12 kagamitan:9 paraan:9 makinarya:8 proseso:8 mga:7 produkto:7 bahay:6 baristang:6 bestida:6
+baguhin	95	ang:37 iyon:18 iyan:17 ito:10 ni:7
+bagyo	31	sa:15 ang:5 wala:4
+bahagi	58	ng:39 ko:5 po:4
+bahala	24	sa:11 kung:4
+bahay	862	na:119 niya:75 ni:74 ko:73 ng:50 sa:48 ang:29 si:26 ninyo:22 mo:21 nila:19 namin:16 at:15 kubo:15
+baho	22	ng:9 po:7 mo:4
+baka	569	hindi:47 may:37 ang:26 gusto:22 si:21 nga:17 sa:16 kailangan:14 isa:12 mapakinabangan:9 mas:9 po:9 sakaling:9 ng:8
+bakal	49	ang:20 na:16 sa:6
+bakit	996	hindi:184 mo:109 ba:82 ka:80 po:63 ang:52 wala:31 ko:30 kaya:28 niyo:16 naman:15 siya:12 ako:11 ayaw:11
+bakuran	37	ng:13 namin:4 natin:4
+bal	31	na:11 at:5
+bala	22	ang:7 sa:6 ba:4
+balahibo	34	ng:19 ang:8 sa:5
+balak	87	kong:13 na:12 mong:5 ni:5 ko:4 mo:4 nilang:4 niyo:4
+balakang	34	ko:11 noong:10 niya:8
+balang	36	araw:35
+balat	69	ng:22 niya:10 ang:7 at:6 ay:5 na:4
+balbas	76	niya:13 sarado:10 mo:8 ang:7 ko:5 na:5 para:4 po:4
+balikat	38	ko:16 niya:8 ni:6
+balita	48	mula:10 ng:7 sa:7 ako:4 babagyo:4
+balitang	24	namatay:6 ito:5 iyan:5 iyon:5
+balkonahe	36	ng:9 sa:7
+balot	28	ng:10 na:8 po:4
+banda	53	rito:15 ba:4 ko:4 ng:4 ninyo:4 niya:4
+bang	1019	makita:37 pumunta:29 gawin:28 hiramin:24 ipaliwanag:18 may:16 tulungan:14 hawakan:13 buksan:12 bumili:12 kumain:12 gamitin:11 maging:11 malaman:11
+bangkay	30	ang:11 sa:4
+bangko	33	sa:12 na:8
+bangkuber	20	na:4
+bansa	126	ang:30 sa:12 namin:10 natin:8 ay:7 ko:5 mo:4 ng:4 po:4
+bansang	73	ito:23 hapon:17 iyon:8
+bantay	21	sarado:14 ang:6
+banyo	24	na:5
+baon	40	kong:19 ko:11 akong:4
+bar	32	na:12 si:8
+baril	40	na:13 sa:8 niya:6
+barista	76	ko:15 sa:14 ay:13 roon:9 ngayon:5
+baristang	79	si:47
+barko	39	sa:21 namin:4 natin:4
+basa	25	ang:6 na:5 ako:4
+basahin	104	ang:49 mo:15 ito:7 itong:5 iyan:5 iyon:5 ko:5
+baso	72	ng:48 at:4 niya:4 sa:4 tinidor:4
+basta	31	bastang:7
+bastos	32	ang:4 po:4
+bata	464	pa:85 sa:82 ang:54 ng:34 ako:14 ay:13 siya:12 ka:11 para:10 po:10 si:9 at:8 kaysa:8 lang:8
+batang	237	babae:64 lalaki:37 ito:21 iyan:14 sumigaw:8 babaeng:7 iyon:6 lalaking:5 pilipinong:4
+baterya	20	ng:10 ang:6
+bato	55	ang:22 sa:10 bato:4
+baul	21	na:9 ng:8
+bawal	44	ang:12 manigarilyo:4
+bawang	24	ang:5 sa:5 para:4 pero:4
+bawat	162	isa:14 taon:14 araw:7 aspekto:6 umaga:6 gabi:5 impormasyon:4 linggo:4 tao:4
+bayad	31	sa:10 ang:9
+bayan	67	ko:9 nang:9 sa:9 ay:7 ng:5 ni:5 nila:4
+bayaran	49	para:22 ang:21 ni:5
+baynilya	25	at:20
+baywang	28	ni:7 ko:4 niya:4 pababa:4
+beer	24	sa:8 pa:6
+berde	136	at:72 ang:22 puti:10 asul:5 ay:4
+berdeng	255	damo:51 tsaang:15 kambas:14 kastilyo:12 talahib:10 dyaket:8 tsaa:8 may:7 militar:6 kalesang:5 butiki:4 crocs:4 gusali:4 keso:4
+beses	286	na:72 sa:59 ko:32 akong:20 kong:15 ako:12 mo:12 pa:7 ang:5 nang:5 lang:4 nakitang:4
+bibe	23	sa:8 ang:5 banda:4
+bibig	35	mo:7 ko:6 niya:5
+bibilhin	29	ko:10 ba:4 niyo:4
+bibili	33	ako:12 sila:9
+bibliya	20	ninyo:7 ng:4
+bigla	21	pong:8 siyang:5
+biglang	43	umulan:7
+bigyan	134	mo:49 niyo:25 ng:15 ninyo:15 po:15 ka:4
+bilang	222	ng:35 isang:19 ang:17 alay:5 alkalde:5 guro:4 libangan:4 na:4 opisyal:4 pagpapasalamat:4 pampatibay:4 regalo:4
+bilhin	38	ang:15 niyo:4
+bilis	24	ng:11
+bilisan	22	mo:13
+bilog	24	na:13 ang:10
+bilyong	21	dolyar:7
+binabalak	22	ni:5
+binabasa	120	ko:80 ang:11 mo:9 ni:8
+binabawalan	32	ko:20 kitang:10
+binanggit	36	ko:11 niya:6 ni:5
+binaril	37	po:10 ni:7 si:7 at:5
+binasa	62	ko:28 ni:9 mo:6 ang:5
+binata	42	pa:13 at:8
+binati	51	ko:21 ako:17 niya:6
+binigay	29	niya:7 ko:5
+binigyan	141	niya:44 ko:26 ako:18 ng:12 siya:10 po:9 ni:5 ka:4
+binilhan	33	niya:12 ko:7 ni:7
+binili	114	ko:22 niya:17 ni:13 ang:11 mo:10 akong:7 po:6
+binisita	56	ko:19 namin:8 natin:5 ni:5 niya:4
+bintana	134	sa:28 ng:24 ay:12 para:12 ang:8 kita:7 maaraw:7 at:4
+binti	64	niya:16 ko:15 ni:7 ang:6 at:5 mo:4
+binuksan	44	ko:12 ang:9 ni:8 mo:5 niya:5
+biro	31	lang:8 niya:7
+bisikleta	53	ko:19 mo:8 niya:8
+bisita	49	ni:18 ngayong:8 ko:4
+bisitahin	24	ang:13 si:5
+bitbit	26	na:6 ang:5
+bituin	27	sa:11
+bituing	20	dagat:13
+bituwin	33	sa:8 at:4
+biyahe	51	ng:10 ko:6 sa:6 niya:4
+blusang	24	ito:16 iyan:4 iyon:4
+bobo	24	ka:4
+bola	65	sa:30 bolang:13 papunta:6 ang:4 bola:4
+bolpen	28	na:9 kong:8
+boses	29	niya:9 ko:6 mo:5
+bote	48	ng:28 sa:6 ang:4
+braso	63	ko:33 niya:7
+budismo	52	at:14 ay:9 ang:7
+budista	53	animista:10 ako:6 ang:5 siya:4
+budistang	33	mongheng:8 monghang:4 templo:4
+bughaw	46	ang:27 na:13
+buhangin	32	sa:18 ang:7
+buhay	533	sa:83 ko:82 ay:50 ng:39 niya:33 na:32 pa:31 ang:24 mo:18 ni:12 si:11 po:10 at:6 ninyo:6
+buhok	226	niya:42 mo:29 ni:27 na:22 at:18 ko:15 ng:13 sa:12 ninyo:11 ay:9 ang:6
+bukas	133	ang:31 nang:16 ng:7 kung:5 na:5 ay:4 po:4 sa:4 tuwing:4
+bukid	56	ni:23 sa:6 ang:5 na:4 ng:4
+buko	45	si:11 pandan:10 pay:6 at:4 dyus:4
+bukod	39	tangi:14 sa:13 pa:5
+buksan	118	ang:43 mo:32 ninyo:17 niyo:14 po:4
+bulag	41	ang:11 si:6 siya:5 at:4
+bulaklak	112	na:34 sa:28 ng:11 ang:9 at:7 si:4
+bulong	25	dalawa:4 ko:4 may:4 niya:4
+bulsa	42	niya:19 ko:10 mo:4 ng:4
+bumaba	37	sa:7 ng:6 ang:5 po:4
+bumababa	27	ang:13 po:7
+bumagsak	105	ako:20 po:18 ang:15 sa:14 na:10 siya:8 halos:6 ng:4
+bumalik	138	ako:14 sa:14 ka:13 na:11 po:11 siya:11 si:10 ang:7 kami:6 doon:5 akong:4 kayo:4 mula:4 ngayon:4
+bumangon	25	nang:7 pagsapit:4
+bumbay	21	na:9 at:6
+bumibili	25	ng:8 ako:6 po:4
+bumili	355	ng:150 ako:70 si:48 po:29 ka:12 siya:12 sila:6 lang:4
+bumisita	47	sa:19 si:6 ako:5 kay:5 po:4
+bundok	73	fuji:17 ng:14 na:12 sa:9 ay:5
+buo	20	ang:4 kong:4 ninyong:4
+buong	419	mundo:75 araw:69 buhay:44 gabi:22 linggo:16 katawan:14 pamilya:14 lungsod:12 siyudad:12 kuwarto:8 proseso:8 tag:8 bansa:7 bahay:6
+bus	65	na:11 ang:8 depende:6 at:5 papuntang:5 po:5 si:4
+busog	21	na:11
+butas	53	ang:23 sa:8 butas:6 po:5 ng:4
+butiki	23	sa:14 tutubo:5
+butil	24	ng:17
+buto	23	ng:10 sa:5
+buwan	180	ng:51 ang:27 na:21 bago:9 sa:9 buwan:7 nang:6 ay:4 mula:4 po:4
+buwang	23	titan:5 io:4 paghahanap:4
+byetnames	23	na:14
+canada	44	ay:6 mula:5 at:4 sa:4
+cheddar	22	at:22
+chris	25	na:19
+credit	24	card:23
+cree	25	at:18
+croissant	30	na:19
+crónicas	27	de:27
+daan	188	nakita:29 ang:18 papuntang:16 sa:15 si:15 at:10 papunta:9 na:8 pauwi:8 ng:5 ay:4 daang:4 kinausap:4 nang:4
+daang	105	dolyar:22 taon:11 st:7 piso:6 magatas:5 baka:4
+daga	21	ang:5
+dagat	64	doon:8 ay:7 ang:5 at:5 dito:4 na:4 ng:4 sa:4
+dagdag	32	na:11 sahod:5 niya:4
+dagdagan	36	mo:14 ng:11 ninyo:4 pa:4
+dahan	103	dahan:61 dahang:6 lang:5 ang:4 po:4
+dahil	951	sa:270 may:50 hindi:48 ang:24 parang:18 ng:17 wala:17 mas:16 gusto:15 naiinggit:15 alam:14 sobrang:12 umuulan:11 dito:10
+dahilan	82	kung:35 ng:16 para:13
+dahon	57	ng:32 sa:17
+daigdig	50	ay:14 na:9 sa:7
+dala	94	ko:32 akong:10 kong:7 dalang:5 ng:5 siyang:5 ang:4 dala:4 pong:4
+dalaga	30	pa:8 ba:4
+dalandan	36	kapalit:8 sa:8 ang:7 mula:5
+dalang	41	flashlight:6 plaslayt:6
+dalawa	131	ang:46 sa:24 akong:8 po:5 siyang:5
+dalawampung	27	taon:6 libong:4
+dalawang	465	beses:61 taon:22 araw:15 oras:14 anak:13 linggo:12 minuto:9 lalaking:8 grupo:7 libro:7 baterya:6 daang:6 lalaki:6 babae:5
+dalhin	64	mo:30 ang:9 sa:6
+daliri	31	ko:8 niya:6 ng:5
+damdamin	23	nila:5
+dami	130	pong:35 kong:18 ko:15 po:13 mong:10 ng:5 ninyong:4 sa:4
+daming	45	mga:6
+damit	144	na:48 ko:23 niya:11 mo:9 ang:8 sa:6 si:6 at:4 kahapon:4 namin:4 ni:4 ninyo:4
+damo	113	sa:89 ang:18
+danes	100	pranses:94
+daniel	31	sa:22 ang:6
+dapat	1100	ang:68 po:67 nating:53 kong:47 mong:40 naming:27 gawin:24 mag:22 kayo:19 na:18 may:16 pong:14 sa:14 si:14
+darating	82	na:19 siya:10 ang:7 si:7 po:6 sa:6 ako:5 ka:4 sila:4
+dati	142	ang:21 ng:17 sa:15 si:15 niyang:8 akong:6 kong:5 ako:4 siya:4
+dating	97	nasa:8 ko:4
+daw	349	siya:54 sa:36 niya:33 ang:31 ng:22 si:22 po:18 ako:15 ni:14 sila:12 siyang:11 ay:8 niyang:8 ito:5
+de	194	majipur:27 gulong:25 sac:15 indianoj:14 cielo:9 ube:9 kolor:7 edad:6 latang:6 mercedes:6 coco:5 kuryente:4 los:4 matusalém:4
+dede	23	niya:12 ni:4 nila:4
+dennis	21	na:12 yaong:7
+desidido	46	kayong:10 akong:8 kang:8 pa:7
+desisyon	28	mo:8 ko:5 ang:4
+di	506	ko:67 ba:45 ako:31 siya:30 ka:23 pa:19 na:15 lamang:12 niya:11 mo:10 alam:9 kailanman:9 masyadong:8 nila:8
+dibdib	31	mo:7 ni:6 niya:6 ko:4
+diet	22	cola:21
+diksiyonaryo	21	ng:4 para:4 sa:4
+dikya	21	ang:15 sa:5
+dilaw	100	ang:41 na:38 po:8 at:5
+dilim	48	po:11 dito:4
+din	301	ang:64 ako:36 po:33 sa:18 namin:14 si:13 ng:12 siya:10 pong:7 akong:6 sila:6 siyang:6 ay:4 ba:4
+dinala	51	ko:14 niya:9 ni:4
+dinaya	31	namin:4
+disyembre	77	ng:72
+dito	314	sa:170 ang:17 na:9 ka:8 si:8 po:7 nang:6 ako:5 ba:5 hanggang:4 tayo:4
+diyan	30	sa:8
+diyaryo	33	uulan:6 sa:5 habang:4
+diyos	130	ang:21 sa:15 at:13 ay:12 na:11 noong:5 bawat:4
+doktor	88	na:14 sa:13 ang:9 isa:7 ko:5 ba:4 huwag:4
+dolyar	40	ang:12 sa:7 po:5
+doon	143	sa:19 may:12 ay:9 ako:8 ang:7 nang:6 po:5 ko:4 siya:4
+dos	35	dragões:7 ng:6
+drawer	24	na:10 ng:6 ko:4
+droga	26	ang:10 sa:5
+dugo	40	sa:10 ang:5 mo:5 ni:4 ninyo:4
+dulo	26	ng:15 po:4
+dumaan	87	ako:20 sa:19 ang:12 si:10 kami:6 po:5
+dumalaw	203	na:68 ako:33 si:30 sa:23 ang:19
+dumalo	25	ng:8 sa:7 dapat:4
+dumating	244	si:41 ang:36 sa:30 ako:23 na:23 siya:18 po:14 ka:9 kami:7 dito:5 sila:5 tayo:4
+dyaket	57	ko:14 na:14 siya:5 at:4
+ebidensiya	42	ng:22 laban:6
+edad	108	na:40 niya:9 mo:8 ko:6 po:6 ang:4
+eksaktong	23	halaga:4 petsa:4
+eksperimento	40	ang:32
+eksperto	21	sa:13
+ekstraterestre	27	sa:7 at:5 ay:4
+elepante	46	ang:15 para:9 sa:7
+enero	67	ng:48 ay:4 po:4
+epekto	29	ng:17 nito:4 sa:4
+eroplano	32	sa:8 ko:5 papuntang:4
+erwin	25	ng:7 may:6
+eskinita	34	sa:8 nakita:7 rito:5
+eskuwelahan	26	sa:5
+eskwela	21	ang:4 sa:4
+espada	20	ko:8
+espasyo	24	at:4 sa:4
+espasyong	29	nasasakop:8 estasyon:5
+esperanto	113	at:24 ay:18 kometo:7 sa:7 dahil:5 ang:4 interlingua:4 la:4
+esperantong	23	librong:8 salitang:4 tra:4
+espesyal	59	na:45 po:5
+estados	61	unidos:61
+estante	23	ang:13 mo:4
+estatwa	28	ng:11 ang:6 sa:6
+estudyante	87	sa:29 ang:16 niya:6 si:4
+europa	39	at:7 ay:6 ang:4 sa:4
+flashlight	47	na:7 po:7 ko:6 ninyo:4 si:4
+gaano	272	po:42 ba:26 ka:22 karaming:19 katagal:18 ko:14 karami:12 kabigat:9 kalaki:8 mo:8 siya:7 kahaba:6 kataas:5 kaya:5
+gaanong	59	makabuluhan:8 katagal:6 magustuhan:5 bisita:4 malinaw:4
+gabay	23	ng:4
+gabi	165	sa:27 ang:11 nang:11 gabi:9 ng:8 ay:6 kasama:5 na:5 naroon:5 mga:4
+gabing	27	ito:8 iyon:5 umaga:4
+gagawa	45	ng:26 niyan:4
+gagawin	291	ko:55 iyon:38 mo:29 iyan:27 ninyo:25 niya:18 ito:17 ni:16 namin:7 nila:7 daw:6 natin:6 ng:5 sa:4
+galing	217	sa:104 ako:10 po:10 australia:5 galing:5 mong:4 pilipinas:4 siya:4
+galit	121	sa:14 po:13 na:12 siya:11 ka:10 si:10 ako:9 ang:8 ni:5 pa:5 niya:4
+gamit	269	ang:158 na:47 ko:12 sa:11 mo:7 ng:7 ay:4 habang:4 niya:4
+gamitin	120	ang:63 mo:13 ito:8 sa:6 iyan:5 iyon:5 po:5 ninyo:4
+gamot	58	na:32 ang:5 sa:5 ay:4
+ganda	115	ng:33 niya:29 po:17 sa:5 ni:4
+ganito	65	ang:18 pala:6 si:5 magsalita:4
+ganitong	88	uri:12 klase:10 pag:8 kalagayan:5 oras:5 halaman:4 klaseng:4 paraan:4 sitwasyon:4 survey:4
+ganoon	196	ang:39 din:24 ba:8 kasimple:8 kagaling:6 kaorihinal:6 karunong:6 na:5 kaganda:4 kalakas:4 katagal:4 magsalita:4
+ganoong	67	bagay:9 lalaki:6 uri:6 halaman:4 pag:4
+ganyan	64	ang:22 din:6 magsalita:4
+ganyang	80	bagay:10 pangalan:9 uri:8 lalaki:6 halaman:4 pag:4
+gasolina	33	ang:6 habang:6 ng:6 namin:4 natin:4 sa:4
+gatas	83	na:18 at:15 ang:12 ng:11 sa:7 naman:5 ako:4
+gawa	176	sa:107 po:30 ng:6 ang:4 rito:4
+gawin	907	iyan:223 iyon:211 ito:124 ni:45 mo:42 ang:39 ng:29 sa:20 para:17 ko:14 tayong:14 ngayon:12 nang:11 ay:10
+gaya	31	ng:20 ni:4
+gayunpaman	21	hindi:7 sa:5
+george	28	na:11 yaong:4
+gera	35	noong:5 sa:5 ay:4 higit:4
+gilid	29	ng:25
+ginagamit	118	ko:23 ang:19 ng:12 sa:9 po:7 ni:4
+ginagawa	294	ng:40 ko:32 mo:32 ito:18 namin:18 ni:18 natin:17 iyan:16 iyon:15 niya:11 nila:9 ninyo:9 si:8 po:7
+ginamit	25	na:6 ko:5 nila:4
+ginang	21	jackson:8 na:8
+ginawa	383	ko:59 niya:46 iyon:45 mo:37 ni:32 iyan:27 po:17 ang:12 ito:11 ng:11 ba:8 namin:7 kung:6 natin:6
+ginawang	20	sakripisyo:6
+giniginaw	27	po:9 ako:6
+ginoong	44	jackson:7 wood:5
+ginto	39	ang:18
+gintong	20	relo:8 isda:5
+gising	42	ka:9 na:9 pa:6 si:5
+gisingin	20	mo:11
+gitara	25	ko:4 rito:4
+gitna	39	ng:36
+gitnang	24	silangan:8 europa:7 kapanahunan:5
+gramatika	25	ng:16
+greg	251	na:106 ang:33 sa:27 at:10 ay:10 nang:9 ng:6 nitong:6 yaong:5 pag:4
+griyego	39	ang:6 at:6 na:4
+griyegong	20	kapitbahay:5
+grupo	53	ng:16 natin:6 mo:5 namin:5 ni:4
+gubat	61	ng:18 na:15 ang:10 at:4
+gulang	133	na:61 ako:28 siya:9 ka:6 ang:5 si:4
+gulay	47	ang:11 maliban:10 na:5 sa:5
+gulo	23	ng:6 gulo:5
+gulong	52	sa:8 ang:7 na:6 lalaki:5
+gumagamit	56	ng:33 po:9 tayo:4
+gumagana	61	ang:34 nang:9 pa:4
+gumagawa	170	ng:89 po:21 si:19 ang:14 ako:5 niyan:5
+gumaling	47	ang:14 na:14 ako:5 po:4
+gumamela	38	sa:22 ang:8 tanglad:5
+gumamit	41	ng:31
+gumawa	248	ng:132 niyan:24 nito:19 niyon:12 si:10 ka:8 ako:6 po:5 sa:5 siya:5 kami:4
+gumigising	20	nang:8 ako:6
+gumising	52	nang:19 si:6 ako:5 po:4
+gumuho	21	ang:13 po:5
+guni	83	guni:41 guning:11 ko:5 mo:4
+guro	144	ang:19 sa:16 ko:13 namin:13 niya:12 ay:8 si:8 kung:7 natin:7 mo:6 ng:4
+gusali	48	sa:11 ng:10 ay:8 at:6
+gusaling	36	ito:18 gawa:5 iyan:4
+gusto	2582	ko:621 kong:458 mo:338 ni:130 mong:116 po:88 niya:84 niyang:79 ng:74 ang:64 niyo:61 ba:58 ninyo:41 nilang:37
+gustong	298	gusto:40 gawin:22 pumunta:12 maging:11 sabihin:7 malaman:6 kumain:5 makita:5 pakasalan:5 subukan:5 mag:4 magbayad:4 magkaroon:4 magpanukala:4
+gutom	45	na:19 ako:4
+guwapo	24	at:7 ang:6
+guwapong	54	pandak:7 lalaking:5
+guwardiya	28	ang:7 na:6 ng:5
+haba	33	ng:24
+habang	365	wala:52 nagbabasa:14 naglalakad:13 nasa:13 may:12 papunta:12 ang:9 umiinom:9 bata:7 nag:6 naghihiwa:6 nagsasalita:6 tumatawid:6 buhay:5
+halaga	31	ng:25
+halaman	81	ay:15 sa:11 ito:10 ang:6 at:5 ng:5 si:5
+halamang	33	singaw:8 ugat:6 bakod:4
+halimbawa	24	ng:4
+halos	183	lahat:36 hindi:29 walang:18 araw:17 wala:17 isang:4
+hamon	26	at:13
+hanapin	43	ang:26 mo:7
+handa	141	na:49 ka:19 para:17 po:9 si:8 akong:7 ni:6 ang:4
+hanga	36	ako:20
+hanggang	474	sa:208 madaling:22 lunes:10 alas:8 ngayon:8 pizzeria:7 huwebes:6 palengke:6 apat:5 isang:5 restawran:5 gabi:4 ika:4 linggo:4
+hangin	70	ang:33 sa:9 at:8 po:4
+hans	48	na:34 ang:4
+hapon	320	nang:63 sa:28 at:25 ang:17 ay:13 ng:10 ako:9 nakita:7 nasa:7 naroon:6 dahil:5 lakad:5 naman:5 noong:5
+hapones	213	na:54 ay:35 at:18 sa:18 ingles:14 ang:11 para:4
+hapunan	24	sa:7 ko:4
+harap	79	ng:64 ko:5
+harapan	110	ng:95 ko:5
+hardin	146	ng:65 ni:26 sa:11 niya:8 ang:4
+hari	35	ang:15 ng:4
+harina	22	at:6 sa:6 tubig:5
+hati	25	ang:7 kami:4 tayo:4
+hawak	47	para:12 na:10 ng:4 po:4 siyang:4
+hawakan	93	ang:32 mo:18 ito:10 iyan:10 iyon:9 ninyo:4
+hayaan	54	mo:21 mong:11 ninyo:8
+hayop	111	ang:28 na:22 sa:16 at:6 ay:5 ayon:4
+heto	45	ang:29 po:16
+higanteng	26	gas:6 lamesang:4 mesang:4
+higit	147	na:42 sa:30 pa:18 nang:9 isang:7 tatlumpung:7 animnapung:6 pang:5 tatlong:4
+higpitan	22	ang:9 mo:5
+hilagang	43	amerika:31
+hilaw	22	na:18
+hilig	72	ko:30 ang:8 mo:5 po:5 mong:4
+hiling	29	na:4
+hinabol	21	ng:8 po:5
+hinahabol	22	po:8 na:4
+hinahanap	85	ko:28 mo:10 niya:8 nila:7 si:7
+hinahangaan	30	ko:22 ni:4
+hinala	29	ko:9 po:8
+hinalikan	67	niya:19 ni:16 ko:12 po:8 ng:4
+hinalo	21	ni:13 niya:5
+hinati	25	po:9 ni:4
+hinawakan	25	niya:9 mo:5
+hindi	9274	ko:1569 po:984 ako:694 mo:411 ka:356 pa:336 na:328 siya:250 ba:235 niya:223 ito:154 natin:118 namin:113 ninyo:106
+hinding	127	hindi:125
+hinihintay	69	ko:19 ba:5 po:5 nila:4 ninyo:4
+hiniling	27	ni:9 ng:6 po:4
+hininga	24	mo:9 ko:4 ninyo:4
+hintayin	36	mo:9 dito:8
+hinuli	22	po:7 ng:6
+hiramin	39	ang:33 nang:4
+hirap	34	akong:5 po:4
+hokkien	24	ang:6 sa:4
+hong	28	kong:26
+hopyang	54	ube:22 baboy:11 munggo:5 kundol:4 monggo:4
+hortons	41	para:6 dito:5 sa:5
+hubarin	26	mo:17 ninyo:9
+hudyo	40	sa:9 at:5 noong:5
+hugasan	22	ang:7 mo:6
+hugis	33	ng:15
+huli	80	nang:24 na:6 kong:5 ng:5 ka:4 kitang:4
+huling	137	beses:24 buwan:17 araw:9 tren:6 gagawa:4 kliyente:4 kustomer:4 mamimili:4 piraso:4
+hulyo	82	ng:65 noong:4
+humahanga	31	ako:19 po:5 si:4
+humalik	38	po:7 siya:7 ako:5 ang:5 si:5 sa:4
+humiga	23	sa:6 para:4
+humihingi	33	ng:9 ako:6 kami:6 tayo:4
+humingi	109	ng:50 siya:12 ka:11 ako:8 nito:6 sa:4 si:4 sila:4
+huminto	29	ang:12 ngayon:4
+hunyo	75	ng:65 at:4
+huwag	1232	kang:233 mong:233 mo:131 po:98 na:66 kayong:56 ninyong:50 niyo:42 ka:30 ninyo:28 niyong:20 mag:11 nang:11 gawin:9
+huwebes	36	po:6 ang:4 nasa:4
+iba	447	ang:93 ibang:78 pa:67 pang:46 sa:19 iba:17 na:15 ay:14 po:14 ka:7 pong:7 ng:6 naman:5 ba:4
+ibabaw	89	ng:79
+ibahin	42	iyan:13 iyon:13 ang:9 ni:5
+ibalik	62	ang:16 mo:15 niyo:10 ninyo:5 po:5 ni:4
+ibang	721	bansa:71 mga:51 tao:40 tema:30 magagawa:25 mesa:24 daigdig:21 kulay:18 planeta:17 mundo:15 lugar:14 trabaho:14 wika:11 paraan:10
+ibibigay	27	ko:12 sa:5
+ibig	183	sabihin:119 mong:14 kong:11 ninyong:7 sabihing:6 ay:4
+ibigay	82	mo:37 niyo:9 po:9 sa:9 ninyo:8
+ibinaba	29	ni:7 po:6 ko:5 niya:5
+ibinigay	59	ko:14 sa:14 po:8 niya:5 kay:4
+ibon	87	sa:30 ay:11 ang:9 ng:7 gamit:6 na:4
+ideya	49	kung:8 ko:6 ng:6 ideya:5 pero:5 ako:4
+iginigiit	27	po:9 niyang:8 ng:7
+iisa	27	lang:6 ang:5
+iisang	59	aplikante:4 diyos:4 naninirahan:4 residente:4
+iisip	28	na:11 ng:5
+ika	846	ko:18 dalawampu:9 ni:4
+ikaapat	27	na:23
+ikakasal	21	na:6
+ikalawa	25	ng:12 may:4
+ikalawang	29	lakad:6 digmaang:4
+ikaw	247	ang:98 ay:43 ba:27 lang:17 na:17
+ikot	29	sa:11 ako:4
+iksamen	22	sa:9 nang:4
+ilagay	63	mo:28 ang:15 iyan:5 ito:4 niyo:4
+ilalim	223	ng:203 po:5
+ilan	98	sa:26 ang:19 pong:19 po:9 akong:5 pang:5
+ilang	646	mga:119 taon:67 oras:46 beses:37 araw:33 buwan:28 tao:26 linggo:13 sandali:11 taong:11 minuto:9 siglo:9 libong:8 bansa:6
+ilaw	129	ilaw:44 sa:43 na:13 ng:7 at:4
+iling	26	lang:9
+ilog	141	ang:44 sa:36 na:19 at:6 nang:5 ay:4 ng:4
+ilong	30	mo:9 ni:4 ninyo:4
+imbitasyon	23	ninyo:5
+impluwensiya	26	ng:13 ang:4
+importante	79	ang:18 sa:18 po:8 ay:5 kaysa:5
+imposible	21	sa:7
+ina	62	ang:8 ay:6 ng:6 mo:5 ni:5 at:4 ko:4 noong:4
+inaasahan	70	kong:13 ko:12 iyan:4 iyon:4 ni:4 niyang:4 pa:4 po:4
+inabot	33	po:7 ako:5 ko:4
+inakala	26	ko:8 po:5 ng:4
+inakusahan	34	po:8 siya:6 niya:4 si:4
+inamin	32	ni:8 po:5 niyang:4
+inaresto	21	po:7 ang:6 si:5
+inasahan	21	ang:6 ni:4
+inayos	32	niya:9 ko:8 ni:6
+indiya	54	at:17 rin:8
+indiyang	63	si:19 tinderong:16 tindero:7
+ingat	54	ka:21 sa:13 po:7 kayo:4
+inggit	24	si:18
+ingles	276	na:44 at:32 sa:26 ang:25 ay:22 si:13 dahil:12 ng:6 niya:6 intsik:5 kaysa:5 kung:5 nang:5 para:5
+inhenyero	22	ang:8 ako:5
+inihaw	24	na:20
+inihurnong	22	patatas:19
+iniimbestigahan	28	po:11 ng:4
+iniinom	39	ko:10 mula:6 ni:4
+iniisip	192	ko:53 mo:24 ni:15 kong:13 ng:12 na:11 niya:10 nila:8 ninyo:7 ang:5 niyang:4
+inilagay	32	niya:9 ang:7 ko:5 ni:5
+inilibing	28	si:8 ni:5
+inimbitahan	29	ko:7 pala:6
+ininom	20	ko:8 na:4
+ininsulto	22	ko:8 po:5 ako:4
+init	57	na:11 ang:10 ng:8
+iniwan	35	niya:7 ni:5 sa:4
+iniwanan	20	niya:4
+inom	25	ng:13 kagabi:5
+inosente	35	ang:20 siya:11
+intelihensiya	41	ang:7 ng:7 at:6 ay:6 sa:6
+interesado	79	sa:16 ako:15 siya:10 si:6 ang:5 ka:5 kami:5 po:4
+interlingua	25	at:4 ay:4
+intsik	92	na:23 at:11 sa:9 ang:7 ay:4
+inumin	71	ang:22 ko:8 kapag:6 mo:4 niya:4
+inutusan	21	po:7
+inyo	159	ang:34 kung:19 na:14 ng:9 po:9 sa:9 hindi:6 ba:5 ito:5 ni:5 dahil:4 magdadalawang:4 mamaya:4 pagkatapos:4
+inyong	111	mga:10 dalawa:9 lahat:4 paglilingkod:4 paninilbihan:4 serbisyo:4
+ipagbawal	20	ang:10 dapat:5 po:5
+ipagpalagay	30	natin:15 nating:15
+ipagtanggol	38	ang:31
+ipahayag	22	ang:10 ng:8 sa:4
+ipakita	40	mo:17 sa:10 ang:4
+ipaliwanag	93	ang:18 kung:15 sa:10 niyo:8 ito:7 iyan:7 iyon:5 ng:5 mo:4 ni:4
+ipapakita	28	ko:18
+ipinagbabawal	27	ang:10 ko:5 din:4
+ipinagdiriwang	52	ang:18 po:14 niyo:4
+ipinagdiwang	26	po:11 namin:4
+ipinagmamalaki	40	ni:7 ko:6 po:5 niyo:4
+ipinakita	24	niya:9 siya:4
+ipinaliwanag	23	ko:9 sa:4
+ipinangako	34	niyang:7 ko:6 kay:4
+ipinanganak	83	po:20 ako:13 siya:13 si:10 sa:8 at:4
+isa	969	sa:171 po:130 itong:71 pang:61 pong:61 siyang:57 akong:41 lang:34 iyong:25 pa:23 si:21 ay:19 lamang:19 ang:17
+isalin	23	ang:9 sa:4
+isang	3133	araw:116 beses:75 piraso:64 linggo:54 buwan:50 oras:48 mesa:45 tao:40 babae:39 magandang:36 baso:35 maliit:34 bagay:33 malaking:33
+isara	43	ang:27 mo:10
+isauli	24	ang:15
+isda	141	sa:66 ang:19 at:11 kahapon:6 po:6 kung:4 samantalang:4
+isdang	29	ito:11 espada:4 nakalutang:4
+isinara	29	ni:11 po:6 namin:4
+isinilang	40	po:13 ako:8 si:7 siya:5
+isinulat	34	ko:8 niya:6 ito:4
+isip	257	ng:33 mo:24 kong:23 ko:22 sa:14 ni:11 na:10 nila:9 ay:8 ninyo:7 niya:7 at:6 ako:5 nang:5
+isipan	44	ito:11 iyan:6 iyon:5 niya:5 ang:4 mo:4
+isipin	32	ang:14 mo:6 kung:5
+isla	475	lulu:386 lulung:43 sa:9 ng:7 bangkuber:5 galiano:4
+islang	30	iyon:10 iyan:9
+ismartpon	21	niya:9
+istarbak	187	ako:33 para:24 sa:16 dito:11 na:10 may:9 at:8 naroon:6 akong:5 kami:5 ang:4
+istasyon	33	ng:28
+istorya	35	ng:14 niya:6 ang:4
+isulat	31	ang:9 mo:9 niyo:5 po:4
+itaas	48	ng:19 mo:5 ko:4 po:4
+itago	30	ang:16 mo:5
+italyano	32	at:5
+itanong	36	mo:18 sa:10
+itik	21	sa:7 ang:5 banda:4
+itim	333	na:234 ang:59 at:7 sa:5 ay:4 ng:4
+itinago	22	ni:6 ang:4 ko:4
+itinanggi	34	ni:12 niyang:11 niya:5
+itinaya	22	ni:6 ko:4 po:4
+itinayo	22	po:4
+itlog	117	ng:30 sa:16 at:15 ako:11 na:8 ang:7 nang:5 para:4 si:4
+ito	1883	ang:253 sa:228 ay:184 ng:105 para:88 ni:79 nang:59 po:49 hindi:32 noong:21 kaysa:19 mula:19 kay:18 uli:18
+itong	574	mga:23 libro:19 gawin:18 patibong:15 wika:13 isang:10 patunayan:8 ipaliwanag:7 mantsa:7 bagay:6 kumpirmahin:6 nangyayari:6 aklat:5 alisin:5
+itsura	23	ng:6 ni:4 niya:4
+iwan	23	ng:9 mo:4
+iwanan	26	mo:8 ang:5
+iwasan	22	ng:8 ang:5 mo:4
+iyan	910	ang:138 sa:91 ni:83 ng:43 po:34 ay:33 nang:27 hindi:18 uli:14 ba:13 gagawin:12 kung:12 ngayon:10 dahil:9
+iyang	90	gawin:12 bagay:4 pakinabangan:4
+iyo	277	ang:45 na:42 ng:32 kung:21 ba:13 sa:12 ito:7 kapag:7 hindi:6 si:6 tungkol:6 huwag:4
+iyon	927	ang:113 ni:87 sa:80 ay:59 ng:39 po:31 nang:28 hindi:19 para:16 kung:14 gagawin:12 lang:12 na:12 uli:11
+iyong	359	mga:21 gawin:20 suot:12 sarili:6 pag:5 relihiyon:5 emerhensiya:4 pakinabangan:4 pamilya:4 tawaging:4
+jackson	23	sa:9 ang:5
+jam	24	na:13 yaong:7
+jerry	23	ng:14 ang:5
+juan	20	nang:5
+ka	3054	ba:559 na:359 ng:311 sa:280 bang:229 nang:110 pa:106 lang:40 dapat:36 namin:31 rito:23 naman:20 ni:20 at:17
+kaalaman	26	sa:9 ng:5 ko:4 ni:4
+kaarawan	52	ko:15 niya:9 ngayon:5 ng:4 sa:4
+kabataan	50	ko:15 niya:7 namin:6 natin:6
+kabayo	56	sa:15 at:8 ibon:5 ay:4
+kabila	39	ng:29 naman:4
+kabilang	73	ang:16 po:9 pampang:4 panig:4 sa:4
+kabuhayan	26	ang:6
+kada	45	buwan:17 linggo:16 taon:7
+kadalas	22	gamitin:6 pumunta:5
+kadiri	22	naghahalikan:6
+kagabi	22	pero:4
+kagamitang	22	ito:20
+kagandahan	35	niya:19 sa:4
+kagaya	50	ng:32
+kahapon	78	sa:18 ang:12 ay:4 hindi:4 si:4
+kahawig	21	na:7 niya:6 sa:4
+kahina	20	hinala:20
+kahirap	28	hirap:26
+kahit	575	na:190 kailan:81 sino:49 ano:45 kanino:39 isang:21 anong:19 ang:16 sinong:13 sa:9 saan:8 alin:6 hindi:5 kaunting:4
+kahon	62	ng:36 sa:6 at:4 para:4
+kahoy	41	ang:13 na:12 at:5
+kahulugan	32	ng:12 nito:6 niyan:4 niyon:4
+kaibigan	295	ko:98 niya:40 mo:23 kong:22 ng:12 sa:11 si:10 ni:8 ninyo:7 niyang:7 akong:5 ay:4
+kaibigang	35	kong:15 si:5
+kailan	242	ka:33 mo:23 ba:18 ko:17 po:17 ang:13 siya:9 tayo:8 hindi:5 ilalabas:5 aalis:4
+kailangan	1590	ko:241 kong:193 po:160 mong:130 nating:94 mo:83 naming:61 natin:57 ng:54 namin:51 ninyong:38 pa:38 ni:36 niya:32
+kailangang	389	gawin:68 pumunta:22 manatili:15 bayaran:14 kailangan:14 mag:13 basahin:12 sabihin:8 magsalita:7 baguhin:5 humingi:5 maging:5 magmadali:5 makipag:5
+kailanman	47	ay:8 ginustong:6 ang:5
+kainan	31	sa:11 ng:8
+kainin	48	ang:22 mo:6 iyan:4
+kakaiba	43	ang:12 po:6 ito:4
+kakaibang	49	amoy:4 bagay:4
+kakailanganin	59	po:10 kong:8 natin:8 mo:6 ng:4 niyo:4
+kakain	65	ng:29 nang:10 si:5
+kakainin	23	ng:7 ni:6
+kakaunti	44	lang:18 ang:9 po:7
+kakayahan	55	mo:10 po:7 mong:6 ninyo:6 niya:5
+kakilala	28	niya:6 po:6 si:4
+kaklase	47	ko:21 niya:14
+kalahati	43	ng:35
+kalahating	40	oras:12 kilo:5
+kalapati	25	ang:10 at:7
+kalawakan	28	at:6 ay:4 ng:4
+kalbo	26	po:7 ba:4 si:4
+kalesa	31	sa:25
+kalesang	26	papuntang:13 pumunta:13
+kalidad	28	ng:19 kaysa:6
+kaligayahan	22	ay:4 kaysa:4
+kalikasan	35	ang:6 ng:5
+kalimutan	67	na:18 ang:17 mo:8 niyo:8
+kalimutang	89	isama:11 gawin:10 magsuot:9 mag:8 ipadala:6 patayin:6 bilangin:5 ilagay:5 ilista:5 isali:5
+kalooban	27	niya:11 ko:8 mo:6
+kalusugan	57	ang:14 ko:9 ay:7 niya:6 kaysa:5 ni:5
+kalye	59	ng:8 ang:7 ay:6 papuntang:6 sa:6
+kalyeng	20	ito:15
+kama	47	ang:8 at:6 ko:6 nang:4 ni:4
+kamatayan	21	ang:7
+kamatis	30	na:9 ang:6 at:6
+kamay	188	ko:38 niya:37 mo:20 ng:18 sa:11 ninyo:10 na:9 ang:4 ay:4
+kambas	22	na:17 at:4
+kambing	27	si:5 bilang:4
+kami	1096	ng:281 sa:232 ni:92 nang:44 ang:23 ay:22 puwedeng:21 rito:14 ngayon:10 para:10 tungkol:10 dapat:8 hanggang:8 na:8
+kaming	567	lahat:32 mga:19 pinag:18 mag:16 oras:12 kumain:10 nag:10 kahit:8 kapani:8 maglaro:8 magpalit:8 pareho:8 tulungan:8 dalawa:6
+kamiseta	23	at:11 siya:4
+kamukha	55	ng:20 ni:12 po:9 mo:5 niya:4
+kanang	32	balikat:6 braso:6 kamay:5 bahagi:4 mata:4
+kang	634	mag:28 gawin:13 magsalita:11 tingnan:8 maging:7 mas:7 masyadong:7 kumain:6 maghintay:6 magpaliwanag:6 umalis:6 babae:5 magtitiwala:5 matakot:5
+kanila	98	ang:28 ay:14 po:10 na:7 ito:5 kung:4 ni:4 pero:4
+kanilang	337	mga:89 relasyon:16 pugad:8 anak:7 sariling:7 kasal:6 wika:6 bansa:5 hardin:5 imbitasyon:5 negosyo:5 garing:4 kalusugan:4 lahi:4
+kanin	40	ang:8 at:4 lang:4
+kanina	37	ang:15 sa:7 kaya:4
+kaninang	46	umaga:43
+kanino	79	ang:23 ka:8 mo:8 na:5 man:4 po:4 pong:4
+kaninong	41	selpon:6 anak:4 medyas:4 sulat:4
+kaniyang	38	mga:5 kapatid:4
+kanser	35	sa:16 ang:4 po:4
+kantang	48	iyon:15 ito:13 iyan:12 tutugtugin:4
+kantidad	45	ng:28 at:7 po:4
+kantones	48	na:21 at:9 sa:4
+kanya	302	ang:82 ng:32 na:24 sa:19 ay:18 po:12 kung:9 ito:8 ngayon:5 pero:5 si:5 at:4 ba:4 kagabi:4
+kanyang	1477	mga:161 anak:45 asawa:35 ina:25 ama:22 kagandahan:22 ganda:20 ismartpon:19 trabaho:19 kaarawan:17 nanay:16 sarili:16 aso:15 pangalan:15
+kapag	391	may:22 pinutol:12 mas:9 naglalaro:9 siya:9 hindi:7 natapos:7 iniinom:6 pebrero:6 ako:5 binombahan:5 gabi:5 mag:5 natatae:5
+kapalaran	25	ko:8 ng:5 namin:4 natin:4
+kapalit	33	ng:32
+kapani	29	paniwalang:18 paniwala:11
+kapatid	390	ko:124 kong:64 na:58 mo:29 niya:25 ni:20 niyang:17 mong:10 ay:7 ninyo:4 ninyong:4
+kape	154	ang:32 sa:16 at:12 niya:9 mo:8 si:8 arnie:6 ko:6 pa:6 siya:6 akong:5 po:5 kanina:4 nila:4
+kapeng	94	unikorniyo:44 may:22 itim:7 keyk:5
+kapihan	109	doon:25 sa:10 may:9 erwin:6 si:5 ang:4 na:4
+kapihang	149	istarbak:97 tim:27 istarbaks:12
+kapitbahay	167	kong:43 ko:33 na:26 namin:11 natin:9 naming:7 akong:6 po:4
+kapitbahayan	20	ko:4
+karamihan	86	ng:57 sa:14 ay:5
+karaming	23	tao:8
+karaniwan	28	ang:13 lang:5
+karaniwang	37	petsa:4
+karapat	25	dapat:25
+karapatan	32	si:6 para:4 pong:4
+karayom	25	nang:6 at:5
+karera	20	ng:9 na:4
+karne	89	ng:38 at:10 ang:9 po:5 bigas:4 si:4
+karneng	23	ito:18
+karpet	26	na:13 ang:8
+kasal	35	si:5 na:4 sa:4
+kasalanan	48	ang:13 ni:10 mo:4
+kasalukuyang	22	gobyerno:4 pamahalaan:4
+kasama	310	ang:80 si:37 ko:21 ng:20 ni:17 namin:16 niya:14 natin:11 ako:9 mo:8 po:8 sa:8 na:7 sila:7
+kasamang	55	mga:6
+kasaysayan	25	ng:10 ang:6
+kasi	39	ang:4 kaya:4
+kasing	116	edad:14 tangkad:14 laki:9 lamig:8 tibay:6 ganda:5 bigat:4 husay:4 linaw:4 sukat:4
+kasinungalingan	20	lang:12
+kaso	26	nakalimutan:6 ng:4
+kastila	70	at:10 sa:10 portuges:8 ang:5 ay:4 pero:4
+kastilang	51	librong:19 bersiyon:4 nobelang:4
+kastilyo	53	ang:15 sa:11 niya:5 roon:5 laban:4
+kasya	23	sa:9 ang:4
+katabi	22	ng:16
+katagal	48	ka:7 ang:5 kailangang:4
+katangian	20	ng:12
+katao	25	ang:19
+katapangan	27	ninyo:9 niya:6 mo:5
+katapusan	38	ng:29 ang:5
+katas	26	ng:14 na:7
+katawan	68	ko:12 ng:12 niya:11 at:7 mo:5
+katayuan	20	sa:9 ng:8
+katibayan	34	na:16 laban:4
+katoliko	25	at:7 sa:7
+katotohanan	40	lang:6 ng:6 sa:5 ay:4
+katulad	181	ng:87 ko:36 sa:12 ni:10 po:5 mo:4
+kaugnayan	20	sa:12
+kaunti	79	ang:29 lamang:10 na:9 pa:6 raw:5
+kaunting	126	paminta:15 asin:9 meryenda:7 gatas:6 mantika:5 pera:5 maulap:4
+kausapin	61	ang:14 si:11 tungkol:10 mo:7
+kay	1109	greg:68 michael:14 mayumi:12 tomas:11 yaroslav:9 hans:7 adil:6 gandang:6 hashimoto:4 santa:4
+kaya	892	mo:87 ang:56 ko:54 kong:54 po:40 hindi:36 ba:35 niyo:27 pong:22 niyang:21 ako:19 lang:19 ni:18 nating:12
+kayang	452	gawin:48 ipaliwanag:27 baguhin:23 tiisin:15 mabuhay:13 tulungan:12 ipahayag:11 manalo:11 magpaamo:10 magtrabaho:9 patunayan:9 sagutin:9 tumulong:7 abutin:6
+kayo	1047	sa:240 ng:216 nang:31 ni:29 po:19 rito:16 kay:14 puwedeng:14 pupunta:11 roon:11 ang:9 para:9 kasama:8 nakatira:8
+kayong	660	gawin:28 mag:21 dalawa:17 lahat:10 makilala:10 umalis:9 gagawin:8 tingnan:8 gumawa:7 maghintay:7 mas:7 babae:6 dapat:6 hindi:6
+kaysa	552	sa:445 kay:31 riyan:5 roon:4
+kayumanggi	55	ang:39 po:10
+kayumangging	46	unikorniyo:7 buhok:5 aso:4 daga:4
+keso	38	ng:7 ang:4 gamit:4
+kesong	46	feta:11 suwiso:8 cheddar:7 pizza:4
+keyk	107	ni:21 na:19 sa:15 ang:14 si:10 at:5 niya:5
+kilala	239	ko:65 ang:31 mo:19 ni:16 po:16 ba:12 ka:9 niya:9 niyo:9 sa:8 ng:6 si:5 bilang:4 siyang:4
+kilalang	35	kilala:14 marunong:4
+kinabukasan	23	ay:6
+kinagat	22	ako:7 po:5
+kinailangan	105	kong:24 pong:13 naming:9 niyang:9 lang:8 ni:8 ko:7 po:5
+kinain	155	ni:45 ko:30 nang:15 ng:14 mo:13 niya:7 ang:5 po:4
+kinakabahan	23	ako:4
+kinakailangan	66	ng:25 po:11 para:5
+kinakailangang	46	pumunta:12 bayaran:10 kagamitan:4 mag:4
+kinakain	109	ni:25 ko:22 ng:15 ang:7 nila:7 niya:5
+kinakausap	59	ko:22 niya:7 ang:5 mo:4 ni:4
+kinalaman	37	sa:15
+kinausap	74	ko:50 niya:7
+kinikilabutan	28	ako:11 po:7
+kinuha	44	ko:9 ang:8 ni:7 pong:4
+kinumpirma	38	po:18 nila:12 ng:8
+kita	355	ng:31 ko:30 sa:28 ang:19 puwedeng:11 na:8 nang:8 mo:7 marinig:6 kahapon:5 ninyo:5 hahayaang:4 matutulungan:4 namin:4
+kitang	207	makita:16 kausapin:14 kita:14 kitang:13 makausap:8 makilala:7 may:6 tulungan:6 gawin:4 mamahalin:4 tulungang:4 umalis:4
+klase	125	ng:55 sa:12 niya:8 ko:6 nang:4
+klaseng	74	ito:6
+klasikong	22	nahuatl:11
+kliyente	32	ang:10
+ko	9887	ang:1772 po:1164 sa:873 na:410 pong:373 si:341 ng:247 alam:238 siya:235 ito:178 lang:174 ay:158 kay:138 nang:134
+kolang	80	pangdiyeta:74
+kolonya	22	sa:11 ng:4
+kompanya	22	ang:8 ng:8
+kompyuter	48	ko:16 na:6 ang:5 mo:4
+kong	2584	hindi:89 gawin:75 may:74 si:73 babae:58 maging:46 malaman:45 mag:44 sabihin:44 makita:39 ang:36 pumunta:30 lalaki:22 maraming:20
+kontento	56	na:27 ka:10 sa:9
+koreano	29	sa:4
+korte	34	ng:27
+kostumer	49	na:35
+kotse	237	ko:46 sa:22 mo:18 ang:16 ng:15 niya:14 ni:12 ninyo:12 si:11 ako:5 kung:5 nila:5 pero:5 po:5
+kotseng	42	ito:11 iyan:10 iyon:4 sinasakyan:4
+kreyol	40	na:19 ng:8 sa:5
+krisis	31	na:24
+kristiyano	22	at:8
+kuko	21	sa:4
+kukunin	43	ko:30 daw:4
+kulang	51	ang:9 ng:7 ka:6 kulang:4 po:4 sa:4 siya:4
+kulay	635	abo:77 rosas:77 tsokolateng:68 ng:50 kapeng:47 na:41 abong:40 ang:25 kape:25 ube:21 tsokolate:17 lilang:14 berde:13 pilak:13
+kultura	42	ng:7 sa:7 nila:6 at:4
+kumain	574	ng:249 ako:82 si:42 ka:34 tayo:26 nang:24 kami:13 na:13 sa:13 ang:12 siya:9 po:7 daw:6 din:5
+kumakain	424	ng:174 ako:93 si:35 po:20 nang:16 siya:12 ang:11 sila:11 ba:8 kami:7 doon:6 sa:6 ka:5 kayo:4
+kumakanta	22	ang:6 si:5
+kumalat	54	ang:20 sa:17 po:7 na:6
+kumanta	33	si:9 siya:5 ka:4
+kumbinsihin	23	si:11 ng:4
+kumilos	23	ka:5 ngayon:4
+kumita	20	si:8
+kumpara	34	sa:32
+kumuha	157	ng:75 po:21 ka:19 ako:16 siya:11 si:7
+kumusta	66	ang:23 na:15 ka:11 po:7
+kundi	55	ang:11 sa:8
+kung	2979	ano:384 saan:285 hindi:271 paano:225 bakit:207 sino:147 may:104 gusto:81 anong:79 wala:60 gaano:59 nasaan:49 kailan:39 minsan:35
+kunin	85	ang:28 mo:24 niyo:9 ninyo:8 po:5
+kurbata	20	mo:4 sa:4 si:4
+kurso	23	sa:8 ng:7
+kusina	49	si:6 ang:5 ay:5 namin:5 natin:4 pinalitan:4
+kustomer	20	na:8 sa:4
+kuting	20	sa:6 si:5
+kutsilyo	29	at:8 ang:6 mo:4
+kuwarto	210	niya:59 ko:49 mo:16 ni:14 ninyo:14 ang:6 niyo:5 para:5 nila:4
+kuwartong	25	ito:19
+kuwento	55	ng:10 tungkol:7 sa:5 mo:4
+kuwerdas	20	ang:12 ng:8
+kuya	106	ko:48 kong:11 ni:9 mo:7 niya:7 ninyo:5 at:4
+la	26	imperio:4
+lababo	27	nila:4 ninyo:4 niya:4
+labag	36	sa:27
+laban	55	sa:29 kay:9 ang:4 ng:4 ninyo:4
+labas	267	ng:143 sa:23 ang:8 nang:8 at:6 na:5 po:5 ako:4 pasok:4 si:4
+labing	70	isa:15 isang:15 anim:9 apat:9 walong:7 dalawang:5
+labintatlong	36	taong:24
+labis	22	na:8 nang:6
+lagay	20	ng:16
+lahat	1053	ng:643 sa:60 na:59 ay:56 maliban:40 para:39 ang:38 nang:9 kung:7 tungkol:7 po:6 doon:5 kami:5 ngayon:4
+lahi	50	ng:17 siyang:4
+lahing	81	taga:16 tsino:7 mongoloid:4 srilangkano:4
+lakad	252	ako:128 ko:22 sa:18 akong:17 kami:7 nang:5 galing:4 na:4 nakita:4 po:4 pumunta:4 tayo:4
+lakas	121	ng:59 ninyo:10 ko:8 para:8 mo:6 ang:5 na:5 po:4
+laki	98	ng:49 po:29 ang:5
+lalabas	20	ang:4
+lalaki	309	sa:55 at:45 ang:44 ay:27 ng:20 na:16 po:13 si:12 ni:8 siyang:5 kung:4 nang:4
+lalaking	238	may:24 iyan:13 ito:12 iyon:12 mukhang:10 magugustuhan:6 nakaitim:6 tinutukoy:6 nakaahit:5 naglalakad:4 nakaupo:4 nangingisda:4 tatlong:4
+lalo	22	na:18
+laman	95	ang:39 ng:39
+lamang	438	ang:135 ng:29 ako:27 sa:27 na:19 sila:11 siya:11 ay:10 akong:7 nang:6 daw:5 ni:5 po:5 tayo:5
+lambak	29	ng:25
+lambot	23	ng:9 po:9
+lamig	47	ng:10 po:10 dito:5 na:5
+lang	1674	po:333 ang:266 ako:97 ng:60 sa:54 kung:48 siya:45 ito:43 iyan:33 si:30 iyon:29 ba:26 akong:23 na:22
+langis	22	sa:11 ang:7
+langit	92	sa:13 at:11 na:10 ang:8 habang:6 ay:5 ngayon:4 pero:4
+larawan	73	ng:15 sa:10 at:6 po:6 ay:5 ni:5 ang:4 niya:4
+larawang	56	ito:47 iyan:6
+laro	25	sa:8 ng:6 dahil:4 noong:4
+laruan	20	ang:4
+lasa	57	ng:48 ang:5
+lasing	33	si:9 ka:6 po:4
+lata	25	ng:21 sa:4
+latino	28	at:7
+lawa	72	ang:31 sa:12 nang:8 ng:7
+layunin	41	ng:7 po:6 ko:4 namin:4 natin:4 nila:4 niya:4
+le	24	guin:15 golem:4
+leche	20	flan:20
+leeg	48	ko:16 niya:13 ni:9 ng:5
+lengguwahe	71	ang:15 sa:9 ng:7 ay:6
+lengguwaheng	80	esperanto:9 hapones:9 alam:4 lojban:4
+letra	26	sa:9 ang:4
+libangan	29	ko:11 ay:6
+libo	34	libong:27
+libong	108	taon:15 dolyar:14 bote:12 botelya:12 yen:8 mga:4 preso:4 tao:4
+libre	57	po:9 ang:7 lang:7 ka:6 sa:6 ako:5 ba:4
+libreng	41	parkingan:8 sampol:8 patikim:6
+libro	284	sa:83 ang:30 ko:13 para:13 ni:12 ay:10 mo:10 tungkol:10 ng:9 bago:8 at:7 si:6 kong:5 ninyo:5
+librong	256	ito:88 iyon:17 crónicas:16 iyan:16 esperanto:7 chavacano:6 empire:4 hinahanap:4 il:4 ingles:4 kastila:4 tungkol:4
+ligtas	51	na:7 ang:6 at:4 ka:4 po:4
+lihim	26	na:14 ang:4
+liit	23	ng:11 liit:7 po:4
+likas	25	na:22
+likod	90	ng:51 ko:11 mo:8
+likuran	42	ng:26 mo:5
+lila	23	ang:13 si:5
+lilang	31	kastilyo:6 kalesang:4
+limang	118	minuto:16 taong:14 taon:13 araw:6 daang:6 beses:4
+linggo	80	ang:9 linggo:8 na:7 nang:7 sa:6 bago:4 nasira:4 ng:4
+linisin	41	ang:24 mo:10
+listahan	28	ng:11 ang:4
+litrato	68	ng:23 sa:5 ako:4 ko:4 lang:4 ni:4 siya:4
+litratong	30	ito:21 iyan:7
+lobo	41	po:13 si:5 ba:4 yata:4
+lojban	35	at:7
+lola	79	ko:24 joey:7 niya:7 sa:6 namin:4
+lolo	83	ko:43 at:6 niya:5 ni:4
+loob	576	ng:392 para:25 si:20 na:18 at:12 ni:12 mo:10 ang:9 niya:9 ninyo:6 ko:5 po:5 sa:5 dahil:4
+lugar	194	na:93 sa:16 ng:15 kung:11 para:11 ito:8 at:4 ay:4
+luha	26	sa:8 ang:7
+lulu	215	rito:39 ako:23 para:21 nitong:19 at:12 ang:9 ay:9 sa:9 nang:7 na:6 pero:5 may:4
+lulung	43	kapihan:14 pizzeria:10 istarbak:9 parke:5
+luma	40	kong:9 ang:6 niyang:6 na:4
+lumabas	109	ng:12 si:10 ang:9 ako:8 ka:8 na:8 po:8 sa:8 siya:8 nang:7 kasama:5
+lumakad	23	ako:12
+lumaki	65	po:13 ako:11 si:6 siya:6 ang:5 sa:4
+lumalabas	22	na:10 sa:5
+lumalaki	23	ang:19 po:4
+lumalangoy	30	sa:12 si:7
+lumang	88	bahay:11 gusali:8 damit:7 barya:5 mundo:5 bakal:4 gitarang:4
+lumangoy	65	si:15 sa:12 ng:7 ang:5 dito:4 kaysa:4
+lumapit	22	sa:4 si:4
+lumba	20	lumba:11 kung:4
+lumilipad	78	sa:50 na:11 nang:8 ang:6
+lumipad	22	ang:12
+lumipat	50	sa:15 ang:6 ng:6 po:4
+lumulutang	32	ang:22 po:4
+lunas	32	ang:11 para:10 po:4
+lunes	51	hanggang:9 nang:8 ang:4 at:4 dahil:4 martes:4
+lungsod	65	ng:23 ang:13 na:10 sa:5
+lupa	52	ang:15 sa:6 at:5 ay:5 mula:4 ng:4 rito:4
+lupain	25	ng:10
+ma	25	bakit:8 promote:8 at:4
+maaari	267	ko:57 mo:32 ba:31 po:25 na:17 mong:14 kang:12 ka:11 kong:9 bang:8 pong:8 itong:5 niyo:5 akong:4
+maaaring	193	maging:8 may:8 hindi:6 kumpirmahin:6 mangyaring:6 magkaroon:5 umalis:5 ibalik:4 isauli:4 mangyari:4
+maaga	89	akong:11 po:11 ang:8 bukas:7 nang:5 ako:4 para:4 siyang:4
+maalala	22	kung:12 ang:7
+maanghang	38	na:19 ang:8 po:6
+maaraw	153	na:88 sa:17 at:12 ngayong:10 pero:7 ngayon:6
+maari	26	mo:8 po:7 niyo:5
+maasim	21	ang:7 po:5
+maayos	128	ang:76 na:24 po:8 mamayang:4 pa:4
+mababa	31	ang:12 nilang:12
+mabagal	31	na:7
+mabaho	24	ang:8 po:8
+mabait	45	at:9 na:9 sa:4
+mabigat	33	ang:14 na:5 po:4
+mabilis	158	na:60 ang:20 po:8 siyang:8 pong:7
+mabuhay	54	nang:25 sa:8 ang:4 kakailanganin:4
+mabuti	142	ang:33 sa:13 na:12 naman:10 nang:9 siyang:8 po:6 bago:5 pang:5 para:5
+mabuting	41	konsentrasyon:6 bantay:4
+madalang	44	lang:33 na:4
+madalas	331	po:42 akong:28 ang:27 na:25 pong:18 siyang:17 kaming:12 kong:9 ako:7 namin:7 ka:6 tayong:6 ba:4 gamitin:4
+madali	109	lang:23 para:17 pong:17 ang:14 siyang:6 ito:4 lamang:4
+madaling	213	araw:93 salita:14 panahon:11 masunog:6 gawin:4 paraan:4 sumakay:4
+madilim	61	na:34 sa:7 po:5 ang:4 para:4
+mag	1132	aral:155 isa:139 aaral:123 ingat:63 alas:49 alala:40 asawa:35 ingles:35 usap:28 isip:26 umpisa:20 asawang:19 pranses:19 seatbelt:16
+magaganda	23	ang:14 po:4
+magagandang	54	lalaki:5 tanawin:5 bagay:4 pelikula:4 plano:4
+magagawa	99	kung:19 ko:11 ni:8 ito:7 iyan:7 iyon:4 para:4 si:4
+magaling	342	na:60 ang:27 sa:24 siyang:20 po:16 magsalita:12 kang:10 ka:9 kumanta:9 si:8 silang:8 akong:7 at:7 kung:6
+maganda	285	ang:120 po:33 rin:15 pong:11 ba:10 sa:9 akong:8 at:8 kung:6 raw:6 sana:6 siya:6 ka:5 si:5
+magandang	331	umaga:36 lugar:28 gabi:13 araw:11 ideya:11 trabaho:10 panahon:8 weytres:8 hapon:7 plano:7 mungkahi:5 panukala:5 babae:4 balita:4
+magbago	34	ng:15 ang:11 ni:4
+magbasa	86	ng:38 ka:8 at:5 nang:5 ang:4 kayo:4 po:4 sa:4
+magbayad	30	ng:11 ni:8 nang:5 muna:4
+magbigay	42	ng:26 ang:8 sa:4
+magdagdag	27	ka:11 ng:8 kayo:5
+magdala	29	ng:10 ka:8 ni:6 kayo:4
+magdamag	35	na:8 pong:7 kaming:6 hanggang:4
+maghanap	49	ng:35 tayo:6
+maghihintay	20	ako:7
+maghintay	70	sa:14 dito:10 nang:9 ka:8 ng:8 hanggang:6 po:4
+maghugas	20	ng:10 ka:6
+magiging	179	masaya:14 mas:11 ayos:9 epekto:9 madali:7 mahirap:6 gabay:5 problema:5 guro:4 maganda:4 malasa:4
+maging	359	maingat:21 mas:15 masaya:11 isang:10 guro:9 handa:9 malupit:8 pari:8 tapat:7 aktor:6 hari:6 inhenyero:6 mayaman:5 parang:5
+magkaiba	20	ang:11 po:6
+magkakaroon	49	ng:28 ka:4
+magkano	158	ang:88 po:35 sa:8 aabutin:4 nga:4
+magkaroon	67	ng:56 ka:4
+magkasama	30	ang:7 kaming:4
+magkita	28	tayo:16 kita:5
+maglakad	54	sa:14 ng:7 lakad:5 ang:4 ka:4 nang:4 si:4
+maglaro	70	ng:37 sa:11 tayo:6
+magluto	27	ng:11
+magmaneho	38	ng:19 si:8
+magnanakaw	24	ang:7 sa:6 na:4
+magpahinga	28	ka:6 tayo:5 ni:4 po:4
+magpakasal	25	sa:7 ni:6
+magpalit	28	ng:26
+magsabi	25	ng:12 sa:6
+magsalita	196	ng:88 ang:28 nang:16 ka:11 at:10 si:9 tungkol:7
+magsimula	39	na:9 mula:6 ang:5 ka:4
+magsisimula	56	ang:29 po:9 na:4
+magsulat	42	ng:11 sa:7 gamit:5 nang:4 si:4
+magsuot	35	ng:27
+magtanong	21	tungkol:6 ka:5
+magtiwala	25	sa:16 ka:5
+magtrabaho	79	nang:18 sa:16 roon:5 noong:4
+magugustuhan	50	mo:18 ninyo:7 ng:6
+magulang	141	niya:30 ko:29 mo:15 ang:11 ninyo:11 ng:7 ay:6 ni:6 para:6
+mahaba	56	ang:34 at:8 pong:4
+mahabang	64	biyahe:5 buhay:4 buhok:4 pagkakasakit:4 panahon:4
+mahahanap	30	ang:9
+mahal	257	ko:68 ang:28 niya:18 na:16 ni:16 kita:15 ng:15 po:12 mo:10 ka:6 namin:5 nila:5 din:4 naman:4
+mahalaga	118	ang:27 po:23 kung:17 sa:12 kay:7 ay:6 akong:4
+mahalagang	29	aral:4
+mahanap	40	ang:19 si:5 na:4
+mahigit	39	nang:16
+mahigpit	25	ang:9 na:8
+mahilig	466	po:74 ako:65 sa:62 akong:45 si:33 ka:30 siyang:20 siya:15 ba:13 ang:10 pong:9 kami:5 kaming:5 kumain:5
+mahina	28	ang:9 kumain:4 si:4
+mahirap	193	na:31 ang:20 basahin:9 pong:9 sa:8 ba:6 gawin:6 itong:6 po:6 ito:5 maghanap:5 para:4 pero:4
+mahiwagang	49	ilaw:36 kapangyarihan:4
+mahiyain	20	si:5
+mahusay	97	na:36 ang:10 po:9 siyang:5 lumangoy:4
+maigi	23	ang:12 sa:4
+maiintindihan	26	mo:6 ang:4 nila:4
+maikling	26	paglalarawan:8 manggas:4
+maingat	30	po:7 na:4 sa:4
+mainit	120	na:58 ang:11 sa:8 pa:7 at:6 init:5 ngayon:4
+maintindihan	26	ang:14 kung:4 ni:4
+maipapaliwanag	25	ang:7 ng:4 niyo:4
+maitim	48	ang:21 na:20
+majipur	27	ni:27
+makahanap	31	ng:18 ako:4 kung:4 siya:4
+makakatulong	24	sa:6 kay:4
+makakaya	23	ko:10 niya:6
+makakita	57	ng:38 sa:8 pa:4
+makakuha	24	ng:22
+makapal	37	na:18 ang:12
+makapasok	21	sa:11 ang:7
+makikita	79	ni:31 ang:7 ko:7 mo:7 natin:5
+makina	36	ng:9 ang:8 sa:5
+makinig	50	sa:16 ka:15 kayo:5 po:4
+makipag	84	usap:69 away:8
+makita	256	ang:76 kung:16 niya:13 si:12 ka:10 ni:10 ko:9 uli:9 mo:8 ito:7 ninyo:7 siya:7 balang:6 ako:5
+makuha	20	ang:9 ito:4
+makulay	29	kulay:19 na:6
+malakas	134	ang:40 na:29 at:6 sa:6 po:4 siyang:4
+malaki	276	ang:134 po:47 at:7 kaysa:7 laki:7 ng:7 siyang:7 ba:6 pong:5 sa:5 mula:4 nang:4 niyang:4 para:4
+malaking	482	akwaryo:51 malaking:39 kantidad:20 tindahan:16 pera:14 bahay:12 lalaking:12 bote:9 halaga:9 agwat:8 biluhabang:8 parke:8 isda:7 kastilyo:7
+malalagpasan	44	ang:22 ito:9 ko:6 kahit:4
+malalaking	45	puting:5 problemang:4
+malalaman	40	kung:15 ito:5 ko:4 po:4
+malalim	23	na:14
+malaman	131	kung:64 ang:12 ni:9 ito:8 niya:7 niyang:5 iyon:4 ng:4
+malamang	83	na:23 ay:20 hindi:9 gaganahan:4 nakita:4 uulan:4
+malambot	33	ang:10 po:7 at:6 na:5
+malamig	150	na:67 ang:14 at:13 sa:10 ako:8 pero:4 po:4
+malapit	284	na:102 sa:94 nang:25 dito:8 ba:7 ang:6 lang:5 ka:4 kung:4 mo:4 po:4
+malawak	57	na:32 ang:13 sa:5
+malayo	64	ang:15 sa:12 na:4
+malayong	26	planeta:4
+maleta	62	ko:32 niya:11 mo:6 ninyo:5
+mali	139	ang:29 po:22 ka:14 sa:13 ako:10 si:7 ko:5 siya:5 iyon:4
+maliban	162	sa:83 na:48 kay:12 ang:10
+maligayang	31	pagdating:8 pasko:7 kaarawan:4
+maliit	251	na:128 ang:57 po:11 ka:6 niyang:6 pa:6 at:4 kaysa:4 pong:4 si:4
+maliliit	49	na:44 ang:4
+malimit	62	na:15 ang:6 siyang:6 siya:4
+malinaw	56	na:23 ang:16 kung:5 sa:4
+maling	45	mali:6 pagkakakilanlan:4
+malinis	73	na:28 ang:18 po:7 ba:5
+malungkot	56	sila:8 si:7 ang:5 na:5 ako:4 ka:4 kayo:4
+malusog	46	na:17 ang:4 sa:4
+maluwag	24	ang:13 po:6
+mama	35	sa:14 at:6
+mamahaling	21	damit:6
+mamamatay	49	tao:19 po:7 ako:4
+mamatay	44	si:14 nang:6 ang:4 kaysa:4
+mamaya	93	pa:75
+mamayang	59	gabi:44 hapon:13
+man	119	lang:30 ang:18 siya:8 kasaya:4 sa:4
+manalo	31	ng:7 sa:7 si:5 ni:4
+mananalo	34	si:7 sa:6 kami:5 tayo:5 siya:4
+manatili	86	sa:37 rito:19 roon:6 ka:4
+manatiling	23	mapagmatyag:4 nakapokus:4
+mandarin	23	at:7
+manedyer	31	na:15 ng:8
+mang	48	aawit:26 akit:7 insulto:4
+manggagawa	25	ng:8 ang:5
+mangkok	20	ng:11 sa:5
+mangyari	40	puwede:6 ito:4 iyon:4 kahit:4
+mangyayari	74	iyan:15 iyon:14 sa:12 ito:6 po:6 kay:5 kung:5
+maniwala	28	sa:10 ka:7 kay:5
+manok	73	na:18 ay:14 sa:8 at:6 si:6 kahit:4
+manood	38	ng:31
+mansanas	106	na:42 sa:19 at:8 ang:6 si:4
+mantikilya	21	ang:5 at:4 sa:4
+mantsa	45	ng:22 po:13 ang:5 mula:4
+manunulat	31	sa:6 ang:5
+mapa	36	ng:20 sa:6
+mapulang	33	mayelong:6 tsaang:5
+marahil	37	sa:7 ang:5 ay:4
+marami	416	pong:59 akong:56 kaming:39 po:35 na:27 pa:22 siyang:22 ang:18 tayong:17 pang:16 sa:16 nang:14 rami:9 ka:8
+maraming	1063	mga:154 tao:41 puno:27 paniki:21 beses:17 pera:17 maraming:16 taon:14 asukal:13 kalapati:11 oras:11 salamat:11 taong:11 loro:8
+markang	41	ho:5
+marlin	23	yaong:18 na:4
+marso	58	ng:39 taong:4
+marte	36	ay:12
+martes	23	at:6 miyerkules:4 sinimulan:4
+marunong	328	ka:38 ng:29 magsalita:20 po:19 siya:19 si:17 siyang:17 akong:16 ba:11 lumangoy:11 din:10 mag:10 gumawa:7 magmaneho:7
+mas	1546	gusto:185 magaling:62 maganda:62 malaki:49 mabuti:48 bata:42 parang:40 maraming:39 maliit:32 maayos:31 masaya:31 matanda:30 mahalaga:26 magandang:21
+masakit	73	ang:41 po:13 pa:6
+masama	59	ang:34 po:5 sa:5
+masamang	45	balita:5 panahon:5
+masarap	180	ang:102 na:13 po:12 nga:5 ba:4 daw:4
+masasabi	25	ko:10 sa:5 kong:4
+masaya	205	akong:23 ako:21 si:21 ang:19 ka:17 po:16 na:9 pong:8 sa:8 kayo:5 sila:5 siya:5
+masayang	33	masaya:6
+masyado	215	pong:33 po:29 akong:22 kang:19 siyang:17 nang:11 pa:8 itong:6 kayong:6 na:6 ng:6 pang:6 ang:4 ka:4
+masyadong	325	malaki:17 maraming:15 maliit:12 mabilis:10 matagal:10 alam:9 mahal:9 malakas:8 nag:8 magaling:7 mabigat:6 madaldal:6 mahaba:6 madilim:5
+mata	165	niya:35 mo:26 ng:26 ko:19 ninyo:9 ni:8 nila:8 ang:5 bibig:4
+mataas	69	na:27 ang:25 po:7
+matagal	130	na:50 ko:24 nang:14 akong:5 ang:5 po:5
+matalas	23	ang:11 na:6 po:4
+matalino	45	siya:7 nga:6 ang:5 ka:5 si:5
+matamis	28	ang:9 na:6
+matanda	75	na:27 ka:10 ako:7 ang:5 si:5 sa:4
+matandaan	21	kung:11 ang:6
+matandang	44	babae:5 lalaki:5 kumakain:4 magsalita:4 may:4
+matangkad	62	na:27 at:8 siya:5 si:4
+matatapos	24	ang:9 na:6 gawin:4
+matibay	25	na:19 pong:4
+matigas	25	ang:16
+matindi	21	po:5 ang:4 raw:4
+matinding	34	panganib:9 kompetisyon:5 pagod:4 pananakit:4 takot:4
+matulog	21	nang:6 ka:4
+matuto	30	ng:13
+matutong	22	magbisikleta:5 mangabayo:5 mag:4
+matutulungan	25	kung:4
+maulap	119	na:70 ulap:13 ang:6 at:5 nang:4 pero:4 sa:4
+may	6954	mga:1037 nakita:98 yelo:95 isang:82 ari:77 lahing:70 gusto:69 dumalaw:68 sakit:68 dalawang:60 tatlong:56 ilang:52 kasamang:51 alam:50
+maya	45	maya:12 ay:6
+mayaman	77	ang:10 siya:9 sa:7 si:7 ako:6 na:6 at:4
+mayamang	22	mayaman:5 lalaki:4
+mayelong	115	itim:55 tsaang:10 berdeng:9 mapulang:7 kapeng:5 abenang:4
+mayo	102	ng:93 pero:5
+mayroon	566	akong:91 po:88 pong:56 ka:51 ba:30 siyang:27 bang:22 kaming:18 ako:17 ang:15 lang:15 kang:14 pa:14 sa:13
+mayroong	144	mga:14 tatlong:11 asnong:5 burikong:5 isang:4 lobo:4
+medyas	48	niya:8 ang:7 ko:6 mo:6 ninyo:6 at:4 ni:4
+medyo	198	maulap:9 maaraw:7 maluwag:6 masakit:6 matindi:5 nag:5 madilim:4 maganda:4 malamig:4 matigas:4 may:4
+mehiko	28	ang:6
+melissa	45	dahil:31 sa:12
+melokoton	28	si:12 sa:6 at:5
+meron	62	ka:16 akong:8 bang:6 kang:5 ang:4 ba:4
+mesa	197	sa:48 ko:39 ay:24 si:13 may:12 ang:11 ako:4 gamit:4 naroon:4
+mesang	22	ito:6 may:5
+mestisang	20	tsina:5
+mestisong	84	tsino:22 hapones:14 amerindiyong:12
+metro	27	ang:16
+mga	12575	tao:254 bata:219 magulang:162 puno:157 taong:144 bagay:125 kaibigan:123 anak:122 mata:121 babae:115 libro:97 ito:95 salita:95 bulaklak:90
+michael	168	na:126 ng:6 sa:6 ay:5 ang:4
+militar	42	na:28 ang:5
+minahal	22	niya:5
+minsan	111	ay:9 may:8 ang:7 hindi:6 sa:6 kinakailangan:5 gumagawa:4 kailangan:4 ng:4
+minuto	44	ang:11 para:7 ay:5
+miski	38	na:32
+mismo	23	ang:11 ng:4
+miss	23	ko:20
+miyerkules	29	nang:6 po:5 huwebes:4
+mo	4601	ang:769 ba:724 sa:351 bang:286 ako:272 na:207 akong:101 ito:101 ng:95 siya:85 nang:84 iyan:68 kung:61 si:60
+mong	1014	gawin:69 sabihin:36 kalimutang:22 maging:18 gamitin:15 hawakan:14 malaman:12 panghimagas:12 pumunta:12 hindi:11 babae:10 huwag:10 kalimutan:10 kainin:9
+moradong	31	isda:4
+mukha	253	kang:35 siyang:34 niya:33 pong:28 po:21 kayong:14 ng:13 mo:10 ni:10 itong:8 silang:7 ko:6 sa:6 at:4
+mukhang	484	hindi:16 masaya:16 wala:15 militar:14 hapones:12 alam:10 desidido:9 may:9 pareho:8 sundalong:7 latina:6 leopardo:6 ang:5 kontento:5
+mula	882	sa:686 rito:30 noong:25 kay:19 ngayon:17 nang:16 lunes:9 baywang:6 pa:6 roon:6 noon:5 ulo:4
+muli	75	sa:16 ang:13 si:10 ako:8
+muling	27	makikita:4
+muna	124	ang:19 tayo:19 kayo:15 ako:12 dapat:8 natin:5 ng:5 sa:5 hanggang:4
+munang	20	gawin:4 humingi:4
+mundo	124	ay:22 sa:15 ang:14 ng:10 na:6 maliban:4 natin:4
+mundong	47	ito:18 ang:5 pangkanluran:5
+muntik	65	na:34 nang:19 ko:9
+munting	29	lawa:10 tirahan:4
+mura	31	ang:4 nga:4 nito:4
+musika	47	at:12 ang:8 sa:8 ay:5
+musikang	24	zouk:4
+muslim	37	na:7 ang:5
+muwebles	59	sa:23 ang:8 ng:8 niya:8 na:5 namin:4
+na	16500	ang:922 ito:848 po:618 may:546 ako:352 ba:311 lang:275 hindi:248 iyon:223 si:185 iyan:174 sa:146 siya:141 akong:138
+naaakit	20	ang:7 po:4
+naaalala	73	ko:38 mo:11 pa:7 ang:5
+naabot	32	na:9 mo:4 po:4
+nababaliw	21	na:18
+nabalian	26	ng:12 po:8
+nabanggit	29	ko:16 kay:4
+nabaril	23	po:10 si:4
+nabasa	51	ko:19 niya:8 ang:7 mo:6 na:4
+nabigla	26	si:9 rin:6
+nabubuhay	30	pa:5 ako:4 sa:4
+nag	914	aaral:145 aalala:54 aral:44 iisang:34 aaway:28 iisa:24 aalaga:22 order:22 umpisa:18 usap:16 aalmusal:15 isang:15 uusap:15 almusal:13
+nagalit	26	si:6 siya:4
+nagawa	92	ko:26 ni:12 mo:10 po:7 iyon:6 niya:5 iyan:4
+nagbabantay	27	sa:16 na:4
+nagbabasa	117	ako:44 ng:34 po:6 siya:6 nang:5 si:5 ang:4
+nagbapor	26	si:26
+nagbebenta	58	ng:25 ako:7 siya:7 po:4
+nagbibigay	34	ng:14 sa:7 ang:4 po:4
+nagbigay	75	sa:17 ng:15 po:14 siya:12 ako:10
+nagdala	28	ng:5 po:4 sa:4 si:4
+nagdesisyon	28	akong:8 si:6 po:5 siyang:5
+nagdiwang	20	po:8 kami:5 tayo:5
+naghahanap	74	ako:15 siya:10 ng:8 po:8 si:6 ka:5 ang:4 pa:4
+naghanap	22	ako:7 po:4
+naghihintay	78	sa:18 po:10 ako:8 si:6 na:5 siya:5 ng:4 sila:4
+naghintay	39	si:7 ako:6 sa:4
+naging	248	simbolo:16 mas:10 isang:7 malupit:6 inhenyero:5 malinaw:5 pari:5 budista:4 kuripot:4 magulo:4 mga:4 tamad:4
+nagising	36	ako:10 si:7 po:6
+nagkakamali	28	ka:7 rin:5 po:4
+nagkalat	22	ang:11 po:7
+nagkalesa	50	si:30 sina:19
+nagkalesang	27	pula:8 lila:5 puti:5
+nagkaroon	71	ng:29 ako:10 po:10 ka:6
+nagkita	20	kami:6 na:4 po:4
+naglakad	135	ako:39 lakad:19 po:16 si:12 kami:7 akong:6 ang:6 siya:5 papuntang:4 sa:4
+naglalakad	73	sa:13 si:13 ako:9 po:6 na:5 nang:5 siya:5
+naglalaro	85	ng:32 po:6 sa:6 ako:5 ka:4 kami:4 pa:4 siya:4
+naglaro	29	ako:6 ang:4 po:4 siya:4
+nagluluto	113	ng:84 si:22
+nagluto	22	ng:11 ako:4 ang:4
+nagmamaneho	22	siya:5
+nagmamay	24	ari:24
+nagmula	57	sa:33 ang:7 po:5
+nagnakaw	28	ng:22
+nagpakasal	35	siya:11 po:8 si:8 na:4
+nagpapasalamat	39	ako:15 ang:12 po:7
+nagpasya	32	akong:11 siyang:7 po:5 si:4
+nagsabi	60	sa:19 niyan:11 nito:9 niyon:8 na:4
+nagsalita	22	si:5
+nagsasabi	24	ng:8 na:4
+nagsasalita	113	ng:39 ako:12 siya:9 po:7 si:7 ba:6 ka:6 rin:5 ang:4 sa:4
+nagsimula	136	po:20 ang:19 pong:15 siyang:15 na:11 ng:9 akong:6 itong:5 kaming:4 nang:4 sa:4
+nagsimulang	60	umulan:10 kumulo:4 mag:4
+nagsinungaling	30	si:7 ako:5 ka:5 sila:4
+nagsisimula	38	ang:11 na:11
+nagsulat	28	ng:11 nito:7
+nagsuot	21	ng:7 siya:5 po:4
+nagsusulat	26	siya:6 din:4
+nagsusuot	32	ng:18 lang:6
+nagtagal	30	ang:8 ako:4 po:4
+nagtanim	24	si:6 ng:5 ako:4 po:4
+nagtanong	22	siya:5 sa:4
+nagtataka	27	ako:16
+nagtatrabaho	120	ako:23 sa:15 si:13 ang:10 siya:10 ka:8 po:8 rito:6 para:5 sina:4
+nagtitinda	25	ng:6 ako:5
+nagtitiwala	25	sa:11 ako:4
+nagtrabaho	44	ako:8 si:6 po:4 sa:4
+nagtsaang	37	bluberi:14 sereso:12 itim:6
+nagtuturo	31	ako:9 po:6 ng:4 sa:4
+nagugustuhan	23	mo:5
+nagugutom	34	na:9 ang:6 ako:5 po:4
+nagulat	44	si:9 ako:7 din:6 kami:6
+nagustuhan	55	ko:11 ang:9 ni:6 mo:5 ng:5 niya:4
+nahanap	105	ko:18 akong:17 na:13 po:11 niya:6 mo:5 ba:4 ni:4
+nahihirapan	40	si:8 akong:6 ang:4 ka:4
+nahihiya	30	po:5 si:5 akong:4
+nahirapan	39	akong:11 si:8 sa:4
+nahuli	88	po:18 ng:13 na:10 si:8 akong:5 ko:5 ako:4
+nahulog	48	ang:14 sa:10 ako:5
+naiinggit	55	siya:18 ako:12 si:11 ka:4 sila:4
+naiinip	28	ang:6 kapag:5 si:5 ka:4
+naiintindihan	168	ko:47 ang:34 mo:23 ni:10 kung:9 sa:7 niya:6 ng:5
+naiisip	21	ko:10
+naintindihan	36	ang:11 ko:9 ba:4 sa:4
+nais	76	kong:24 ko:9 mo:6 mong:5 na:5 ng:4
+naisip	35	ko:12 ang:6 kong:4
+naiyak	32	si:14 ang:7 na:6
+nakaahit	25	ang:25
+nakaasul	20	na:14
+nakabukas	26	ang:19
+nakadepende	20	sa:11 ang:6
+nakahanap	46	ng:12 ako:8 si:8 sa:5 na:4
+nakahubad	26	po:6 si:5 sa:4
+nakainom	20	si:6 akong:4
+nakaitim	30	na:16 at:8
+nakakaalam	35	ng:15 kung:8 na:4
+nakakain	47	ang:9 ako:6 na:6 po:6 ba:4 ka:4
+nakakakita	53	ng:33 po:5
+nakakalat	22	sa:12 na:5 pong:5
+nakakapagsalita	33	ng:10 si:6 ba:4
+nakakatuwa	25	ang:11
+nakakita	84	sa:19 ng:12 ako:10 ka:10 na:9 siya:9 po:6 ba:4
+nakakuha	22	ng:18
+nakakulay	22	abong:7 abo:6 rosas:5
+nakalimutan	167	ko:47 kong:24 ni:19 po:15 mo:11 na:7 pong:6 ba:5 kahit:5 mong:5 niya:4
+nakalipas	40	na:23
+nakapunta	52	na:18 ka:14 sa:9
+nakaraang	104	linggo:25 buwan:21 taon:20 huwebes:10 miyerkules:6 araw:5 buhay:4 taglamig:4
+nakarating	32	na:8 din:4 ka:4
+nakarinig	23	ako:11 po:4
+nakasakay	21	sa:6 na:4
+nakasalubong	21	ko:5 po:5
+nakasulat	23	sa:12 na:6
+nakasuot	56	ng:21 nang:11 siya:8
+nakatakas	36	na:23
+nakatanggap	36	ako:10 siya:8 po:6 si:5
+nakatayo	26	sa:8 ang:4 roon:4
+nakatira	217	sa:59 ako:24 po:20 si:19 siya:17 ang:11 kami:9 rito:9 sila:9 tayo:6 ngayon:5 raw:4
+nakatulog	29	ako:8 ba:4
+nakaupo	128	sa:45 ako:23 si:22 ang:7 po:6 roon:6 siya:5
+nakikinig	52	ako:14 sa:13 ka:7 siya:7
+nakikipag	57	usap:49 away:8
+nakikita	207	ko:45 mo:25 ang:15 po:15 ni:14 kong:10 ng:10 akong:8 ba:7 niyo:7 namin:5 sa:5 natin:4 ninyo:4
+nakikitang	30	kagaya:6 kapareho:6 katulad:6 gumagawa:4
+nakilala	69	ko:30 akong:7 mo:7 si:5 ang:4
+nakinig	22	ako:5 si:4
+nakipag	26	usap:22
+nakita	822	ko:338 ni:68 po:52 mo:48 akong:41 kong:36 niya:29 niyo:24 si:21 ang:19 ba:13 namin:12 ng:12 raw:11
+nakitang	51	mga:14 lobo:4 nakangiti:4
+nakuha	67	ko:21 ang:16 ni:14
+nalaglag	36	ang:8 sa:8 mula:5 ako:4 na:4
+nalalaman	43	tungkol:9 mo:6 dito:4 diyan:4 doon:4 sa:4
+nalaman	41	mo:7 ko:6 ni:6 kung:4
+nalilito	22	po:6 ako:5
+naman	569	ay:86 ang:58 po:51 ako:43 sa:33 siya:20 si:17 ng:16 pong:11 akong:10 ganoon:9 talaga:9 niya:8 hindi:7
+namang	90	gawin:5 may:5
+namatay	139	ang:33 po:24 si:22 sa:21 siya:17 na:12
+namimili	21	ng:13
+namin	1090	ang:349 ng:88 ni:53 sa:50 ito:41 siya:29 si:27 kayang:25 kayo:24 iyon:22 iyan:21 sila:18 kailangang:14 nang:14
+naming	395	lahat:18 gawin:14 baguhin:10 maging:10 palitan:10 malalagpasan:8 mag:7 dapat:6 ibahin:6 lumaban:6 maghintay:6 pareho:6 si:6 mga:5
+nanalo	59	ako:10 sa:10 si:6 ang:5 siya:5
+nanatili	30	sa:10 akong:4
+nanay	244	ko:91 niya:32 mo:25 ninyo:16 ni:13 at:11 na:8 sa:7 niyang:6 ang:5 ay:5 ng:4
+nandito	100	ako:22 ka:10 si:9 na:8 pa:6 po:6 ang:4 ba:4 kayo:4 lang:4 siya:4
+nandoon	28	ang:8 po:5 si:5 ako:4
+nang	3944	ika:288 walang:141 alas:116 hindi:87 mag:83 mas:77 mga:76 ilang:73 umaga:73 maaga:71 kaunti:63 maayos:61 mabuti:61 isang:52
+nangabayo	32	si:32
+nangako	44	siyang:11 po:9 ako:5 akong:4 ang:4 kay:4 si:4
+nangangailangan	25	ng:15
+nangangamoy	23	ang:7 po:5
+nanganganib	26	ang:7 po:7
+nanggaling	44	sa:12 ang:7 po:7 ako:4 kay:4
+nangyari	106	sa:31 ang:11 kay:9 ito:7 nga:7 kahapon:6 po:5 nang:4
+nangyayari	52	sa:11 ang:7 lang:6 dito:4 pero:4 rito:4
+naninirahan	53	sa:21 dito:6 si:6 po:5
+naniniwala	187	sa:29 ka:24 ako:23 si:17 ang:11 po:11 ba:10 akong:9 nga:8 pa:7 sila:7 na:5 siya:4 siyang:4
+naniniwalang	31	kaya:4 kayang:4 tumutubo:4
+nanirahan	22	sa:10
+naniwala	22	sa:7
+nanonood	39	ng:11 ako:7 si:4
+napag	31	usapan:23
+napagdesisyunan	26	kong:8 po:6 ni:4
+napakaganda	37	ng:24 po:7
+napakahalaga	21	ng:10 po:5
+napanood	21	ko:7 mo:5
+napansin	62	po:9 kong:8 ni:7 ko:6 na:6 ang:4 ba:4
+napatay	28	po:9 si:8
+napilitan	21	po:10
+naramdaman	30	ko:7 po:5
+naranasan	35	ko:13 nila:4 niya:4
+narangha	48	ang:15 at:14 kapalit:8
+naranghang	46	isda:6 kastilyo:5 pangarap:4
+nararamdaman	45	ko:12 mo:8 niya:5 ninyo:4
+narating	26	ko:9 na:6 namin:4
+narinig	142	ko:36 mo:16 akong:14 kong:11 ni:9 po:7 ang:6 niya:6 niyo:6 si:4
+naririnig	59	ko:17 mo:6 ng:6 si:4
+narito	34	na:6 ako:5 ang:4
+naroon	264	ang:92 si:45 ako:34 din:28 sa:27 pa:13 na:12 kami:7
+nars	36	ang:15 na:5 kung:4
+nasa	1197	pizzeria:83 loob:75 bahay:42 tsaahan:35 hardin:34 ilalim:30 istarbak:26 korte:22 ibabaw:21 labas:20 isip:19 kapihang:18 hustong:17 panganib:17
+nasaan	287	ang:153 po:48 si:15 na:13 ba:11 ka:9 kami:7 tayo:6 ako:5 sila:4 siya:4
+nasabi	21	sa:6 ba:5
+nasira	39	ang:25 po:6
+nasugatan	20	sa:6 po:5
+nasunog	44	ang:25 po:15
+nasusunog	24	ang:15 na:6
+natagpo	35	ko:24
+natagpuan	39	ko:6 ng:6 sa:6 akong:4 po:4
+natakot	50	akong:20 sa:7 ang:6 po:4
+natalo	33	si:6 ang:5
+natanggap	60	ko:26 akong:5 mo:4 na:4
+natapon	30	ang:10 po:7 ni:5
+natapos	37	na:8 ang:7 mo:6 kong:4
+natatakot	66	akong:13 sa:11 si:9 po:6 ako:5 na:4 siya:4
+natatakpan	25	ng:20
+natatandaan	57	ko:23 ang:8 mo:7 kong:6
+natatangi	28	po:14 ang:4
+natin	875	ang:223 ng:72 ito:53 sa:41 kayang:39 iyan:36 siya:25 iyon:23 si:21 na:20 alam:17 kailangang:16 kung:16 puwedeng:16
+nating	452	lahat:20 palitan:16 gawin:13 mag:11 baguhin:10 maging:9 dalawa:8 malalagpasan:8 isipin:7 alagaan:6 ibahin:6 lumaban:6 pag:6 pangalagaan:6
+natitirang	20	muwebles:4
+natulog	33	ako:6 po:6 na:5
+natutulog	80	sa:15 pa:11 siya:11 ang:10 po:7 na:4 si:4
+natutunan	33	ko:6 mo:4 niya:4
+natutuwa	42	akong:9 si:9 ako:7 siya:4
+naubos	23	na:12 ang:7
+naubusan	56	na:21 kami:10 tayo:10 po:5
+nauuhaw	20	ako:4 at:4 si:4
+nauunawaan	47	ang:12 ko:12 mo:9
+nawala	132	ko:36 ang:22 na:18 po:10 ni:6 sa:6 siya:5 si:4
+nawalan	76	ng:31 po:12 ako:8 na:7 si:7 siya:6
+nawawala	38	ang:22
+negosyo	29	at:6 ang:4 nila:4
+new	22	york:14
+ng	26579	mga:2920 isang:797 bahay:227 kanyang:195 pranses:187 tubig:182 bagong:172 lahat:172 tao:155 pera:152 maraming:137 ilang:136 ingles:124 kahit:123
+nga	319	ang:34 ako:33 po:33 ng:26 si:12 naman:10 ay:9 ba:9 pala:9 siya:9 talaga:9 ito:8 sa:8 pero:7
+ngayon	531	ay:107 sa:68 ang:61 dito:36 si:16 kung:15 din:14 kaysa:9 hindi:8 ng:8 ko:6 lang:6 na:6 at:5
+ngayong	407	araw:134 gabi:67 ika:31 tag:24 umaga:21 hapon:18 taon:16 linggo:12 maaraw:7 buwan:6 may:6 kitang:4 martes:4 maulap:4
+ngipin	29	ko:5
+ngumiti	29	si:13 siya:4
+ngunit	136	hindi:25 ang:20 walang:7 sa:5
+ni	6318	silvestre:141 greg:128 tomas:99 ariel:93 yanni:53 ziri:50 juan:44 jerry:40 michael:40 robert:38 ziggy:20 jehova:19 antonio:17 cassandra:17
+nila	903	ang:248 sa:100 ako:50 alam:25 hindi:23 tayo:23 ito:22 ng:21 kami:19 ay:17 akong:15 iyon:15 si:14 kung:13
+nilagyan	40	ni:17 ng:12 ko:7
+nilalang	31	na:11 ay:6
+nilang	256	may:7 putulin:6 lahat:5 pag:5 baguhin:4 dumaong:4 gawin:4 hindi:4 kinikita:4 kumain:4 mag:4 panghimagas:4 pirata:4 sahod:4
+nilinis	25	niya:8 ko:6 ni:5
+niloko	43	ako:5 ko:5 mo:4 namin:4
+nina	131	ziri:4
+ninakaw	48	niya:11 po:10 ang:9 ni:8
+ninyo	1745	ang:483 ako:133 sa:102 akong:77 kung:67 ng:67 si:64 ito:54 kailangang:39 iyan:38 iyon:28 kami:27 para:25 siya:24
+ninyong	616	gawin:35 kalimutang:28 pumunta:15 ipaliwanag:13 sabihin:13 hawakan:12 kumain:9 gagawin:8 itanong:8 buksan:7 uulitin:7 baguhin:6 bumili:6 dalawa:6
+nito	113	sa:32 ang:19 ay:13 ng:7 hindi:4 maapektuhan:4 para:4
+nitong	332	ika:61 umaga:58 mga:49 tanghali:11 maaraw:10 taon:10 hapon:8 maulap:8 miyerkules:8 gabi:6 tag:6 abril:4 buwan:4 karne:4
+niya	3001	ang:880 sa:368 po:185 ako:181 siya:111 ng:98 ay:60 raw:55 nang:49 at:47 na:45 ito:43 pong:39 iyon:37
+niyan	35	sa:14 na:7
+niyang	876	si:24 may:22 babae:21 gawin:21 inosente:18 lalaki:14 ang:12 bahay:12 mag:12 pumunta:12 walang:12 anak:11 hindi:11 maging:9
+niyebe	47	sa:14 ang:8 bukas:7
+niyo	786	po:266 ba:115 ang:74 pong:43 bang:40 na:31 ako:22 sa:20 akong:12 para:12 iyan:9 ng:9 lang:8 nang:8
+niyog	30	na:13 ang:6 sa:5
+niyon	20	sa:10
+niyong	78	kalimutang:10 gawin:5 panghimagas:4
+nobyembre	59	ng:40 taong:8
+noon	58	pang:16 si:5
+noong	864	isang:77 nakaraang:73 bata:69 ika:54 kabataan:22 dekadang:20 labintatlong:20 taong:20 lunes:19 mga:16 nasa:15 unang:14 ikalawa:10 nakalipas:10
+normal	24	lang:10 ang:6 na:6
+numero	37	ng:12
+numerong	40	ito:5
+obra	28	ang:14 maestra:4
+okey	36	lang:15 na:8
+oktubre	82	ng:74
+olandes	40	na:15 sa:14 at:6
+oo	106	nga:17 raw:10 arnie:7 kailangan:7 naman:7 puwede:6
+opinyon	62	ko:12 ng:9 hinggil:6 mo:6 ninyo:6 tungkol:6 nila:5
+opisina	38	ko:11 niya:6
+opisyal	50	na:33 ng:6
+opo	23	puwede:6
+oras	468	para:97 na:79 ang:33 ka:27 ng:17 sa:17 mo:13 po:12 ko:11 kung:10 pa:9 si:9 ninyo:8 ba:7
+order	35	ako:8 na:5 siya:5 ko:4
+ordinaryong	25	lalaki:8 tao:7
+oso	24	ang:8 sa:4
+ospital	22	sa:4
+otel	23	na:11 sa:4
+pa	1832	rin:306 po:186 ako:147 ang:124 ba:77 siya:62 sa:56 lang:46 ng:33 mag:30 si:30 akong:28 kami:24 nasa:22
+paa	54	ko:23 ng:7 niya:7
+paano	576	po:66 mo:63 ba:40 ka:35 ko:28 ito:19 ninyo:19 kayo:14 gawin:12 sindihan:12 ako:11 kung:11 ang:10 kumalat:10
+paaralan	56	sa:9 kahapon:4
+pabalik	28	balik:9 sa:9
+paborito	178	kong:62 mong:49 ko:20 ni:10 ninyong:9 niyang:7
+pabrika	24	sa:9 ng:7 ay:4
+pader	28	na:12 ng:10
+pag	797	uwi:95 aaral:73 ibig:62 usapan:56 aari:44 uugali:40 iisip:36 isipan:35 asa:33 inom:25 atake:23 uusap:23 aralan:20 alis:17
+pagbabasa	34	ng:23
+pagbalik	23	ko:13 niya:5
+pagdating	61	ko:14 sa:14 ng:8 niya:7 na:4
+paggamit	24	ng:17
+paggawa	40	ng:30 niyan:5
+pagiging	44	doktor:7 malingat:6 sinungaling:4
+pagitan	76	ng:63 nina:5
+pagka	33	may:4
+pagkain	179	sa:30 ng:18 ang:17 para:14 at:13 mo:11 ko:10 araw:6 doon:5 si:5 ako:4 ay:4
+pagkaing	68	intsik:6 mehikano:6 dagat:5 ito:5 koreano:5 inaangkat:4 iniimport:4
+pagkakamali	24	ko:7 sa:4
+pagkakataon	43	ang:10 na:9 para:6 si:5
+pagkakataong	60	ito:34 gawin:9 dapat:4 iyon:4 may:4
+pagkamatay	21	ng:12 ni:5
+pagkatapos	261	ng:116 ay:17 kong:17 maghapunan:17 nang:10 kumain:9 ko:6 niyang:5 po:5 siyang:5 bumagsak:4 lang:4
+paglaki	23	ng:9 niya:8
+paglalarawan	20	ng:17
+pagmamahal	28	ko:5 mo:4 sa:4
+pagod	89	na:40 ka:9 si:9 ako:5 siya:5
+pagsapit	20	ng:20
+pagsusulat	26	ng:7 sa:5
+pagsusulit	37	sa:15 nang:4
+pahingi	37	ng:16 po:10 nga:9
+pahintulot	25	para:12
+pakainin	25	ang:21
+pakialam	54	sa:22 kung:15
+pakinabang	29	ng:12 ang:7
+pakinggan	28	mo:9
+pakiramdam	70	ko:38 mo:8 na:5 niya:5 ng:4
+pakiusap	54	huwag:24
+pakpak	32	ng:12 ang:8
+pala	116	ang:21 ako:9 siya:9 sa:8 si:8 ng:7 rito:7 may:6 ay:4
+palabas	45	na:13 ng:9 ang:8 sa:5
+palad	22	ko:4
+palagay	74	ko:40 mo:12 ng:4
+palagi	281	akong:38 po:38 siyang:38 pong:26 kong:15 ang:10 mo:10 kang:9 na:9 ka:8 ko:8 niya:8 bang:6 niyang:6
+palaging	167	may:6 sasakyan:6 gutom:5 malinis:5 tumatahol:5 bukas:4 dumarating:4 kumakahol:4
+palaka	23	sa:10 ang:5
+palamigin	24	ang:6 niyo:6 mo:4 po:4
+paligid	91	ng:61 niya:6 ang:5 mo:5
+palitan	67	ang:26 ito:10 iyan:8 iyon:8 mo:4
+pamagat	25	ng:15 ang:8
+pamamagitan	88	ng:86
+pamangkin	102	ko:34 ni:17 kong:9 niyo:7 po:7 ninyo:5 mo:4 si:4
+pambihira	22	po:13 ang:9
+pamilya	207	ko:44 niya:34 ni:16 mo:15 ng:13 sa:13 ang:8 ninyo:7 ay:6 niyo:6
+paminsan	43	minsan:41
+pampang	20	ng:18
+panaginip	33	ko:14
+panahon	198	para:40 ng:27 na:22 ang:17 sa:11 ngayon:10 at:6 lalangoy:6 ay:5 habang:4 lang:4 po:4
+panahong	36	iyon:10 ito:7 iisipin:4
+pandaigdigang	23	kapayapaan:4
+pang	395	araw:22 mga:19 itaas:15 alas:11 isang:9 amoy:8 upuan:7 bagay:5 ehersisyo:5 iba:5 libro:5 pagkakataon:5 dekadang:4 isipan:4
+pangako	22	ko:7
+pangalan	291	niya:60 ng:56 ko:54 mo:29 ay:19 ni:18 sa:15 at:8 ninyo:8 ang:6 nila:4
+panganib	40	ang:16
+pangarap	62	ko:9 kong:7 namin:7 natin:7 mo:5 na:4 ni:4
+pangdiyeta	66	ako:41 at:8 sa:8
+panghimagas	27	na:17 ni:4 pagkatapos:4
+pangit	79	ng:19 na:13 po:11 ang:9 pa:4
+pangunahing	37	pananim:5 hanapbuhay:4 pangkat:4 seksiyon:4
+pangungusap	71	na:26 sa:13 mo:5 niya:4
+pangyayari	23	sa:14 ang:6
+paniki	33	ang:19 sa:6
+paniniwala	49	ko:20 sa:7 ng:6 ninyo:4 niyo:4
+panoorin	29	ang:16 mo:6
+pansin	26	ngayon:12 sa:4
+pansit	27	palabok:5 sa:5
+panspermia	28	ang:8 at:7
+pantalon	22	mo:6 ko:4
+pantay	34	pantay:16 ang:8 na:6
+panyo	22	niya:8 ko:5
+papasok	72	sa:52 ng:8
+papatayin	22	ko:7 ako:6 kita:4
+papel	89	na:22 ang:15 ng:9 at:8 mo:7 ko:4 ni:4 sa:4
+papunta	134	sa:70 ako:11 na:9 po:6 rito:6 kami:5 sila:5
+papuntang	306	pizzeria:40 kapihang:25 istarbak:15 ospital:14 sa:10 tim:9 tsaahan:8 palengke:7 paaralan:6 trabaho:6 dalampasigan:5 eskuwelahan:5 templo:5 eskwela:4
+para	2682	sa:956 gawin:71 isang:50 kumain:42 kay:38 hindi:33 maging:29 pag:29 bumili:27 mag:27 siyang:27 kumuha:26 makita:26 kang:22
+paraan	78	para:34 ng:27
+parang	830	hindi:39 ang:24 mga:22 may:21 ganoon:16 isang:16 nasa:14 mas:12 naging:12 babae:11 walang:9 eksperimento:8 gusto:8 malaking:7
+parati	39	kang:7 siyang:7 kayong:4
+parating	46	na:15
+pareho	193	po:52 kaming:17 silang:14 ang:13 tayong:12 kami:11 pong:10 tayo:9 lang:8 sa:8 ng:5 ni:4
+parehong	159	bus:10 taga:9 bata:8 kamay:4 mga:4 pamangkin:4 pintuan:4 resulta:4
+pari	30	ang:9 si:6
+paris	32	para:5 sa:5
+parke	119	roon:51 ng:19 malapit:12 para:6 at:5 sa:4
+parkeng	25	eskinita:11
+parte	53	ng:25 ko:6 po:5
+paruparo	24	sa:8 ang:6
+pasado	73	nang:62 alas:4
+pasensiya	72	na:59 ko:6
+pasko	30	ng:8 na:4 noong:4
+pasok	25	sa:10
+patak	21	ng:19
+patakaran	26	ng:8 namin:5 natin:5
+patatas	54	na:20 at:15 sa:5 hanggang:4
+patay	82	na:57 ka:6 nang:4 si:4
+patayin	46	ang:19 mo:13
+pati	28	na:13 ang:4
+pating	23	sa:10 ay:6
+pato	22	sa:9 ang:4 banda:4
+patong	24	patong:9 na:6 pong:4
+patuloy	71	na:25 ang:17 po:9 pong:7 pa:6
+patunayan	40	pero:8 mo:6 mong:6 ninyong:6 ito:4
+patungo	34	sa:32
+paumanhin	22	po:8
+paunang	23	lunas:11
+pauwi	23	mamaya:5 na:4
+pawang	20	katotohanan:10 kasinungalingan:6
+payat	26	si:7 na:6
+payo	34	ko:12 ng:8
+payong	53	ko:11 na:6 niya:4
+pebrero	65	ng:22 taong:17 ay:8 ang:4 sa:4
+pelikula	30	ang:6
+pelikulang	61	ito:18 iyan:4 iyon:4 kartun:4
+pera	220	sa:29 ang:24 niya:15 para:14 si:13 namin:11 ko:10 ng:8 natin:7 pambili:7 ako:6 kay:5 mo:4 na:4
+perang	50	hawak:12 mayroon:9 iyan:6 ibinigay:4 ito:4
+pero	825	hindi:209 ang:42 wala:37 may:36 sa:33 mas:23 walang:22 si:13 ngayon:11 alam:8 maaraw:8 mahirap:8 sabi:8 sigurado:8
+personal	27	na:15 kong:9
+petsa	26	ng:8 at:6 sa:6
+pigilan	37	ang:26 si:6
+piksiyon	45	sa:7 at:6 ay:5 tungkol:4
+piksiyong	42	librong:10 espekulatibo:7 libro:6
+pilak	30	na:13 ang:6 kaysa:4
+piliin	20	mo:8 ang:4
+pilipina	47	at:15 si:11
+pilipinang	50	tindera:11 si:10 tinderang:4
+pilipinas	95	ang:12 ay:9 na:7 at:6 dahil:5 may:5 nang:4 sa:4
+pilipino	98	at:15 sa:14 ay:8 ang:6 para:4 si:4
+pilipinong	106	may:13 si:11 barista:5 baristang:5 kapitbahay:5 manedyer:5
+pinabayaan	23	po:5 ko:4 ni:4
+pinag	311	usapan:171 uusapan:59 aaralan:28 aralan:17 aawayan:7 isipan:7 awayan:6 iisipan:4
+pinakain	20	ni:5 ko:4
+pinakamagandang	39	paraan:5
+pinakamalapit	44	na:39 sa:5
+pinakapaborito	25	mong:12 ninyong:4
+pinakita	46	niya:20 ko:10 kay:4 siya:4
+pinanganak	45	sa:15 si:8 dito:6 siya:5
+pinaniniwalaan	29	ba:5 mo:5 ni:5 ko:4
+pinapawisan	20	po:8 si:4
+pinaplano	32	ninyong:4 po:4
+pinatay	97	po:22 ni:16 si:11 ang:9 ko:9 siya:9 mo:5
+pinatunayan	37	ng:10 po:9 ni:5 kong:4
+pinayagan	37	ng:16 ni:4
+pinggan	26	sa:5 pagkatapos:4
+pinili	40	ko:9 ni:9 mo:7
+pinilit	25	niya:6 ako:4 ni:4
+pink	21	ang:9 po:9
+pinsan	76	ko:28 kong:13 mo:9 ng:4 niya:4
+pinto	48	ng:14 sa:12 at:4
+pintuan	29	ng:22 at:4
+pinutol	26	po:6 mo:4 ni:4
+pipiliin	32	ko:9 kong:8 mo:4 ninyo:4
+piraso	126	ng:96 po:9 ako:6 at:4
+pisngi	50	niya:13 ng:10 ni:10 at:4
+pista	27	ng:9 sa:8
+pitaka	21	ko:5 ay:4 mo:4 sa:4
+pitong	34	lalaki:6
+pizza	75	at:25 sa:16 ako:11
+pizzang	26	may:10 pesto:6
+pizzeria	327	sa:48 ako:38 rito:33 may:20 at:16 para:15 na:14 naroon:12 nang:11 ang:9 muli:9 si:7 ay:6 dumalaw:6
+pizzeriang	37	yami:16 yummy:5
+planeta	101	sa:18 ni:12 ang:9 ay:7 dos:7 ng:6 at:4 magmumungkahi:4
+planetang	68	lampas:10 marte:9 irding:6
+plano	92	ko:10 mo:10 niya:9 kong:6 namin:6 natin:6 bang:5 po:4 sa:4
+planong	30	ito:9 gawin:4 iyan:4
+plaslayt	48	na:11 po:7 ko:6 ninyo:4 si:4
+plastik	23	na:16 ang:4
+plato	22	mo:4 pagkatapos:4
+po	13671	ang:2734 ba:1110 ako:1107 ng:827 si:804 akong:517 siya:467 ni:459 ninyo:400 sa:384 kayo:338 ito:235 siyang:201 kami:199
+pong	1787	mga:48 may:23 hindi:22 alam:17 mag:17 maging:17 pumunta:17 makita:14 malaman:14 tao:13 kalimutang:12 gawin:11 tingnan:11 bumili:10
+pook	41	na:19
+popular	23	na:9 ang:6
+populasyon	34	ng:30
+portuges	48	na:18 at:7 pranses:5
+posibilidad	26	na:20 ng:6
+posible	33	pa:6 ito:4
+posibleng	43	ibig:6 kahulugan:6 iwanan:4 kombinasyon:4
+pranses	317	na:50 sa:47 at:35 ang:30 si:14 noong:12 ay:10 bilang:8 kaysa:6 matatas:6 ni:5 po:5 baka:4 din:4
+pransiya	23	ang:5
+presyo	33	ng:21 sa:6
+presyon	32	ng:26
+problema	118	sa:25 ay:12 mo:9 nang:9 ang:6 ng:6 hindi:4 ito:4
+problemang	74	ito:33 kailangang:11 tinutukoy:10 iyon:9 iyan:6
+produkto	21	lang:6 ng:4
+propesor	37	sa:5 ko:4 mo:4
+proseso	47	ng:16 iyon:7 ito:6 iyan:6 mismo:4
+protektahan	29	ang:22
+prut	36	salad:36
+prutas	70	na:19 ang:14 ng:13 at:6 sa:6
+pruteriya	26	at:5 para:4
+pula	133	ang:55 at:32 si:8 narangha:7
+pulang	146	isda:9 alambre:6 damit:6 pula:6 kastilyo:5 kurbata:5 kalesang:4 sombrero:4 touque:4
+pulis	126	ang:50 na:26 sa:21 ay:4 po:4
+pulisya	54	sa:20 ang:17 wala:6
+pumanaw	29	po:12 ang:7 si:7
+pumapasok	46	si:11 sa:10 ka:6 po:4 siya:4
+pumasa	25	sa:13 ako:5
+pumasok	190	sa:60 si:24 na:16 siya:14 ako:10 ngayon:10 ang:9 po:8 ka:7 tayo:5
+pumatay	45	kay:23 sa:10 ng:7
+pumili	35	ng:12 ka:10
+pumunta	645	sa:193 ako:70 roon:55 po:39 si:34 ka:32 riyan:24 siya:24 kami:16 rito:14 ni:13 tayo:13 nang:10 na:9
+pumupunta	70	sa:22 ako:8 rito:8 po:5 si:5
+puno	378	ng:211 ang:38 sa:33 po:19 nang:15 roon:10 na:8 at:7
+punong	93	puno:28 ito:11 tanggapan:6 pamasko:5 balak:4 iyan:4 may:4 nasa:4
+pupunta	232	ako:44 sa:25 ka:20 po:19 siya:16 ba:13 kami:11 ang:10 tayo:9 si:8 ngayong:6 rin:6 rito:6 hindi:4
+puro	59	mga:7 babae:4 depektibo:4
+pusa	161	ang:26 sa:19 ko:14 habang:11 at:10 ay:9 mo:7 si:7 kaysa:6 ninyo:6 niya:6 ni:4
+pusang	23	mukhang:7 nakita:4
+puso	77	ko:37 mo:6 sa:5
+puti	150	at:53 ang:48 ng:8 si:8 sa:5 siya:5
+putik	35	ang:25
+puting	183	unikorniyo:20 kastilyo:13 kapitbahay:7 si:7 damit:6 kabute:5 lalaking:5 may:5 balahibo:4 isda:4 pusa:4 tsokolate:4
+puwede	690	po:105 ba:86 ko:77 mo:70 kong:47 mong:38 kang:26 na:23 bang:19 ka:19 niyo:15 ang:14 tayong:14 akong:13
+puwedeng	439	baguhin:19 gawin:16 sabihin:12 palitan:11 umalis:9 ipahiram:7 mabuhay:7 magtrabaho:7 pumasok:7 tulungan:7 bumili:6 gamitin:6 ibahin:6 kahulugan:6
+puwet	35	ko:15 niya:6 mo:5
+pwede	60	mo:14 ba:7 ko:7 mong:4
+radyo	26	sa:4 uulan:4
+rati	30	ng:6 papasok:6 sa:6
+raw	458	siya:66 ang:65 po:35 sa:19 siyang:18 niya:17 si:17 sila:17 gagawin:16 akong:11 na:11 ng:11 ako:10 ay:10
+ref	44	ni:7 ang:6 namin:5 sa:5 kaya:4
+regalo	51	sa:18 ng:9 ang:6 para:4
+regular	34	na:23
+relasyon	38	mula:6 mukhang:4 namin:4 niya:4
+relihiyon	103	ay:18 ng:13 sa:13 at:12 ninyo:8 ang:6 ko:5 kung:4
+relo	60	ko:27 mo:8 bilang:7
+reputasyon	32	ko:7 niya:7 ang:4
+resibo	21	ninyo:6 niyo:6 mo:5
+responsibilidad	27	na:10 niyo:4
+restawran	38	sa:11 doon:7 na:6
+restawrang	44	pho:7 ito:4
+resulta	35	ng:18 bago:4
+rin	740	po:138 ang:117 ako:72 si:47 sa:30 ba:29 siya:28 ng:24 ito:19 pong:16 iyon:14 iyan:12 akong:11 sila:9
+ring	75	pumunta:7 gawin:4 may:4
+rito	295	sa:110 ang:29 si:13 hanggang:12 para:12 kasama:10 at:9 ng:7 bukas:6 araw:5 ngayon:5 kapag:4 maganda:4 may:4
+riyan	20	kung:12 ang:6
+robert	42	silverberg:27 heinlein:6
+rod	24	na:11 at:5 sa:4
+romano	32	ang:9 katoliko:7
+roon	160	nang:26 ng:24 ay:17 kung:13 sa:13 ang:12 at:7 si:7 ngayon:4
+roong	29	mga:4
+rosas	101	na:45 ang:25 sa:14 po:9 at:4
+rose	51	na:34 yaong:4
+ruta	34	ng:10 bilang:6 papuntang:6 patungong:6
+sa	30244	mga:1747 akin:1411 kanya:631 isang:627 iyo:627 bahay:509 kanyang:477 tingin:461 isla:430 loob:428 inyo:335 labas:330 tabi:288 ibang:238
+saan	678	ba:65 ang:57 ka:57 mo:57 po:56 siya:43 ako:30 ko:25 tayo:19 saan:17 niya:15 ninyo:14 kami:12 man:10
+sabado	24	at:7
+sabaw	31	na:21
+sabay	46	sabay:12 kaming:7 po:6 ang:4 tayong:4
+sabi	947	ko:198 ni:175 kong:155 ng:85 niya:69 niyang:51 sa:33 po:31 nila:26 raw:15 sabi:15 daw:11 mo:11 ay:6
+sabihin	442	sa:95 mo:86 ng:43 kay:24 ang:19 ni:15 po:13 ninyo:12 nito:10 ay:9 ito:9 kung:8 niyan:8 na:7
+sachet	63	at:24 na:23 si:4
+saging	48	sa:16 si:7 na:6 at:5
+sagot	71	ko:19 sa:13 niya:9 na:7 mo:4
+sagutin	35	ang:18 mo:4 ng:4
+sahig	44	sa:11 ng:9 at:8 ang:7
+saka	63	ng:6 sa:6 isang:4
+sakay	23	ng:15
+sakit	177	na:25 ng:19 po:16 siya:16 ang:15 sa:14 niya:12 si:10 ako:6 at:5 daw:4 ka:4 ni:4
+sako	66	ng:42 kong:5 ko:4
+saksi	21	ni:20
+sala	20	si:4
+salad	42	ni:17 na:16
+salamat	98	sa:61 po:11 at:8
+salamin	88	ang:18 niya:12 si:11 ng:10 at:7 sa:7 ko:4
+salita	143	sa:24 ang:21 niya:11 ng:10 nila:9 ay:8 at:4 mula:4
+salitang	105	ito:16 ingles:9 iyan:9 iyon:5 nagmula:4
+salsitsas	45	cheddar:15 at:10 kesong:6 tsedar:6
+sama	54	sama:18 ng:8 po:8 ang:4
+samahan	22	mo:7 itong:4
+samantalahin	22	ang:12
+sampung	98	taon:18 minuto:16 libong:11 beses:5 pulis:5 baka:4 elepante:4 koponan:4 lengguwahe:4
+sana	335	hindi:76 ang:15 akong:13 may:13 ako:10 ng:9 kung:8 ay:6 ito:6 makapaglaan:6 po:6 mahilig:5 makapunta:5 mas:5
+sanang	47	makarating:4 makauwi:4 manatili:4 pumunta:4
+sanay	57	na:19 sa:15 siya:4
+sandali	23	lang:8 ang:6
+sandata	24	ang:6 niya:4
+sang	74	ayon:65 ayunan:7
+sanggol	57	sa:10 ko:9 na:9 nila:4 niya:4
+sangkatauhan	30	ay:12 sa:5 ang:4
+sangkot	21	sa:12
+sanhi	32	ng:29
+sansinukob	38	ay:10 ang:7 at:4
+sanwits	60	na:49 sa:5
+sapat	139	na:95 ang:22 ba:7 po:5 lang:4
+sapatos	75	na:13 ko:10 niya:9 mo:8 ninyo:6 ni:5 nila:4 sa:4 si:4
+sarado	43	ang:24 po:9
+sarah	23	yaong:14
+sarap	37	ng:15 po:8 sarap:4
+sari	24	ang:7 po:7
+sarili	385	ko:81 niya:81 mo:45 niyang:28 ninyo:26 kong:14 mong:13 nilang:11 ninyong:10 niyo:9 namin:8 natin:8 nila:8 sa:7
+sariling	54	wika:7 kultura:5 mga:4
+sariwang	25	hangin:7 tubig:4
+sasabihin	110	ko:43 sa:11 ang:8 mo:6 ni:5 ako:4 kay:4 niya:4
+sasakyan	237	ko:46 sa:34 mo:16 ng:15 niya:15 ninyo:14 ni:13 ang:10 si:10 po:7 kung:5 nila:5 malapit:4 noong:4
+sasakyang	64	iyan:16 ito:12 iyon:6 pangkalawakan:5 pangkalawakang:5 pangalangaang:4 sinasakyan:4
+sasama	70	sa:22 ako:13 ka:10 po:8 ba:5 siya:5
+sasamahan	36	ko:12 ba:4 kita:4 niyo:4 po:4
+saya	32	saya:10 pong:7
+sayang	30	at:14 mag:4
+selpon	41	ko:10 niya:10 ni:4 po:4
+seryeng	21	ito:5 iyan:5 iyon:4
+setyembre	94	ng:89
+si	9461	michael:128 tomas:121 nestor:100 ariel:89 greg:85 ziri:81 leo:78 sachet:59 daniel:53 melissa:46 silvestre:46 simon:46 rose:41 yanni:36
+siglo	21	na:4
+sigurado	184	akong:41 ka:36 kung:29 po:29 ba:16 ako:7 si:7 at:4
+siguradong	50	sigurado:25 pagod:6 kakailanganin:4
+siguro	133	ang:22 siya:9 ako:8 si:8 iyan:6 iyon:6 dapat:5 kayo:4 madaling:4 nila:4 ninyo:4 pumunta:4 sila:4 umalis:4
+sikat	59	na:33 ang:11
+sikreto	30	ang:6 ko:4 sa:4
+sila	910	sa:239 ng:172 ay:31 dahil:18 ang:15 at:15 para:14 tungkol:14 ni:11 inimbitahan:10 kinumbida:10 nang:9 pupunta:9 mula:8
+silang	390	lahat:21 mag:8 mangmamanyika:8 nag:8 umalis:8 alam:6 magpakasal:6 mamigay:6 may:6 mga:6 nalalaman:6 tingnan:6 batang:4 kumain:4
+silangang	23	asya:8 europa:5 bahagi:4
+silbi	24	ng:13 ang:10
+silid	102	aralan:21 kainan:17 aklatan:12 na:8 ni:6 tulugan:5 ko:4
+silvestre	125	ang:79 sa:46
+silya	34	sa:14 at:4 si:4
+simar	35	na:13 yaong:8 at:4
+simbahan	29	sa:11
+simbolo	47	ng:38
+simon	50	hanggang:45
+simple	29	lang:14
+simpleng	27	sistema:4
+simula	57	ng:20 bukas:7 nang:4
+sina	319	edmundo:13 inay:6 mama:6 nanay:6 oswaldo:6 ma:4
+sinabi	526	ni:138 ko:90 sa:72 niya:62 mo:24 ng:19 nila:15 niyang:11 ba:10 nina:10 ninyo:7 kong:6 na:6 po:5
+sinabihan	44	ako:8 ko:8 niya:7 kami:4 ni:4 po:4 tayo:4
+sinadya	46	niya:9 ko:6 niyo:6 po:5
+sinasabi	199	ko:35 mo:35 ng:26 niya:20 sa:13 ni:10 ninyo:8 ito:5 nilang:5 iyan:4 iyon:4 niyang:4
+sinasakyan	21	niya:8 nina:6
+sinasamba	33	ko:9 po:7 ng:6
+sinaunang	20	panahon:9
+sindihan	23	ang:16 mo:5
+singkretista	21	ako:9 akong:6
+sinira	25	ng:9 mo:5
+sino	733	ang:496 po:72 ba:22 sa:16 ka:13 pa:13 ako:12 iyong:9 sila:8 sino:8 si:7 naman:6 puwedeng:6 man:4
+sinong	231	may:21 nagsabi:12 bata:6 kandidato:6 gusto:5 makasalubong:4 nakahanap:4 tumawag:4
+sinturon	20	si:6 ng:4
+sinu	21	sino:21
+sinubukan	117	ni:19 po:14 niyang:13 ko:11 pong:11 kong:10 niya:8 naming:5 ng:5 namin:4 nilang:4
+sinulat	24	niya:9 ni:6
+sinusubukan	68	kong:16 ko:14 mong:5 ninyong:4 niyang:4 pong:4
+sipon	36	ko:12 mo:8 ako:5
+sira	60	ang:20 ulo:10 na:8 sira:7 po:4 raw:4
+sistemang	26	solar:11 pang:9
+siya	3540	sa:981 ng:713 ay:176 nang:121 ang:95 at:85 noong:44 pero:40 ngayon:38 para:38 dahil:36 rito:25 ni:24 marunong:21
+siyam	25	na:17 ng:4
+siyang	1414	mag:36 gawin:19 may:19 magsalita:17 tao:16 huwag:15 mga:15 hindi:14 nabalisa:13 eksperto:12 pumunta:11 isang:10 asawa:9 kumain:9
+siyempre	34	ang:5 pupunta:4
+siyensiya	22	ang:9 kapag:4
+siyensiyang	114	piksiyon:73 piksiyong:32
+siyudad	139	ni:63 ng:16 sa:16 ang:14 na:10
+sobra	69	po:14 akong:11 pong:8 siyang:6 sobra:5
+sobrang	280	abala:12 tangkad:7 dami:6 dilim:6 mamahalin:6 ingay:5 lamig:5 nag:5 bihira:4 dalas:4 desidido:4 ganda:4 init:4 mahalaga:4
+sombrero	46	ko:10 mo:10 niya:4 sa:4
+sombrerong	27	ito:12 kasya:4 safari:4
+sopas	36	na:15 sa:7 ang:4 ng:4
+subukan	65	mong:15 mo:12 ito:6 minsan:5 natin:4 niyo:4
+sugat	45	ni:8 ang:6 sa:6 niya:5 lang:4 na:4
+sukat	51	ng:24 ko:5 ang:4 at:4 na:4
+sulat	156	kamay:26 na:20 mo:18 ng:14 ko:11 sa:8 niya:7 ni:6 ninyo:6 nila:5 at:4
+sulok	44	na:13 ng:11
+sumakay	98	ng:39 si:13 ako:10 sa:9 ka:8 po:7 siya:7
+sumali	42	sa:18 ako:6 po:4 si:4
+sumama	52	sa:20 ka:7 ang:6 kay:4
+sumang	22	ayon:19
+sumasakit	55	ang:39 po:10
+sumigaw	36	na:9 si:6 siya:6
+sumisid	25	sa:13 si:7
+sumulat	63	ng:11 po:10 sa:9 ako:6 si:6 nito:5 siya:5 ka:4 ni:4
+sumunod	31	sa:18
+sumusunod	31	sa:14 na:12
+sundalo	58	ang:27 lang:4 po:4 sa:4 upang:4
+sundalong	25	nasugatan:5
+sundan	25	mo:10 daw:4
+sundin	44	ang:27 mo:7 po:5
+sunod	63	na:43 sunod:15
+suot	189	na:49 ko:32 suot:27 niya:20 ang:9 siyang:9 ni:8 ng:5 po:5 mo:4
+susi	74	sa:25 ko:11 ng:9 si:6 mo:4
+susubukan	56	ko:16 po:10 kong:8 natin:6 lang:4 namin:4
+susunod	145	na:135
+suweldo	38	ng:11 mo:4 nila:4 ninyo:4 niyo:4
+taas	25	ng:10
+taba	33	ko:16 taba:7 mula:4
+tabatsoy	27	na:26
+tabi	305	ng:275 ko:9 niya:4
+tabing	61	dagat:34 pruteriya:7 mesa:5
+tablet	41	ko:34
+tag	110	init:60 araw:40 ulan:5
+taga	442	indiya:63 indiyang:60 sri:16 europa:10 saan:10 australia:9 hanga:9 ibang:9 iloilo:8 iran:8 senegal:7 tiyera:7 berlin:6 canada:6
+tagalog	97	ay:18 ang:9 at:9 na:9 dahil:6 kaysa:5
+taglamig	22	na:5 kaya:4
+tahanan	43	niya:8 ko:6 ng:6 namin:4
+tahimik	43	na:12 ang:6
+takdang	61	aralin:54 araling:6
+takip	20	ng:10 sa:4
+takot	146	ako:19 sa:19 ang:15 si:13 na:11 siya:11 akong:7 po:7 ka:6 sila:6 kayo:4 nang:4
+taksi	25	sa:8 para:4
+talaarawan	35	ninyo:9 mo:6 ni:5 niyo:4
+talaga	378	ang:70 ako:35 si:28 ng:18 ito:17 ni:16 alam:15 akong:13 iyon:11 siya:11 iyan:10 sa:9 kami:5 kita:5
+talagang	344	hindi:14 gusto:12 iba:7 mas:7 may:6 malaman:5 obra:5 mahal:4 malawak:4 maliit:4 marunong:4 parang:4 wala:4
+tama	185	ka:31 ang:26 na:26 ba:20 po:12 ng:9 ako:7 siya:7 lang:6 si:6 nga:5 kayo:4
+tamad	59	na:11 ang:8 siya:6 lang:5 kaysa:4 po:4
+tamang	62	daan:8 oras:6 tren:6 coach:4 edad:4 lugar:4 proseso:4
+tanga	51	ko:13 tanga:8
+tanggalin	28	mo:12 ang:10
+tanggapan	28	ng:20 sa:6
+tanggapin	28	ang:26
+tanghali	42	nang:21 sa:6
+tanghalian	35	sa:7 at:5 ko:5
+tangi	20	po:10 ang:5
+tangkad	45	niya:10 ng:9 po:8 ni:4
+tango	33	at:8
+tanim	29	ng:29
+tanong	104	ko:23 niya:18 mo:8 na:8 ni:6 ay:5 ako:4 ng:4
+tanungin	47	mo:18 kung:10 ninyo:6
+tao	699	sa:185 ang:119 ay:62 at:28 na:28 po:20 si:19 ng:18 rito:15 lang:13 para:10 roon:9 nang:8 dahil:7
+taon	326	na:104 ang:31 sa:19 ka:18 taon:16 nang:14 ay:10 dahil:10 ko:7 bago:6 para:6 akong:5 ng:5 pa:5
+taong	558	gulang:136 ito:32 may:30 iyon:17 hindi:12 kilala:11 katulad:9 malaki:9 gustong:8 nag:6 nakalipas:6 nasa:6 bayan:5 ang:4
+tapang	42	ninyo:12 mo:8 niya:7
+tapat	67	ng:43 siya:6
+tapos	255	na:92 nasa:17 pinag:12 ka:11 pumunta:9 lakad:7 may:6 sa:6 ang:5 ng:5 bayaran:4 ko:4 magbayad:4 nag:4
+tapusin	26	ang:14 na:5
+tasa	37	ng:29
+tasang	22	kape:5 tsa:5
+tatawag	24	ako:12 po:4
+tatawagan	23	kita:9 ko:6
+tatay	275	ko:135 niya:47 mo:23 ang:10 ni:7 na:6 at:5 ng:5 ninyo:5 niyang:4
+tatlo	93	ang:16 sa:12 po:7 pong:7 lang:6 na:6 akong:5 kami:5 kaming:5 tayong:4
+tatlong	434	taon:40 araw:36 daang:30 oras:29 beses:28 kulay:21 piraso:18 aklat:16 libro:12 metro:11 minuto:8 taong:8 buwan:7 linggo:6
+tatlumpung	42	taong:11 katao:8 tao:8 taon:5 kabataan:4
+tato	27	sa:14 siya:4
+tauhan	41	mo:8 ang:5 po:5 ninyo:4
+tawag	95	sa:44 ng:13 ay:7 ko:6
+tawagan	45	mo:21 si:7 ang:4
+tawagin	26	ay:11 mo:5
+taylandes	27	na:10 at:7
+taylandiya	20	at:10
+tayo	919	ng:218 sa:214 nang:30 puwedeng:22 ni:20 ang:19 rito:18 bukas:14 dapat:14 ngayon:10 ay:9 hanggang:9 na:9 pupunta:9
+tayong	477	lahat:33 mag:22 oras:13 alipin:12 dalawa:10 pumunta:9 kahit:8 kapani:8 magpalit:8 mga:7 sapat:7 ibang:6 panahon:6 perang:6
+teknolohiya	20	ay:5
+telebisyon	39	at:4 ko:4
+telepono	27	sa:5 ko:4 ni:4
+tema	81	ng:38 ang:6 iniisip:4
+temperatura	37	sa:14 ng:4 rito:4
+templo	31	sa:12
+tent	41	natin:12 namin:10 nang:6 ninyo:6 mo:4
+teorya	30	niya:6 nila:4 ninyo:4 niyo:4
+text	34	mula:7 ni:7 ninyo:5
+tharsan	27	yaong:19
+the	21	explorers:4
+tiisin	29	ang:21 ito:6
+tikman	21	mo:7 ito:4
+tim	57	hortons:57
+timbang	32	ng:7 ko:5 nakabalandra:4 nakakalat:4 ni:4 niya:4
+timog	77	ng:15 korea:12 amerika:10 silangang:9 na:7 aprika:5
+tinamaan	38	po:10 si:8 ng:7 ang:5 ako:4
+tinanggal	29	ni:13 niya:4
+tinanggap	37	niya:7 ni:6 nila:6 ko:4
+tinanggihan	48	niya:16 ang:9 ni:6 nila:6 po:5
+tinanong	70	ko:30 niya:22 ni:6 ako:4 lang:4
+tinapay	62	na:19 ang:10 sa:6 at:5 si:5
+tinatawag	25	na:9
+tinawag	25	niya:7
+tinawagan	43	ni:10 ko:9 ako:4 mo:4 niyo:4
+tindahan	127	ng:26 para:13 sa:13 namin:8 natin:8 ay:7 bumili:7 ako:6 at:6 kung:4
+tindahang	46	iyan:12 ito:10 iyon:7 presko:6
+tindera	38	ay:13 sa:12 ko:5
+tinderang	42	si:21 pilipina:8 taga:5
+tindero	42	ay:17 sa:8
+tinderong	66	si:33 taga:22
+tingin	517	ko:315 mo:93 ninyo:23 po:12 sa:12 ni:11 niya:10 niyo:9 ng:6 ba:4
+tingnan	161	mo:51 ang:13 po:13 ninyo:10 natin:9 kaysa:8 nang:8 ng:6 kung:5 ni:5 si:5 niyo:4
+tinidor	32	na:5 kutsilyo:4
+tiningnan	70	ni:22 ko:16 niya:9 po:8
+tinitingnan	30	ko:11 ni:4
+tinulungan	38	ni:7 ko:6 ako:5 mo:4
+tinutukoy	57	ko:15 ninyo:10 niyo:10 mo:9 ni:8
+tisyort	29	at:11 na:6 siya:5
+tita	30	ko:5 sony:5
+titi	30	ni:8 ang:7 ko:5 mo:5
+titingnan	23	ko:16
+tito	49	ko:24 bert:5 niya:5 ed:4
+tiwala	23	sa:11 ko:6
+tiyak	69	na:61 mawari:4
+tiyan	23	niya:8 ko:6
+tiyera	61	ay:13 ang:7 lamang:6 ng:6 at:4 sa:4
+tiyo	23	ko:10 niya:6
+tokyo	36	sa:4
+tomas	163	ang:40 na:26 sa:21 ng:19 at:6 ay:6 kung:5 tungkol:4
+totoo	179	lang:33 ang:25 bang:24 po:12 ba:10 iyon:6 ito:5 iyan:5 at:4 raw:4 si:4
+totoong	31	buhay:6 may:4
+trabahador	43	sa:13 ang:10 na:9
+trabaho	237	niya:34 ko:30 sa:22 mo:19 ang:14 si:11 ng:10 ninyo:9 nang:8 nila:6 dahil:5 po:5 iyon:4
+trabahong	69	kailangan:16 iyan:14 ito:10 iyon:6 nangangailangan:6
+trak	59	na:12 ang:10 si:9 para:8 mula:4 ng:4
+tren	84	ang:22 sa:9 papuntang:7 nang:5 ay:4 namin:4
+tsaa	52	at:13 ako:6 sa:6 ba:5 sila:5 ang:4
+tsaahan	154	sa:52 ako:15 at:10 dito:6 may:6 para:6 ang:5 naroon:5 nang:4 pinag:4
+tsaahang	24	may:5 tabi:4
+tsaang	116	itim:27 may:26 passion:8 chai:7 earl:7 mayelo:6
+tsina	77	at:10 ang:9 itong:6 si:6 ay:4 bumbay:4
+tsinang	25	si:4
+tsino	83	at:16 ingles:16 sa:9 aleman:7 alemang:7 ay:4 raw:4
+tsinong	78	mukhang:8 pruteriya:7
+tsip	46	na:31 at:4 sa:4
+tsipreng	20	griyegong:7 griyegang:5 griyego:4
+tsismis	21	na:7 sa:6 tungkol:4
+tsokolate	78	ang:22 at:19 si:9 sa:5
+tsokolateng	111	unikorniyo:55 croissant:15 keyk:7 kastilyo:5
+tsuper	21	ng:11 na:4
+tubig	251	mula:48 ang:35 sa:28 at:23 na:23 ng:18 kapag:11 ay:9 para:9 si:5 nga:4
+tugma	20	ang:8 nga:8 po:4
+tuhod	27	ko:10 hindi:4 ni:4
+tuktok	39	ng:38
+tulad	122	ng:99 ko:5 sa:4
+tulog	57	ang:12 na:5 si:5 pa:4
+tulong	80	mo:14 ng:11 ninyo:11 niya:9 sa:8 bakit:6 nila:5
+tuloy	30	ako:9 ang:6 na:4
+tulungan	121	si:24 mo:22 ni:9 ninyo:9 niyo:9 ako:8 kita:5 kami:4 sila:4 tayo:4
+tumaas	24	ang:12 po:9
+tumakas	30	na:12 ang:4
+tumakbo	77	si:21 ang:10 po:7 ako:4 kami:4 nang:4 siya:4
+tumalon	31	sa:12 si:6
+tumanggap	27	ng:16 si:5
+tumanggi	65	si:20 siya:12 po:8 siyang:8
+tumataas	20	ang:17
+tumatahol	22	ang:14
+tumatakbo	30	ang:9 sa:6 po:5 nang:4
+tumawa	23	ang:13
+tumawag	89	sa:21 ka:14 si:14 po:10 ako:9 ng:4
+tumawid	68	nang:13 po:9 sa:8 ako:7 ng:7 siya:6 si:5 na:4 tayo:4
+tumayo	39	ka:10 ang:6 siya:6 si:4
+tumigil	145	ang:37 na:21 sa:20 ka:17 po:9 ako:7 nang:5 si:5 ngayon:4
+tumingin	40	ka:9 siya:9 si:5 ako:4 po:4 sa:4
+tumira	60	sa:30 ako:4 ang:4
+tumulong	85	sa:50 kay:13 kayo:5 ka:4
+tumutugtog	32	ng:9 ako:5 po:5 ka:4 si:4
+tumutulong	25	sa:7 ang:5
+tunay	107	na:85 kong:6 niyang:6
+tungkol	586	sa:460 dito:36 doon:27 diyan:26 kay:23 saan:6
+tungkulin	29	ko:12 mo:6
+tunog	65	ng:27 na:16 sa:6 at:4
+turuan	24	ng:13 mo:6
+tutubo	23	po:9 ito:4 uli:4
+tutulong	28	sa:5 ka:4 siya:4
+tutulungan	48	niya:13 ko:6 mo:5 kita:4
+tuwing	133	linggo:14 lunes:13 umaga:10 huwebes:7 dumarating:5 miyerkules:5 biyernes:4 martes:4 nakikita:4 naririnig:4 sabado:4 tinitingnan:4 tumitingin:4
+ubas	20	na:7 at:4 sa:4
+ube	70	ang:15 sa:14 si:12 at:6 ng:5
+ubeng	52	hopya:11 polboron:5 keyk:4 pandesal:4
+ubos	39	na:37
+ugali	21	ng:4 niya:4
+ugat	33	ng:13 sa:13
+ulan	78	sa:15 ang:14 nang:10 kahapon:7 ng:5 ay:4
+ulap	45	na:10 ang:7 ay:4 sa:4
+uli	48	ang:12 sa:9 sina:8 mamaya:4 si:4
+uling	32	ang:10 si:5 gawin:4
+ulit	41	ang:6 niyang:4
+ulitin	20	ang:8 mo:5
+ulo	118	ko:23 niya:17 ni:13 ang:10 mo:10 ng:10 at:6 nito:6 hanggang:4
+umaga	401	nang:136 at:37 ng:22 sa:22 nasa:17 po:12 lakad:11 pa:10 nitong:9 ang:8 rin:7 nakita:6 naroon:6 para:5
+umagang	22	medyo:6
+umakyat	42	ng:11 sa:5 ang:4 kami:4 po:4 siya:4
+umalis	192	na:28 siya:22 si:21 ang:15 ka:14 ng:14 sa:14 po:11 nang:8 ngayon:8 ako:6
+umiinom	200	ako:76 ng:57 ka:12 siya:11 po:9 si:7 kayo:5 ba:4
+umiiyak	33	ang:12 habang:4 kapag:4
+uminom	158	ng:91 ka:16 ako:15 mula:7 siya:5 po:4
+umiyak	32	ang:9 siya:7 si:4
+umpisa	41	na:11 ang:6 ng:5 po:5
+umulan	40	nang:11 gaano:4
+umupo	116	si:26 sa:16 po:14 ako:11 siya:10 ka:8 ang:5 kami:4 sila:4
+umuulan	35	sa:5 ngayon:4
+umuwi	73	na:17 ka:12 nang:10 sa:7 si:7 po:4
+una	87	ng:20 mong:8 pong:6 kong:5 ninyong:5 ay:4 may:4
+unang	219	beses:55 araw:14 panahon:12 pagkakataon:10 hilera:8 buwan:6 opisyal:6 tingin:6 dumating:5 babaeng:4 pagkakataong:4
+unggoy	34	sa:23 na:4
+unibersidad	35	ng:13 ko:4 sa:4
+unidos	28	ang:5 ay:5
+unikorniyo	148	ay:45 ang:40 sa:33 ng:20 mula:6 pero:4
+unti	23	unting:9 unti:6
+upang	75	depensahan:4 mag:4
+upuan	32	sa:10 si:5
+uri	97	ng:94
+usap	217	sa:66 usapan:23 kay:20 ka:14 si:14 ako:10 kami:10 po:9 tayo:9 usapang:7 ni:6 nang:4
+usapan	247	namin:124 ang:26 na:18 din:12 natin:11 sa:8 tungkol:6 naming:5 ni:5
+uso	30	ang:14 ngayon:5
+utak	43	ang:7 ng:6 ni:6
+utang	69	ko:17 sa:11 na:8 ako:5 niya:5 ka:4 si:4
+uto	58	uto:29 po:11 si:5
+uulan	45	daw:10 bukas:8 po:6 ng:4
+uulitin	34	daw:8 ko:8 iyan:6 ito:5 iyon:5
+uusap	41	tungkol:14 kami:6 tayo:4
+uusapan	62	namin:19 ang:14 nila:7 ng:4
+uwak	21	sa:10 ang:6
+uwi	94	ko:77 niya:5 na:4
+wakas	46	ay:7 ang:4 nakarating:4 si:4
+wala	1950	akong:430 po:222 pong:186 na:159 siyang:100 nang:99 pa:67 kang:64 ka:58 kaming:56 sa:50 ako:49 tayong:42 silang:40
+walang	1309	laman:37 may:28 kahirap:26 bayad:25 tao:19 mga:18 nakakaalam:17 tulong:17 silbi:16 hanggan:15 kasalanan:14 kapantay:11 kuwenta:11 mas:11
+walo	20	ang:6 ng:4
+walong	39	araw:11 taong:8
+watawat	28	ng:21
+wika	210	sa:29 ang:27 ng:26 ay:24 nila:19 mo:10 ninyo:10 tulad:6 at:5 dahil:4
+wikang	236	guni:22 ingles:18 pranses:17 banyaga:8 hapon:7 ito:7 lojban:7 alam:5 aleman:5 indiheno:5 ruso:4
+yabang	28	yabang:7 niyo:6 ninyo:5 po:4
+yan	26	sa:7 ni:4
+yanni	61	ang:28 si:9 sa:4
+yaong	620	taga:35 may:26 anglo:23 pilipina:22 mga:19 pilipinang:13 mestisong:12 haponesa:11 guwapong:10 tseka:10 pilipinong:9 inglesa:8 mandaring:8 pilipino:8
+yari	28	sa:18 ito:4
+yaroslav	31	na:12 ang:5 sa:4
+yata	175	ang:18 ako:13 ito:11 si:11 iyan:10 iyon:8 puwedeng:8 kayang:6 siya:5 akong:4 kami:4 namin:4 naming:4 natin:4
+yelo	97	ako:37 ang:15 at:12 sa:11
+yumuko	45	po:19 ako:11 si:9
+yung	94	isa:6 mga:6 iba:5 araw:4
+ziri	101	ang:25 sa:25 ng:19 at:10 na:5 si:4
+[3]
+<s> aabutin	27	po:11
+<s> aalis	32	na:6 tayo:5
+<s> abala	43	po:16 ako:7 si:7 siya:6
+<s> agad	21	na:8 pong:5
+<s> akala	244	ko:156 mo:12 namin:12 ni:9 ninyo:5
+<s> akin	53	ang:29 po:9 na:6 ito:5
+<s> ako	294	ang:87 ay:84 po:37 naman:17 rin:15
+<s> alam	968	ko:220 kong:220 mo:159 po:58 ni:45
+<s> alas	25	onse:8 nuwebe:5 sais:5
+<s> alerdyik	19	siya:9
+<s> alin	62	ang:32 po:11 sa:6
+<s> aling	70	mga:12 plano:6
+<s> amoy	26	alak:5
+<s> ang	3703	mga:275 sabi:190 dami:98 laki:62 ganda:59
+<s> angkop	20	po:8 ba:7
+<s> ano	1108	ang:639 po:185 ba:116 pa:38 sa:23
+<s> anong	349	oras:59 klaseng:21 klase:20 gusto:15 ginagawa:13
+<s> araw	52	araw:45
+<s> asul	24	ang:16
+<s> at	109	ang:9 may:8 kung:6
+<s> ay	16	naku:5
+<s> ayaw	471	kong:154 ko:124 ni:30 mo:24 po:21
+<s> ayon	31	sa:22 kay:6
+<s> ayos	38	lang:11 ba:5 ka:5
+<s> babalik	35	ako:14 siya:8
+<s> bagay	41	na:13 sa:9 ang:6 po:6
+<s> bago	66	pa:30 ang:13 ka:6
+<s> baka	359	hindi:40 may:29 gusto:16 kailangan:14 nga:12
+<s> bakit	773	hindi:145 mo:100 ba:82 ka:75 po:63
+<s> balak	31	kong:12
+<s> basahin	17	mo:12
+<s> bata	17	pa:11
+<s> bawal	39	ang:8
+<s> baynilya	22	at:18
+<s> berde	54	at:42 ang:12
+<s> bibilhin	20	ko:6
+<s> bibili	16	ako:9
+<s> bigla	18	pong:8
+<s> bigyan	105	mo:45 niyo:24 ninyo:15 po:15
+<s> bilisan	18	mo:11
+<s> binabasa	53	ko:43 ni:7
+<s> binabawalan	32	ko:20 kitang:10
+<s> binanggit	22	ko:9 niya:5
+<s> binaril	24	po:8 ni:7
+<s> binasa	39	ko:23
+<s> binata	18	pa:9
+<s> binati	22	ko:10
+<s> binigyan	130	niya:42 ko:24 ako:15 siya:10 po:9
+<s> binilhan	30	niya:10 ko:7 ni:7
+<s> binili	37	ko:12 niya:11 ni:6
+<s> binisita	45	ko:13 namin:7
+<s> binuksan	32	ko:9 ni:8 mo:5 niya:5
+<s> bughaw	16	ang:11
+<s> buhay	21	pa:12
+<s> bukas	40	ang:8
+<s> bukod	25	tangi:12 sa:8
+<s> buksan	75	mo:31 ninyo:17 niyo:14 ang:6
+<s> bulag	23	ang:9
+<s> bumagsak	45	po:18 ang:10 ako:6 halos:6
+<s> bumalik	74	ka:12 po:11 na:9 siya:9 si:8
+<s> bumibili	19	ako:6
+<s> bumili	184	ako:48 si:46 po:28 ng:20 siya:12
+<s> bumisita	16	si:6
+<s> buong	68	araw:33 gabi:9 tag:8
+<s> dadalhin	17	ko:13
+<s> dagdagan	24	mo:13
+<s> dahan	26	dahan:22
+<s> dahil	93	sa:26 po:7 ikaw:5 may:5
+<s> dala	27	ko:20
+<s> dalawa	19	ang:15
+<s> dalawang	61	beses:22 oras:6 taon:6 araw:5
+<s> dalhin	31	mo:25
+<s> dapat	493	po:63 nating:32 mong:29 siguro:13 mag:12
+<s> darating	31	po:5
+<s> desidido	21	pa:7
+<s> di	269	ko:53 ako:21 siya:17 pa:15 ka:13
+<s> dilaw	28	ang:20 po:8
+<s> dinala	32	ko:13 niya:7
+<s> dito	55	sa:6 ako:5 ba:5 ka:5 po:5
+<s> doon	60	may:11 ako:5 po:5
+<s> dumaan	41	ako:9 ang:7 kami:6 po:5
+<s> dumalaw	90	si:27 ako:25 ang:15 sa:8
+<s> dumating	131	si:31 ako:15 po:14 siya:12 ang:11
+<s> gaano	190	po:36 ba:24 karaming:16 katagal:16 ka:9
+<s> gagawin	51	ko:36
+<s> galing	44	sa:12 ako:8 po:8
+<s> galit	60	po:12 ako:8 si:7 na:6 siya:6
+<s> gamitin	25	mo:12 po:5
+<s> ganoon	48	din:16 ang:10 ba:7
+<s> ganyan	16	din:5
+<s> gawa	84	sa:47 po:28
+<s> gawin	51	mo:24 natin:6 ninyo:6
+<s> gayunpaman	19	hindi:7 sa:5
+<s> ginagamit	27	ko:9 ang:7
+<s> ginagawa	71	ko:24 namin:15 natin:13 po:7
+<s> ginawa	143	ko:42 niya:25 po:13 mo:8 ang:7
+<s> giniginaw	22	po:9 ako:5
+<s> gumagamit	26	po:9
+<s> gumagawa	110	ng:54 si:19 po:15 ang:9
+<s> gumaling	22	na:11
+<s> gumawa	53	ng:13 si:8 ka:7 po:5 siya:5
+<s> gumising	24	ako:5
+<s> gusto	1595	ko:464 kong:369 mo:199 po:69 ni:56
+<s> gustong	98	gusto:33 maging:5
+<s> gutom	17	na:11
+<s> habang	53	nasa:6 tumatanda:5
+<s> halos	108	hindi:25 wala:13 araw:12 walang:11
+<s> handa	85	na:39 ka:12 po:9 akong:7
+<s> hanga	21	ako:19
+<s> hawakan	27	mo:18
+<s> hayaan	47	mo:20 mong:11 ninyo:8
+<s> heto	45	ang:29 po:16
+<s> higit	55	na:20 pa:7 nang:5
+<s> hilig	41	ko:25
+<s> hinabol	20	ng:8 po:5
+<s> hinahanap	40	ko:25 niya:5
+<s> hinahangaan	30	ko:22
+<s> hinalikan	50	niya:15 ni:13 ko:8 po:6
+<s> hinalo	21	ni:13 niya:5
+<s> hinati	25	po:9
+<s> hinawakan	20	niya:9
+<s> hindi	6138	ko:1266 po:842 ako:519 pa:258 mo:250
+<s> hinding	104	hindi:104
+<s> hinihintay	47	ko:12 po:5
+<s> hiniling	22	ni:9 ng:6
+<s> hinubad	17	ni:8
+<s> hinuli	21	po:7 ng:6
+<s> hubarin	26	mo:17 ninyo:9
+<s> humahanga	29	ako:19 po:5
+<s> humalik	31	po:7 siya:7 ang:5 si:5
+<s> humihingi	27	ako:6 kami:6
+<s> humingi	40	siya:10 ako:7 ng:6
+<s> huminto	19	ang:7
+<s> huwag	1031	mong:211 kang:199 mo:118 po:93 na:57
+<s> iba	70	ang:33 po:12 iba:7
+<s> ibalik	35	mo:15 niyo:10 ninyo:5 po:5
+<s> ibibigay	17	ko:11
+<s> ibigay	62	mo:36 niyo:9 po:9 ninyo:8
+<s> ibinaba	27	ni:7 po:6 ko:5 niya:5
+<s> ibinigay	18	ko:7
+<s> iginigiit	26	po:9 ng:7 niyang:7
+<s> ikaw	177	ang:77 ba:26 ay:25 lang:17 na:10
+<s> ikinagagalak	16	ko:9 kitang:5
+<s> ilagay	33	mo:24
+<s> ilan	29	ang:12 po:6 sa:5
+<s> ilang	230	taon:41 beses:22 buwan:20 oras:16 tao:13
+<s> inaasahan	19	kong:10
+<s> inabot	26	ako:5 po:5
+<s> inakusahan	34	po:8 siya:6
+<s> inamin	31	ni:8 po:5
+<s> inaresto	19	po:7 ang:5 si:5
+<s> inayos	31	niya:9 ko:8 ni:6
+<s> inggit	21	si:18
+<s> iniimbestigahan	22	po:10
+<s> iniisip	69	ko:34 kong:9 ng:6
+<s> inilagay	17	niya:9
+<s> inilibing	19	si:6
+<s> inilipat	17	po:7
+<s> iniwan	19	niya:5
+<s> interesado	40	ako:12 kami:5
+<s> inutusan	21	po:7
+<s> ipagpalagay	26	natin:13 nating:13
+<s> ipakita	20	mo:16
+<s> ipaliwanag	18	niyo:8
+<s> ipapakita	20	ko:16
+<s> ipinagbabawal	23	ang:8 ko:5
+<s> ipinagdiriwang	27	po:12 ang:5
+<s> ipinagdiwang	24	po:11
+<s> ipinagmamalaki	33	ni:7 ko:6 po:5
+<s> ipinakita	17	niya:8
+<s> ipinaliwanag	19	ko:8
+<s> ipinangako	20	niyang:6 ko:5
+<s> ipinanganak	69	po:20 ako:12 siya:12 si:9
+<s> isa	435	po:113 itong:53 siyang:43 akong:29 iyong:23
+<s> isang	195	beses:26 araw:13 obra:9 taon:7 oras:6
+<s> isara	18	mo:10
+<s> isinilang	38	po:13 ako:7 si:7 siya:5
+<s> isip	60	kong:21 mo:8 niyang:5
+<s> isulat	20	mo:8 niyo:5
+<s> itanong	17	mo:13
+<s> itim	21	ang:13
+<s> itinanggi	34	ni:12 niyang:11 niya:5
+<s> ito	290	ang:162 po:47 ay:39 ba:16 na:7
+<s> iyan	171	ang:92 po:32 ay:21 ba:13
+<s> iyon	143	ang:70 po:30 ay:23 ba:7 lang:5
+<s> kabilang	19	po:9
+<s> kabuhayan	22	ang:6
+<s> kadiri	22	naghahalikan:6
+<s> kahapon	28	ang:5
+<s> kahit	108	na:39 sino:12 ang:11 kailan:8 ano:6
+<s> kaibigan	19	ko:9
+<s> kailan	167	ka:30 ba:17 ko:17 mo:17 po:15
+<s> kailangan	1198	ko:209 kong:169 po:148 mong:105 nating:70
+<s> kailangang	100	kailangan:12 mag:9
+<s> kakaiba	17	ang:9
+<s> kakailanganin	37	po:7 natin:6 mo:5
+<s> kakain	52	ng:27 nang:6 si:5
+<s> kakainin	17	ng:7
+<s> kakaunti	18	ang:8 lang:6
+<s> kakilala	21	niya:6 po:6
+<s> kalbo	23	po:7
+<s> kalimutan	35	na:15 niyo:8 mo:7
+<s> kami	38	ang:12 ay:12 po:6
+<s> kamukha	24	ng:13
+<s> kanila	21	po:10 ang:7
+<s> kanino	33	ang:9 ka:6
+<s> kaninong	37	selpon:6
+<s> kanya	24	po:12 ang:8
+<s> kapag	109	pinutol:12 may:8 binombahan:5
+<s> karaniwan	18	ang:7 lang:5
+<s> kasama	36	ng:7 niya:6 po:5
+<s> kasing	46	lamig:8 tangkad:6 tibay:6
+<s> katulad	26	ko:20
+<s> kay	32	gandang:6
+<s> kaya	361	mo:68 ko:40 kong:38 ba:34 po:33
+<s> kayo	23	po:11
+<s> kayumanggi	26	ang:14 po:10
+<s> kilala	123	ko:43 mo:16 po:13 ang:9 ba:9
+<s> kinagat	18	ako:7 po:5
+<s> kinailangan	74	kong:17 pong:13 lang:8 ko:7 naming:5
+<s> kinain	62	ni:13 ko:12 ng:11 nang:9
+<s> kinakailangan	42	ng:18 po:9
+<s> kinakain	30	ko:8 ng:6 ni:5
+<s> kinakausap	16	ko:7 niya:5
+<s> kinausap	40	ko:24
+<s> kinikilabutan	22	ako:11 po:7
+<s> kinumpirma	38	po:18 nila:12 ng:8
+<s> kita	49	ko:15 sa:11 ang:5
+<s> kitang	23	kitang:13 kita:10
+<s> kontento	35	na:18 ka:9
+<s> kukunin	30	ko:25
+<s> kulang	35	ang:7 ng:6 ka:5
+<s> kulay	137	abo:43 rosas:32 ube:11 berde:9 kape:9
+<s> kumain	261	ng:86 ako:48 ka:27 si:24 kami:12
+<s> kumakain	239	ng:78 ako:50 si:29 po:19 siya:11
+<s> kumalat	27	sa:16 po:7
+<s> kumuha	79	po:20 ka:18 ng:10 ako:9 siya:8
+<s> kumusta	60	ang:21 na:14 ka:9 po:6
+<s> kung	517	hindi:79 may:57 gusto:27 minsan:25 wala:25
+<s> kunin	45	mo:21 niyo:9 ninyo:7 po:5
+<s> labing	24	isa:7 apat:5
+<s> lahat	51	ng:18 ay:11
+<s> lakad	52	ako:40 akong:5
+<s> lasing	17	ka:5
+<s> libre	41	po:9 ang:6 lang:5
+<s> limang	17	taon:6 taong:5
+<s> lobo	25	po:13
+<s> lumabas	41	si:10 po:8 ka:7 siya:6
+<s> lumaki	45	po:12 ako:10 siya:5
+<s> maaari	240	ko:54 ba:31 mo:31 po:25 na:17
+<s> maaaring	62	hindi:6 mangyaring:6
+<s> maaga	37	akong:9 po:9
+<s> maaraw	29	ngayon:6 ngayong:6 sa:5
+<s> maari	25	mo:8 po:7 niyo:5
+<s> maayos	35	ang:26 po:5
+<s> mabagal	21	na:5
+<s> mabaho	24	ang:8 po:8
+<s> mabilis	64	na:13 po:7 pong:6 ang:5 siyang:5
+<s> mabuti	28	naman:10
+<s> madalang	39	lang:30
+<s> madalas	250	po:42 akong:23 pong:18 siyang:16 ang:14
+<s> madali	53	pong:13 lang:12 para:12
+<s> madaling	32	masunog:5
+<s> madilim	22	na:12
+<s> mag	178	ingat:41 isa:28 aaral:8 aral:8 iwan:8
+<s> magaling	147	na:19 ang:13 siyang:13 po:11 silang:8
+<s> maganda	130	ang:63 po:20 rin:9 ba:7
+<s> magandang	106	umaga:33 gabi:12 lugar:7 araw:5
+<s> magbasa	16	ka:8
+<s> magdagdag	19	ka:11 kayo:5
+<s> magdala	17	ka:8
+<s> magdamag	27	na:7 pong:7 kaming:6
+<s> maghintay	16	ka:7
+<s> maghubad	17	ka:10 kayo:7
+<s> magiging	57	mas:9 masaya:9 mahirap:5
+<s> maging	25	maingat:7
+<s> magkano	139	ang:73 po:34 sa:8
+<s> magkita	22	tayo:14 kita:5
+<s> maglalaho	16	ang:8 po:8
+<s> magpahinga	17	ka:5
+<s> magsimula	19	na:5
+<s> magsisimula	35	ang:9 po:9
+<s> magugustuhan	20	mo:8
+<s> mahaba	18	ang:10
+<s> mahal	138	ko:52 ni:12 niya:11 ang:10 po:6
+<s> mahalaga	28	ang:11 po:7 sa:5
+<s> mahigit	16	nang:7
+<s> mahilig	358	po:70 ako:63 akong:44 si:25 ka:23
+<s> mahirap	88	basahin:7 pong:7 na:6
+<s> mahusay	33	na:5 po:5
+<s> mainit	27	ang:6
+<s> makikita	44	ni:31
+<s> makinig	23	ka:12 kayo:5
+<s> malakas	47	ang:21
+<s> malaki	138	ang:84 po:35 laki:7
+<s> malaking	42	kantidad:8 kawalan:6
+<s> malamang	61	ay:18 na:11
+<s> malambot	23	ang:8 at:6 po:6
+<s> malamig	33	ang:9 sa:6
+<s> malapit	131	na:67 nang:21 sa:7 ang:6 ba:5
+<s> mali	53	ang:23 po:13
+<s> maliban	28	sa:20
+<s> maligayang	20	pagdating:7
+<s> maliit	48	ang:25 po:9 na:7
+<s> malimit	34	na:7 siyang:6
+<s> malinaw	20	na:15
+<s> malinis	29	na:8 po:6 ba:5
+<s> malungkot	22	sila:6
+<s> mamamatay	20	po:7
+<s> mamaya	73	pa:64
+<s> marami	314	pong:52 akong:47 kaming:35 po:35 na:22
+<s> maraming	599	mga:111 tao:24 paniki:21 puno:19 maraming:13
+<s> marunong	149	ka:31 po:18 siya:17 siyang:14 si:13
+<s> mas	712	gusto:121 maganda:42 magaling:33 mabuti:25 mahalaga:23
+<s> masakit	51	ang:31 po:10
+<s> masama	21	ang:14
+<s> masarap	114	ang:77 po:8
+<s> masaya	78	akong:23 ang:9 ka:8 ako:7 po:7
+<s> masayang	23	masaya:5
+<s> masyado	163	pong:32 po:29 akong:20 kang:16 siyang:16
+<s> masyadong	111	malaki:12 maliit:12 maraming:9 mabigat:5 madilim:5
+<s> matagal	75	na:22 ko:21 nang:9
+<s> matalas	16	ang:8
+<s> maulap	33	ulap:7 ang:6
+<s> may	4069	mga:730 nakita:70 dumalaw:54 ilang:47 isang:46
+<s> mayroon	413	po:86 akong:76 pong:56 ka:37 ba:30
+<s> mayroong	96	mga:11 tatlong:10 asnong:5 burikong:5
+<s> medyo	140	maluwag:6 masakit:6 matindi:5 nag:5
+<s> meron	48	ka:14 akong:8 bang:6 kang:5
+<s> mga	239	kasing:22 kapatid:16 alas:15 tatlumpung:8 dekalidad:6
+<s> minsan	41	may:6 kinakailangan:5
+<s> mukha	139	kang:31 pong:28 siyang:23 po:20 kayong:14
+<s> mukhang	301	hindi:16 wala:15 masaya:11 alam:10 desidido:9
+<s> mula	33	sa:13
+<s> muntik	61	na:30 nang:19 ko:9
+<s> na	43	kay:7
+<s> naaalala	49	ko:31 mo:9
+<s> nabanggit	20	ko:16
+<s> nabaril	19	po:8
+<s> nabasa	23	ko:12
+<s> nabigla	18	rin:6
+<s> nag	475	aaral:73 aalala:30 aral:26 aaway:20 order:14
+<s> nagawa	45	ko:15 po:7 mo:6
+<s> nagbabasa	41	ako:21 po:6 ng:5
+<s> nagbapor	26	si:26
+<s> nagbebenta	39	ng:12 ako:7 siya:6
+<s> nagbigay	42	po:14 ako:10 siya:10
+<s> nagdesisyon	28	akong:8 si:6 po:5 siyang:5
+<s> nagdiwang	16	po:8
+<s> naghahanap	59	ako:13 siya:10 po:7 si:6
+<s> naghanap	21	ako:7
+<s> naghihintay	49	po:9 ako:7 sa:6 si:5 siya:5
+<s> naging	96	mas:6 pari:5
+<s> nagising	27	ako:9 po:6 si:5
+<s> nagkalat	18	ang:10 po:7
+<s> nagkalesa	50	si:30 sina:19
+<s> nagkalesang	27	pula:8 lila:5 puti:5
+<s> nagkaroon	43	ng:15 po:9 ako:7 ka:5
+<s> nagkita	18	kami:6
+<s> naglakad	81	ako:18 lakad:18 po:14 si:12 kami:6
+<s> naglalakad	25	si:10 po:5
+<s> naglaro	21	ako:5
+<s> nagluluto	110	ng:83 si:22
+<s> nagmula	22	ang:6 po:5
+<s> nagpakasal	27	siya:9 po:7 si:7
+<s> nagpapasalamat	37	ako:15 ang:12 po:7
+<s> nagpasya	27	akong:10 po:5
+<s> nagsasalita	51	ako:8 po:7 siya:7 ba:6 ng:6
+<s> nagsimula	94	po:19 pong:13 ang:11 na:11 siyang:9
+<s> nagsinungaling	24	ako:5 ka:5
+<s> nagsisimula	30	na:11 ang:7
+<s> nagsusulat	20	siya:6
+<s> nagtanim	19	si:6
+<s> nagtataka	24	ako:16
+<s> nagtatrabaho	68	ako:23 siya:10 po:8 ang:7 ka:6
+<s> nagtitinda	19	ako:5
+<s> nagtrabaho	26	ako:6
+<s> nagtsaang	30	bluberi:14 sereso:12
+<s> nagtuturo	20	ako:9 po:6
+<s> nagugutom	23	ako:5 ang:5
+<s> nagulat	30	din:6 kami:6
+<s> nagustuhan	30	ko:7 mo:5
+<s> nahanap	38	ko:14
+<s> nahihirapan	35	si:8 akong:5
+<s> nahihiya	25	po:5
+<s> nahirapan	30	akong:9 si:8
+<s> nahiwa	18	ni:6
+<s> nahuli	64	po:15 na:10 ng:10 si:7
+<s> nahulog	26	ang:11
+<s> naiinggit	33	ako:11 si:11
+<s> naiintindihan	80	ko:37 mo:18 niya:6
+<s> nais	47	kong:22 ko:6
+<s> naiyak	27	si:14 ang:7
+<s> nakadepende	17	sa:8 ang:6
+<s> nakahanap	33	ako:8 si:8 ng:6
+<s> nakakain	32	ako:6 po:5
+<s> nakakatuwa	17	ang:10
+<s> nakakita	41	ka:10 na:9 ako:7
+<s> nakalimutan	122	ko:38 kong:18 ni:16 po:12 mo:10
+<s> nakapunta	33	na:17 ka:13
+<s> nakarinig	18	ako:9
+<s> nakasuot	26	siya:7 ng:6
+<s> nakatanggap	35	ako:10 siya:7 po:6 si:5
+<s> nakatira	111	po:20 ako:19 sa:16 siya:16 kami:9
+<s> nakatulog	20	ako:5
+<s> nakaupo	48	ako:13 sa:9 si:9 po:6
+<s> nakikinig	21	siya:7 ako:6 ka:5
+<s> nakikita	97	ko:26 mo:17 po:12 kong:8 ni:8
+<s> nakilala	41	ko:20 mo:7
+<s> nakipag	20	usap:17
+<s> nakita	415	ko:142 ni:60 mo:40 po:38 niyo:24
+<s> nakuha	20	ko:15
+<s> nalaglag	16	ang:7
+<s> namatay	87	po:24 si:20 ang:19 siya:15 na:6
+<s> namili	18	ng:7
+<s> namimili	16	ng:10
+<s> nanalo	39	ako:8 ang:5 si:5
+<s> nandito	58	ako:14 na:8 po:5
+<s> nandoon	21	ang:7 po:5
+<s> nang	189	maaraw:24 maulap:24 ika:18 mga:11 pasado:9
+<s> nangabayo	32	si:32
+<s> nangako	40	siyang:11 po:9 ako:5
+<s> nangangamoy	19	ang:7 po:5
+<s> nanganganib	23	po:7 ang:5
+<s> nanggaling	20	po:7
+<s> nangyari	17	po:5
+<s> naninirahan	17	sa:6 po:5
+<s> naniniwala	110	ka:24 ako:16 po:11 ba:10 si:10
+<s> napagdesisyunan	20	kong:8
+<s> napakaganda	33	ng:23 po:7
+<s> napakalaki	16	ng:8 po:6
+<s> napansin	24	ko:5
+<s> napatay	23	po:9 si:8
+<s> napilitan	17	po:8
+<s> naramdaman	18	ko:6
+<s> narinig	84	ko:27 mo:14 kong:11 ni:6 niyo:6
+<s> naririnig	23	ko:9 mo:6
+<s> naroon	164	ang:78 si:27 din:24 sa:16 kami:5
+<s> nasa	547	loob:28 bahay:24 ibabaw:14 labas:14 hustong:13
+<s> nasaan	231	ang:140 po:45 na:12 ba:9 si:7
+<s> nasira	26	ang:21
+<s> nasunog	35	ang:17 po:15
+<s> nasusunog	17	ang:15
+<s> natagpo	19	ko:14
+<s> natagpuan	24	ko:6
+<s> natakot	44	akong:20 sa:7 ang:6
+<s> natalo	25	ang:5
+<s> natanggap	34	ko:26
+<s> natapon	21	ang:10 po:6
+<s> natatakot	37	akong:11
+<s> natatakpan	20	ng:15
+<s> natatandaan	29	ko:15 kong:5 mo:5
+<s> natatangi	17	po:10
+<s> natulog	26	po:6 ako:5
+<s> natutulog	46	pa:9 siya:9 ang:8 po:6
+<s> natutuwa	20	akong:9 ako:6
+<s> naubos	21	na:12 ang:6
+<s> naubusan	52	na:18 kami:10 tayo:10 po:5
+<s> nauunawaan	27	ko:10 mo:9
+<s> nawala	98	ko:31 na:17 po:9 ang:8 ni:6
+<s> nawalan	45	po:12 na:7 si:7 ako:6 ng:5
+<s> nawawala	16	ang:8
+<s> ngayon	135	ay:58 ang:13 ko:5 sa:5
+<s> ngayong	36	araw:12
+<s> ngumiti	20	si:7
+<s> ngunit	17	ang:7
+<s> nilagyan	37	ni:17 ng:12
+<s> nilinis	24	niya:8 ko:6 ni:5
+<s> niloko	41	ko:5
+<s> ninakaw	27	ang:8 ni:7 po:7
+<s> nitong	97	umaga:25 mga:23 ika:20 tanghali:7
+<s> noong	140	bata:29 isang:20 nakaraang:17 ika:9 nasa:7
+<s> okey	27	lang:11 na:8
+<s> oo	96	nga:16 raw:10 arnie:7 kailangan:7 naman:7
+<s> opo	23	puwede:6
+<s> oras	29	na:20 nang:5
+<s> paano	341	po:63 mo:57 ba:40 ka:29 ko:21
+<s> pag	129	uwi:78 aari:21 usapan:9 alis:5 isipan:5
+<s> pagkatapos	62	ng:26
+<s> pagod	40	na:26 ka:5
+<s> pahingi	37	ng:16 po:10 nga:9
+<s> pakiusap	43	huwag:23
+<s> palagi	237	po:37 siyang:35 akong:34 pong:26 kong:12
+<s> palaging	87	malinis:5
+<s> palamigin	18	niyo:6
+<s> pamangkin	23	ko:10
+<s> pambihira	22	po:13 ang:9
+<s> panahon	22	na:13
+<s> papatayin	18	ako:6 ko:6
+<s> papunta	30	na:9 po:6
+<s> para	178	sa:26 kang:18 siyang:16 po:10 kanino:8
+<s> parang	337	hindi:34 ang:19 may:14 nasa:9 gusto:7
+<s> parati	27	siyang:6
+<s> pareho	137	po:46 kaming:14 silang:13 kami:10 pong:9
+<s> parehong	45	bus:10
+<s> pasado	32	nang:26
+<s> pasensiya	59	na:59
+<s> patay	31	na:25
+<s> patayin	17	mo:9
+<s> patuloy	50	ang:16 na:15 po:9 pong:6
+<s> patunayan	21	mo:6 mong:6 ninyong:6
+<s> paubos	16	na:16
+<s> paumanhin	17	po:8
+<s> pero	83	hindi:21 may:9 sa:6
+<s> pinabayaan	19	po:5
+<s> pinag	158	usapan:107 uusapan:26 isipan:7 aaralan:6
+<s> pinaghahabol	16	po:8
+<s> pinakain	17	ni:5
+<s> pinakita	28	niya:14 ko:8
+<s> pinaniniwalaan	22	ba:5
+<s> pinatay	68	po:20 ni:13 si:7 ang:6 ko:6
+<s> pinatunayan	34	ng:9 po:9 ni:5
+<s> pinili	28	ko:9 ni:9
+<s> pinilit	22	niya:6
+<s> pink	19	ang:9 po:9
+<s> pranses	17	ang:5
+<s> pula	50	ang:22 at:18 narangha:7
+<s> pumanaw	27	po:12 ang:7 si:7
+<s> pumasok	63	siya:11 ako:9 si:9 po:7 ka:6
+<s> pumili	19	ka:9
+<s> pumunta	195	ako:39 po:35 ka:22 si:21 siya:20
+<s> pumupunta	29	ako:6 sa:5
+<s> puno	56	ng:24 ang:12 po:12
+<s> punong	19	puno:19
+<s> pupunta	111	ako:35 po:15 ka:14 kami:9 ba:8
+<s> puro	43	mga:7
+<s> puti	49	ang:23 at:12
+<s> puwede	586	po:95 ba:84 ko:75 mo:67 mong:37
+<s> puwedeng	46	mangyaring:6
+<s> pwede	46	mo:13 ko:7 ba:6
+<s> sa	2249	tingin:388 hapon:68 pizzeria:60 mga:56 bahay:55
+<s> saan	351	ba:60 po:50 mo:43 ka:42 ang:29
+<s> sabay	22	sabay:9 kaming:5
+<s> sabi	555	kong:142 ko:138 ni:84 niyang:43 ng:31
+<s> sabihin	92	mo:61 ninyo:10 po:8 niyo:7
+<s> sagot	19	ko:8 niya:5
+<s> salamat	84	sa:49 po:10 at:8
+<s> sampung	22	taon:6
+<s> sana	232	hindi:76 may:13 ay:6 makapaglaan:6 po:6
+<s> sanay	27	na:16
+<s> sang	48	ayon:48
+<s> sapat	24	na:17
+<s> sasabihin	32	ko:24
+<s> sasama	36	ka:8 po:8 ako:5 ba:5
+<s> sasamahan	30	ko:6
+<s> sayang	16	at:12
+<s> si	480	tomas:10 ginoong:7
+<s> sige	18	na:5
+<s> sigurado	100	akong:35 ka:29 po:16 ba:9 ako:6
+<s> siguradong	50	sigurado:25 pagod:6
+<s> sikat	17	na:9
+<s> sila	39	ay:15 ang:9
+<s> simple	16	lang:14
+<s> sinabi	274	ni:84 ko:48 niya:36 sa:31 ng:13
+<s> sinabihan	40	ko:8 ako:7 niya:6
+<s> sinadya	36	niya:9 ko:6
+<s> sinasabi	45	ko:12 ng:11 mo:9 nilang:5
+<s> sinasamba	23	ko:9 po:5
+<s> sinira	20	ng:9
+<s> sino	524	ang:371 po:64 ba:17 pa:9 iyong:8
+<s> sinong	205	may:21 nagsabi:8 kandidato:6
+<s> sinu	19	sino:19
+<s> sinubukan	114	ni:18 po:14 niyang:13 ko:11 pong:11
+<s> sinundan	19	ko:6
+<s> sinusubukan	55	kong:15 ko:14
+<s> sira	30	ang:12 na:7
+<s> siya	234	ay:109 ang:72 po:21 nga:8
+<s> sobra	51	po:12 akong:9 pong:8 siyang:6
+<s> sobrang	189	dami:6 dilim:6 tangkad:6 ingay:5
+<s> subukan	45	mong:14 mo:12
+<s> sumakay	45	si:11 ako:10 ka:7 po:5 siya:5
+<s> sumasakit	44	ang:32 po:10
+<s> sumasamba	19	po:9
+<s> sumulat	30	po:9 siya:5
+<s> sundan	18	mo:9
+<s> sundin	16	mo:7 po:5
+<s> suot	20	ko:16
+<s> susubukan	50	ko:14 po:10 kong:8
+<s> taga	82	australia:9 hanga:5
+<s> tahimik	21	na:5
+<s> takot	76	ako:15 akong:7 na:7 si:6 ka:5
+<s> talagang	138	hindi:10
+<s> tama	71	na:18 po:12 ang:10 ba:6 ka:5
+<s> tamad	22	ang:7
+<s> tanong	32	niya:12 ko:11
+<s> tanungin	27	mo:16
+<s> tapos	182	na:62 pinag:12 nasa:11 pumunta:9 ka:8
+<s> tatawag	18	ako:11
+<s> tatawagan	20	kita:9 ko:6
+<s> tatlo	23	lang:6 na:6 ang:5
+<s> tatlong	95	taon:20 araw:15 metro:10 daang:9 beses:7
+<s> tawagan	24	mo:19
+<s> tayo	28	ang:8 po:5
+<s> tigilan	16	mo:10
+<s> tinamaan	31	po:10 ng:6 ang:5
+<s> tinanggal	27	ni:13
+<s> tinanggap	25	niya:7 nila:5
+<s> tinanggihan	42	niya:16 ni:6 nila:6 po:5
+<s> tinanong	56	ko:26 niya:19 ni:6
+<s> tinawagan	34	ko:8 ni:5
+<s> tingnan	95	mo:45 po:13 ninyo:10 natin:9
+<s> tiniis	16	ni:7
+<s> tiningnan	58	ni:18 ko:15 po:8 niya:7
+<s> tinitingnan	17	ko:6
+<s> tinulungan	28	ko:5 ni:5
+<s> titingnan	18	ko:16
+<s> tiyak	58	na:54
+<s> totoo	58	bang:24 ba:8 po:8
+<s> trabaho	23	ko:6
+<s> tsokolate	16	at:13
+<s> tugma	16	nga:8
+<s> tulog	22	ang:5 na:5
+<s> tuloy	19	ako:6
+<s> tulungan	32	mo:14 niyo:9 ninyo:6
+<s> tumaas	23	ang:11 po:9
+<s> tumakbo	55	si:20 ang:8 po:7
+<s> tumalon	16	si:6
+<s> tumanggi	53	si:17 siya:12 po:8 siyang:8
+<s> tumatakbo	17	ang:7
+<s> tumawa	19	ang:10
+<s> tumawag	52	ka:14 po:10 si:10 ako:7
+<s> tumawid	40	nang:13 po:9 ako:5
+<s> tumayo	34	ka:10 ang:5 siya:5
+<s> tumigil	90	ang:30 na:13 ka:12 po:9 ako:5
+<s> tumingin	31	siya:8 ka:7 si:5
+<s> tumuloy	16	ako:5
+<s> tumutugtog	19	ako:5 po:5
+<s> tungkol	28	sa:18 saan:5
+<s> ubos	36	na:36
+<s> umalis	82	siya:16 ang:12 na:12 ka:9 si:9
+<s> umiinom	109	ako:38 ka:11 ng:11 siya:11 po:9
+<s> umiiyak	16	ang:9
+<s> uminom	54	ka:14 ako:7 mula:7 siya:5
+<s> umupo	79	si:22 po:14 ako:10 siya:7 ka:6
+<s> umuulan	29	sa:5
+<s> umuwi	26	ka:10 na:5
+<s> unang	27	beses:20
+<s> uto	18	uto:18
+<s> wala	1434	akong:372 po:193 pong:166 na:112 siyang:75
+<s> walang	714	may:25 laman:23 nakakaalam:15 bayad:13 silbi:12
+<s> wumawagayway	16	po:8 ang:5
+<s> yari	23	sa:15
+<s> yumuko	41	po:19 ako:9 si:9
+aaral ako	33	ng:29
+aaral ng	62	pranses:9 ingles:6
+aaral sa	25	iksamen:6 pagsusulit:6 silid:5
+abala po	17	si:7 siya:5
+abenang gatas	30	na:12 at:7 naman:5
+abo ang	45	langit:11 mga:7 suot:5
+akala ko	163	po:25 may:8 ay:7 ayaw:5 gusto:5
+akin ang	316	mga:26 espada:11 pera:10 totoo:8 kotse:7
+akin kung	83	ano:34 paano:9 saan:9 kailan:6
+akin na	61	ang:10 hindi:6
+aking mga	47	magulang:7
+aklat na	120	ito:77 iyon:16 iyan:15
+ako ang	150	nagsulat:7 may:6 gumawa:5 huling:5 sumulat:5
+ako at	83	may:12 naroon:7 nagkola:5
+ako ay	125	isang:15 may:8 nasa:5
+ako dahil	25	hindi:5 sa:5
+ako hanggang	35	sa:10 pizzeria:6
+ako kapag	26	natapos:6 ako:5
+ako kayang	20	sesantihin:5
+ako kaysa	16	sa:14
+ako kumakain	23	ng:21
+ako kung	50	bakit:15 alam:6 ayaw:5
+ako mahilig	20	sa:11
+ako mula	21	sa:11 lunes:7
+ako na	52	ang:11 po:8
+ako nag	27	aaral:5
+ako nakakakita	25	ng:22
+ako naman	28	ay:26
+ako nang	167	alas:23 kaunti:11 mag:8 ilang:7 maaga:7
+ako ng	1484	mga:142 isang:97 tatlong:24 bagong:21 isa:18
+ako ngayon	17	sa:8
+ako ngayong	17	gabi:9
+ako ni	154	tomas:5
+ako noong	35	ika:11
+ako papuntang	103	pizzeria:31 istarbak:11 kapihang:11 tim:8 tsaahan:6
+ako para	151	sa:20 damputin:16 isang:13 kumain:13 uminom:9
+ako po	42	ang:32 si:5
+ako rati	16	papasok:6 sa:5
+ako rito	31	sa:7
+ako roon	36	ng:20
+ako sa	1757	mga:101 kanya:75 iyo:59 isang:46 pizzeria:43
+ako sigurado	32	kung:25
+ako tungkol	19	sa:16
+akong alam	30	tungkol:10 sa:9
+akong gawin	41	iyan:13 iyon:12 ito:11
+akong hindi	43	ko:25
+akong ibang	34	magagawa:8
+akong kumain	25	ng:22
+akong mag	35	aral:12 alaga:7
+akong may	37	abenang:6
+akong nakikitang	21	kagaya:6 kapareho:6 katulad:6
+akong oras	34	para:26
+akong pakialam	30	kung:14 sa:12
+akong panahon	18	para:17
+akong pumunta	30	sa:22
+akong sabihin	16	sa:15
+akong sapat	23	na:23
+aksaya ng	16	panahon:6 oras:5
+alagaan ang	36	mga:17 sarili:9
+alam ang	87	mga:8 ibig:5 pangalan:5
+alam ba	44	ninyo:31 ni:6
+alam ko	254	na:47 kung:46 pong:46 ang:41 po:31
+alam kong	236	hindi:34 may:16 alam:12 parang:6 magugustuhan:5
+alam kung	253	paano:51 ano:47 bakit:20 sino:18 saan:17
+alam mo	184	ba:118 kung:13 na:13 ang:9 bang:8
+alam mong	34	hindi:5
+alam na	134	may:20 inimbitahan:8 ganito:7 lumulutang:5 ni:5
+alam ng	48	lahat:16 mga:7
+alam ni	141	tomas:13 ariel:7
+alam nila	16	ang:7 kung:5
+alam ninyo	22	ang:6 ito:5
+alam niya	29	ang:16 kung:5
+alam niyo	38	ba:12 po:12
+alam po	64	ba:26 ninyo:9 ni:8 ninyong:5
+alam tungkol	26	sa:22
+alamin kung	16	ano:6
+alas dos	28	ng:6
+alin ang	38	mas:9
+alin sa	17	mga:11
+amin kung	19	paano:10
+anak kong	22	babae:14 lalaki:6
+anak na	90	babae:35 lalaki:29 si:6
+anak niya	16	sa:6
+anak niyang	36	si:9 babae:8 lalaki:8
+ang abogado	20	ko:8 niyang:6
+ang aking	288	mga:18 ama:11 kaibigan:5 kapatid:5 sarili:5
+ang aklat	112	na:81 bago:7
+ang alam	38	mo:8 ko:7
+ang alok	21	na:11
+ang ama	23	niya:9
+ang aming	62	mga:10 bahay:5
+ang amo	17	ni:6
+ang amoy	31	ng:16 na:10
+ang anak	133	ko:30 niyang:27 niya:23 ni:12 na:11
+ang aparatong	18	ito:18
+ang apelyido	23	ni:9
+ang araw	99	ng:24 sa:17 na:11 mula:6 ko:5
+ang artikulo	27	ninyo:10 niyo:10 mo:5
+ang artipisyal	19	na:19
+ang asawa	106	ko:32 niya:30 ni:15 mo:9 niyang:8
+ang aso	107	ko:27 ni:15 sa:14 mo:10 ng:9
+ang asong	21	ito:6
+ang ate	23	ko:13 mo:7
+ang ating	94	mga:15 bayan:5
+ang awto	29	ng:13 ko:7
+ang babae	26	sa:16
+ang babaeng	60	iyon:9 nakikipag:8 iyan:5
+ang badyet	23	natin:8 namin:7
+ang bago	21	kong:10 niyang:5
+ang bagong	66	kotse:6 sasakyan:6 may:5
+ang bahala	19	sa:11
+ang bahay	136	ko:32 na:26 ni:19 nila:9 niya:9
+ang baho	20	ng:9 po:7
+ang balat	35	ng:15 at:6
+ang balbas	26	niya:13 mo:8
+ang baril	25	na:12 niya:6
+ang barko	21	sa:12
+ang bata	71	sa:29 ng:18 bata:7
+ang batang	83	babae:26 lalaki:16 ito:7 iyan:7
+ang bawat	59	isa:9 aspekto:6
+ang berdeng	47	damo:28
+ang bibig	20	mo:7 ko:6
+ang bilang	39	ng:35
+ang bintana	19	ng:6 para:6
+ang bisikleta	33	ko:15 mo:7 niya:6
+ang blusang	20	ito:12
+ang bola	17	papunta:6 sa:5
+ang bolpen	18	kong:8 na:8
+ang boses	21	niya:9 ko:6
+ang braso	21	ko:18
+ang budismo	16	at:5 ay:5
+ang buhay	152	ay:29 ng:27 sa:25 ko:16 niya:13
+ang buhok	150	niya:40 ni:21 mo:20 at:17 na:12
+ang bulaklak	31	na:22
+ang bundok	23	fuji:8 na:7
+ang buong	108	mundo:17 pamilya:13 katawan:8 kuwarto:8 proseso:8
+ang daan	19	papunta:6
+ang dahilan	57	kung:34 ng:14
+ang daliri	16	ko:6
+ang dami	118	pong:34 ko:14 kong:14 po:12 mong:10
+ang daming	42	mga:6
+ang damit	53	ko:17 na:12 mo:6 niya:5
+ang dapat	82	kong:37 naming:12 nating:12 gawin:5
+ang dibdib	20	mo:6 ni:6
+ang dilim	20	po:7
+ang diyos	22	ay:6 sa:5
+ang dyaket	16	ko:6
+ang esperanto	28	ay:9 at:6
+ang flashlight	19	ko:6 na:5
+ang gagawin	81	ninyo:20 mo:15 ko:12 ni:9 nila:6
+ang galing	26	galing:5
+ang gamot	16	na:10
+ang ganda	92	ng:27 niya:24 po:15
+ang ganitong	38	pag:8 uri:6
+ang ganyang	30	uri:6
+ang gawin	17	tayong:12
+ang gilid	19	ng:19
+ang ginagamit	16	ng:6
+ang ginagawa	84	ng:23 mo:17 ninyo:8 ko:6 nila:5
+ang ginawa	56	mo:12 ni:10 niya:8 ng:5
+ang gumawa	68	niyan:23 ng:17 niyon:11 nito:10
+ang guro	27	ko:5 namin:5 sa:5
+ang gusto	221	mo:48 mong:28 ni:28 kong:21 ko:18
+ang haba	21	ng:15
+ang halaga	16	ng:13
+ang hapones	22	ay:6
+ang hindi	45	ko:10
+ang hininga	16	mo:6
+ang huling	64	beses:20 araw:9
+ang iba	30	ay:6
+ang ibang	22	mga:5
+ang ibig	121	sabihin:86 mong:12 kong:8 ninyong:7
+ang ilan	23	sa:17
+ang ilang	36	mga:15
+ang ilaw	16	sa:6
+ang ilog	20	na:8 sa:5
+ang ilong	19	mo:5
+ang ingles	39	ay:9 dahil:5 niya:5
+ang iniisip	37	mo:11 ni:10 niya:5
+ang inumin	17	ko:6
+ang inyong	41	mga:8
+ang isa	92	sa:56 ay:10 pang:6
+ang isang	313	tao:11 lalaking:7 bagay:6 ginoo:6 kabalyero:6
+ang isip	50	ng:8 ko:6 mo:6 niya:5
+ang istorya	20	ng:11
+ang itim	18	na:11
+ang itlog	17	ng:14
+ang itsura	16	ng:6
+ang iyong	111	mga:11
+ang kaarawan	16	ko:6 niya:5
+ang kabataan	16	ko:12
+ang kagamitang	18	ito:18
+ang kagandahan	22	niya:15
+ang kahit	23	na:13
+ang kaibigan	71	ko:28 niya:14 kong:7 mo:5 niyang:5
+ang kailangan	97	mo:23 ko:14 natin:8 ninyo:8 namin:7
+ang kalahati	17	ng:16
+ang kalidad	21	ng:13 kaysa:6
+ang kalusugan	25	ko:8 ay:7
+ang kamay	58	ko:21 niya:13 ng:9 mo:6
+ang kanilang	149	mga:44 relasyon:6 anak:5 negosyo:5
+ang kantang	30	iyon:12 iyan:10 ito:7
+ang kanyang	774	mga:99 anak:33 kagandahan:18 ina:17 asawa:16
+ang kapalaran	18	ko:8
+ang kapatid	143	ko:49 kong:37 mo:18 niya:10 niyang:7
+ang kape	38	niya:7 arnie:6 mo:6
+ang kapitbahay	34	kong:13 naming:5
+ang karamihan	63	ng:46 sa:8
+ang kastilang	19	librong:12
+ang katawan	22	niya:7 ng:5
+ang kaya	19	ni:5
+ang keyk	31	ni:18 sa:7 na:5
+ang kinain	59	ni:32 ko:11 mo:9
+ang kinakain	46	ni:20 ko:10 ng:8
+ang klase	22	ng:6 sa:6
+ang kompyuter	20	ko:14
+ang kotse	114	ko:30 ng:15 sa:14 mo:11 ni:11
+ang kotseng	23	iyan:8 ito:7
+ang krisis	27	na:24
+ang kulay	147	tsokolateng:44 ng:29 kapeng:26 rosas:15 na:7
+ang kultura	20	nila:6
+ang kuwarto	68	niya:16 ko:15 mo:10 ninyo:9 ni:6
+ang kuwento	21	ng:9
+ang kuya	52	ko:29 kong:7 niya:5
+ang lahat	572	ng:406 para:38 maliban:35 sa:30 ay:20
+ang lakas	43	ng:13 ko:8 ninyo:8 mo:5
+ang laki	71	ng:40 po:24
+ang lalaki	38	sa:12 ng:9
+ang lalaking	45	iyan:9 iyon:6 tinutukoy:6
+ang laman	34	ng:30
+ang lambot	19	ng:7 po:7
+ang lamig	23	po:7
+ang langit	36	sa:8 at:7
+ang larawang	20	ito:17
+ang lasa	36	ng:35
+ang layunin	29	po:6 ng:5
+ang leeg	33	ko:13 niya:12 ni:5
+ang libro	63	sa:17 bago:8 ko:6 ni:5
+ang librong	101	ito:61 iyon:10 iyan:7
+ang lola	19	ko:10 niya:5
+ang lolo	48	ko:32
+ang loob	43	ni:10 niya:9 ng:7 mo:6 ninyo:6
+ang lugar	27	na:21
+ang lumang	31	bahay:10 gusali:7
+ang lumilipad	49	sa:44 nang:5
+ang mag	38	aalaga:8 asawa:6 aasikaso:5
+ang magiging	32	epekto:9 gabay:5
+ang mahalaga	20	kung:10 ay:6
+ang maleta	39	ko:24 niya:6
+ang mama	16	sa:9
+ang mangyayari	18	sa:6 kay:5
+ang mansanas	18	sa:7 na:5
+ang maraming	23	tao:6
+ang mas	82	gusto:34
+ang mata	35	ko:10 ng:10 niya:6 mo:5
+ang may	123	ari:47 aring:13 alam:11 gusto:8
+ang mayroon	36	ka:10 kayo:10 sa:6
+ang medyas	18	mo:5
+ang mga	4698	tao:123 bata:120 magulang:87 mata:76 ito:65
+ang mukha	50	niya:19 ni:9 mo:6 ng:6
+ang mundo	21	sa:6
+ang naanod	17	sa:15
+ang nag	78	iisang:33 udyok:7 imbento:6 aalaga:5
+ang nagawa	19	ko:11
+ang nagbigay	18	sa:10 ng:6
+ang nagsabi	21	niyan:6 nito:5
+ang nagsulat	18	ng:10 nito:7
+ang nakikita	19	mo:5
+ang nakita	18	ko:8
+ang namatay	17	sa:11
+ang nanay	119	ko:52 niya:21 mo:13 ninyo:9 ni:7
+ang nangyari	33	sa:18 kay:5
+ang nararamdaman	16	mo:5
+ang nasa	68	loob:28 isip:8
+ang numero	18	ng:10
+ang opinyon	49	ko:11 ng:7 hinggil:6 tungkol:6
+ang oras	40	mo:7 ng:5
+ang paborito	112	mong:39 kong:31 ko:11 ninyong:9 niyang:7
+ang pag	161	aaral:24 atake:20 ibig:19 uusap:12 inom:11
+ang pagkain	55	ng:10 mo:8 ko:7 sa:7 para:5
+ang pagkakataong	21	ito:15
+ang pakiramdam	35	ko:16 mo:6
+ang pamagat	17	ng:15
+ang pamangkin	35	ko:20 kong:5
+ang pamilya	99	niya:28 ko:27 mo:10 ni:7 ninyo:6
+ang panahon	37	lalangoy:6 ng:6
+ang pang	21	itaas:6 alas:5
+ang pangalan	226	niya:54 ko:50 ng:50 mo:22 ni:18
+ang pangit	43	ng:17 po:11
+ang pangunahin	17	kong:12
+ang pangunahing	19	pananim:5
+ang panyo	19	niya:8 ko:5
+ang papel	25	mo:7 na:6
+ang parehong	46	bata:8
+ang payo	22	ko:8 ng:6
+ang payong	17	ko:7
+ang pelikulang	21	ito:14
+ang pera	65	sa:16 namin:11 natin:7 ko:6 niya:5
+ang petsa	16	at:6 ng:6
+ang pinag	24	uusapan:9 usapan:6
+ang pinagkaiba	17	ng:17
+ang pinakamagandang	31	paraan:5
+ang pinakamalapit	36	na:35
+ang pinakapaborito	24	mong:11
+ang pinsan	29	ko:9 mo:6
+ang pinto	23	ng:12 sa:5
+ang plano	19	natin:5
+ang plaslayt	21	na:9 ko:6
+ang populasyon	18	ng:17
+ang pranses	46	na:12 sa:8 ang:5
+ang presyo	21	ng:16
+ang presyon	31	ng:26
+ang problema	40	sa:10 nang:9 ay:8
+ang problemang	45	ito:26 tinutukoy:10
+ang pulang	20	alambre:6
+ang pulisya	22	sa:16
+ang pumatay	17	kay:10 sa:7
+ang pusa	41	habang:10 ko:8 sa:6
+ang puso	33	ko:21
+ang puting	33	unikorniyo:20
+ang puwet	21	ko:12
+ang relihiyon	35	ay:8
+ang relo	40	ko:22 mo:8
+ang reputasyon	28	ko:7 niya:7
+ang resibo	18	ninyo:6 niyo:6 mo:5
+ang sabaw	17	na:12
+ang sabi	226	ni:73 po:29 niya:28 ng:25 ko:22
+ang sagot	30	ko:7 na:6 sa:6
+ang sakit	57	ng:15 na:10 po:10 niya:8
+ang salamin	28	niya:12 ng:6
+ang salitang	40	ito:10 iyan:8
+ang sanggol	34	sa:8 ko:5
+ang sanhi	24	ng:22
+ang sapatos	19	mo:6 niya:5
+ang sarap	31	ng:13
+ang sarili	205	niya:59 ko:44 mo:34 niyang:18 ninyo:13
+ang sasabihin	16	ko:9
+ang sasakyan	118	ko:27 ng:15 sa:13 mo:11 niya:11
+ang sasakyang	33	iyan:14 ito:7 iyon:6
+ang saya	18	saya:10 pong:5
+ang selpon	23	ko:10 niya:7
+ang silid	28	ni:6
+ang sinabi	75	niya:19 ko:17 ni:15 mo:9 sa:5
+ang sinasabi	64	ko:15 mo:11 niya:11 ninyo:8 ng:5
+ang sipon	19	ko:12
+ang siyensiyang	20	piksiyon:14
+ang sombrero	17	mo:6 ko:5
+ang sugat	18	ni:6 sa:6
+ang sukat	25	ng:23
+ang sulat	48	kamay:7 na:7 ng:7 mo:6
+ang suot	40	niya:12 suot:7 ni:5
+ang susi	37	sa:17 ng:8 ko:5
+ang tag	18	init:9 araw:6
+ang tagal	16	na:9
+ang tagalog	23	ay:9
+ang talaarawan	20	ni:5
+ang tamang	33	daan:8 tren:6
+ang tanga	21	tanga:8 ko:6
+ang tangkad	19	niya:5
+ang tanong	30	ko:9 mo:5
+ang tao	61	sa:25 ay:10 at:5
+ang taong	51	iyon:9 ito:5 malaki:5
+ang tapang	22	ninyo:5 niya:5
+ang tatay	144	ko:77 niya:31 mo:11 ni:5
+ang tawag	75	sa:37 ng:12 ay:6
+ang temperatura	24	sa:7
+ang teorya	20	niya:5
+ang timbang	21	ng:7 ko:5
+ang tindera	18	ay:9 ko:5
+ang tindero	19	ay:12
+ang tingin	26	sa:8 mo:6
+ang tinutukoy	35	ni:8 ko:7 ninyo:6 niyo:6 mo:5
+ang titi	16	ni:5
+ang tito	20	ko:13
+ang tiyera	16	ay:6
+ang trabaho	60	niya:16 ko:8 mo:7 nang:6 ninyo:6
+ang trabahong	38	kailangan:16 iyan:10 ito:6
+ang tsansang	16	hindi:16
+ang tubig	68	mula:19 sa:12 kapag:10 at:7 ay:5
+ang tulong	26	mo:8 ninyo:7
+ang tunay	41	na:26 niyang:6
+ang tungkol	35	sa:20 diyan:5
+ang tunog	37	ng:20 na:11
+ang ulo	52	niya:16 ko:14 mo:5
+ang una	26	mong:6 ninyong:5
+ang unang	114	beses:28 araw:7 buwan:6 opisyal:6 pagkakataon:6
+ang unikorniyo	45	sa:27 ay:12 mula:6
+ang utak	18	ng:5 ni:5
+ang utang	17	ko:10
+ang watawat	17	ng:13
+ang wika	35	nila:13 mo:6
+ang wikang	46	ingles:8 lojban:6
+ang yabang	19	yabang:7
+anim na	51	taong:10 buwan:5 tao:5
+ano ang	980	gagawin:45 gusto:38 nangyari:35 paborito:33 ginagawa:31
+ano ba	117	ang:106
+ano kaya	22	ang:15 kung:6
+ano na	24	ang:17 po:6
+ano pa	53	ang:18 po:16 ba:14
+ano po	188	ang:145 ba:36 kaya:6
+ano sa	34	tingin:17 palagay:5
+anong gusto	18	mong:10
+anong klase	24	ng:20
+anong oras	69	ka:16 ang:10 po:8 nagbubukas:5
+anuman ang	20	gusto:7 mangyari:7
+anyos na	17	gulang:8
+apat na	94	babae:8 taong:8 beses:5
+apelyido ni	16	miguel:7
+aral ng	100	pranses:30 ingles:19 mga:14 musika:8
+araw ang	79	numerong:20 pag:6 mga:5 pebrero:5
+araw araw	90	na:14 akong:11 po:10 sa:6 ako:5
+araw ko	18	sa:5
+araw na	117	ito:30 buhay:5 iyon:5
+araw nang	38	ika:13 masyadong:6 hindi:5
+araw ng	102	mga:17 daigdig:7 pasko:7 ramadan:5
+araw po	21	akong:7 ako:5 ang:5
+araw sa	78	kanluran:6 bahay:5 bintana:5
+ari ng	72	bahay:14 otel:6 mga:5 pizzeriang:5
+ariel ng	29	prut:16
+artipisyal na	63	intelihensiya:45
+asin at	16	paminta:14
+aso ko	18	habang:10
+aspekto ng	27	buhay:8
+asul ang	28	langit:8
+asul na	74	bahay:7 kastilyo:7 kalesa:6 maong:6
+at ako	22	ay:9 naman:7
+at ang	314	mga:43 kanyang:28 anak:12 esperantong:7 isa:7
+at hindi	88	ako:11 ang:8 siya:8 ko:7 na:6
+at iba	67	pa:48 pang:16
+at isang	108	babae:7
+at itim	34	na:19 ang:14
+at itlog	33	ako:10
+at kulay	42	kape:8 tsokolate:8 rosas:5
+at may	120	mga:30 sanwits:7 kolang:5
+at mga	143	ganoon:18 pinya:6
+at nag	19	order:5
+at nasa	17	pizzeria:7
+at ng	75	mga:20
+at pagkatapos	18	ay:9
+at puti	28	ang:14 ng:6
+at sa	121	hapon:15 gaza:8 mga:8 gabi:6 pizzeria:5
+at saka	51	ng:6
+at si	199	bal:13 simar:10 navjot:9 rose:9 francis:7
+at umiinom	28	ng:19 ako:9
+at uminom	22	ng:17 ako:5
+atat na	16	atat:8 gawin:6
+ating mga	33	magulang:5
+ay ang	392	mga:20 ika:15 gawin:14 unang:9 pangunahing:8
+ay ebidensiya	16	ng:14
+ay gumagawa	16	ng:10 po:6
+ay hindi	224	ang:10 ka:9 pa:9 na:8 lamang:6
+ay isa	82	pong:43 sa:18 po:8
+ay isang	294	sikat:10 magandang:7 wikang:6 malaking:5 salitang:5
+ay mas	69	parang:9
+ay may	265	mga:35 isang:12 lahing:11 dalawang:6 ugat:6
+ay nag	24	aaral:7
+ay naging	44	simbolo:16 isang:7
+ay nasa	136	hardin:28 korte:20 loob:5 pagitan:5
+ay para	16	sa:10
+ay parang	104	eksperimento:8 mga:6
+ay si	113	chelsea:6 sachet:6 simar:6
+ayaw ko	156	pong:55 sa:27 ng:16 po:12 nang:9
+ayaw kong	169	gawin:10 makita:9 maging:8 may:8 mag:6
+ayaw mo	45	ba:12 bang:12 sa:8 ng:6
+ayaw na	26	ayaw:17
+ayaw po	26	ni:8 ninyo:5
+ayon sa	78	mga:8 isang:5 opinyon:5
+ayos lang	26	ang:8 si:5
+ba ako	68	sa:15 ng:9 puwedeng:6
+ba akong	143	tulungan:14 humingi:11 umuwi:6 magbukas:5 makahingi:5
+ba ang	906	mga:103 gusto:26 dapat:23 lahat:15 gagawin:12
+ba ay	24	isang:12
+ba ito	66	ni:9 sa:7
+ba itong	34	isang:6
+ba iyan	39	ni:9
+ba iyon	41	ni:8
+ba kayo	281	sa:72 ng:65 kay:9 nang:9 ni:7
+ba kayong	216	gawin:8 gagawin:5 mag:5
+ba kung	127	paano:29 ano:21 saan:15 anong:13 sino:12
+ba namin	16	ginagawa:6
+ba natin	21	ginagawa:6
+ba nating	21	palitan:12
+ba ng	202	mga:17 isa:6 karne:5 pera:5 pranses:5
+ba nila	29	ang:6 ginagawa:6 sinasabi:6
+ba ninyo	413	ang:108 si:43 kung:42 ako:25 ito:24
+ba ninyong	148	ipaliwanag:13 pumunta:13 bumili:6 gawin:6 paliwanagin:6
+ba niya	28	ang:10
+ba sa	261	akin:41 loob:13 bahay:12 inyo:9 dagat:8
+ba sila	39	sa:6
+ba siya	59	sa:20 ng:7
+ba talaga	57	ang:15 si:7 akong:6 iyon:6 iyan:5
+ba tayong	28	mag:8
+bababa sa	23	dalawang:6
+babae ang	49	nagsusuot:6
+babae ng	17	isang:6
+babae sa	66	kanyang:6
+bagay na	150	hindi:22 bagay:15 ito:11 kailangan:8 dapat:6
+bagay sa	48	buhay:8 iyo:6 mundo:6
+bago ang	39	kanyang:5 mga:5 pasko:5
+bago ka	16	umalis:6
+bago mag	47	alas:20 sabado:8
+bago niyang	19	bahay:9
+bago pa	70	mag:29 siya:6 nang:5
+baguhin ang	37	mga:9 mundo:7
+bahay ko	29	ay:8
+bahay na	119	ito:24 iyan:19 iyon:18 bato:12 may:8
+bahay ng	50	kanyang:6 mga:5
+bahay ni	74	jerry:22 ariel:10 juan:5 quincy:5
+bahay niya	23	sa:14
+bahay sa	48	isla:9
+baka gusto	22	lang:8
+baka hindi	46	na:8 ko:7 mo:5 po:5
+bakit ang	52	taba:8 dami:7
+bakit ba	80	ang:12 sobrang:8 nila:7 ninyo:7 hindi:6
+bakit hindi	181	mo:52 ka:48 ninyo:15 na:9 ako:5
+bakit ka	80	ba:9 nag:5
+bakit kaya	28	hindi:9
+bakit ko	30	ba:11 naman:6
+bakit mo	109	ba:22 ako:8 ginawa:8
+bakit niyo	16	po:8
+bakit po	62	ba:33 ninyo:8 ang:5
+bakit wala	31	po:6 akong:5 sa:5
+balahibo ng	19	pusa:7
+balang araw	17	ang:7
+balat ng	22	lupa:6
+bandera ng	18	hapon:5
+bang gawin	27	iyon:8 iyan:7 ko:5
+bang hiramin	24	ang:18
+bang ipaliwanag	18	sa:6 iyan:5
+bang makita	36	ang:29
+bang pumunta	24	sa:6
+baon kong	19	hopyang:7
+baristang si	47	jam:6 sarah:5
+barko sa	21	daungan:8
+basahin ang	49	aklat:10 sulat:7 libro:5 librong:5
+baso ng	48	mayelong:20 alak:5
+bata ang	54	mga:6
+bata ng	34	biko:12
+bata pa	79	ako:37 siya:10 sila:5
+bata sa	82	palaruan:13
+batang babae	32	ang:7 sina:6
+bato ang	22	mga:9
+bayaran ang	21	bayarin:5 mga:5
+berde at	72	kulay:19 puti:8 itim:7 pulang:6 makaliskis:5
+berdeng damo	51	sa:51
+beses akong	20	naglakad:10 pumunta:6
+beses ko	32	lang:11 nang:6 pa:6
+beses na	70	bumagsak:12 may:9 akong:6 nakita:6
+beses sa	59	isang:48
+bigyan mo	49	ako:33 ng:5
+bigyan niyo	25	po:11 ako:6 nga:5
+bilang ng	35	mga:28
+binabasa ko	77	ang:38 sa:13 roon:9
+binabawalan ko	20	kayong:10 po:10
+binasa ko	28	ang:12 po:5
+binati ako	17	ni:12
+binati ko	21	si:6
+binigyan ako	18	ng:10 ni:6
+binigyan ko	26	po:7 siya:7
+binigyan niya	44	ako:25 po:7 siya:7
+binili ko	18	ang:8 sa:5
+binili niya	16	ako:13
+binisita ko	18	ang:11
+bintana ng	24	kuwarto:5
+bintana sa	28	labas:9
+bisita ni	18	celia:9 gina:5
+bola sa	30	kahon:8 mga:8
+bote ng	28	alak:5
+bughaw ang	27	langit:9 panuos:5
+buhangin sa	18	dalampasigan:6
+buhay ang	24	mga:8
+buhay ay	50	maaaring:5
+buhay ng	39	mga:5 pasyente:5 tao:5
+buhay pa	30	po:6 rin:6
+buhay sa	83	ibang:12 labas:12 gubat:6 mga:5
+bukas ang	31	mga:5
+bukas nang	16	umaga:7
+bukid ni	23	jerry:14 juan:8
+buksan ang	43	bintana:14 ilaw:10 kagamitang:5
+buksan mo	31	ang:29
+buksan ninyo	17	ang:16
+bulaklak na	34	maliit:12 malaki:6 ito:5
+bulaklak sa	28	hardin:8
+bumagsak ako	17	sa:17
+bumagsak po	18	ako:5 ang:5 halos:5
+bumili ako	70	ng:63
+bumili ng	150	bagong:25 isang:24 baterya:8 mga:6 dalawang:5
+bumili po	29	ako:16 si:6
+bumili si	48	ziri:10
+buong araw	47	akong:9 sa:8 na:7
+buong buhay	43	ko:30 niya:12
+buong mundo	29	ay:10 ang:6
+butas ang	23	medyas:7
+butil ng	17	buhangin:5
+buwan ang	27	buong:6
+buwan ng	51	taon:16 jupiter:5 urano:5
+cheddar at	22	itlog:21
+chris na	19	mestisong:11
+cree at	18	puti:11
+croissant na	19	may:11 tsokolate:5
+crónicas de	27	majipur:27
+daan ang	18	mga:7
+daan nakita	29	ko:27
+daan papuntang	16	ospital:14
+dahan dahan	34	lang:5
+dahil hindi	48	ko:9 nila:7 ako:5
+dahil may	50	mga:7 sakit:7
+dahil sa	270	mabilis:18 mga:18 kakulangan:16 pera:12 ulan:12
+dahilan kung	35	bakit:35
+dahon ng	32	mga:17
+dahon sa	17	bangketa:6
+dala ko	31	ang:22 sa:7
+dalawa ang	46	pera:6
+dalawa sa	24	miting:12
+dalawang beses	55	akong:13 sa:13 ako:8 na:8
+dalawang taon	19	na:6
+dalhin mo	30	ang:9 sa:6
+damit na	48	gawa:14 ito:11
+damo ang	18	unikorniyo:11
+damo sa	89	tabi:60 larangan:6 tapat:6 labas:5 paligid:5
+damputin ang	16	bolpen:10
+danes pranses	63	na:18 sa:17 at:12
+daniel sa	22	tsaahan:19
+dapat ang	68	mga:9
+dapat kong	47	gawin:26
+dapat mag	22	alala:6 aral:5
+dapat mong	40	gawin:5 ibalik:5
+dapat naming	27	gawin:5
+dapat nating	53	gawin:5
+dapat po	67	nating:19 ba:9 naming:7 kayong:5 ninyong:5
+dati ng	17	basketbol:6 mga:5
+daw ang	31	mga:5
+daw ng	22	mga:6
+daw niya	33	ang:6 iyan:6 iyon:6 na:6
+daw po	18	siya:7
+daw sa	36	gabi:14
+daw siya	34	ng:14 sa:7
+de majipur	27	ni:27
+depende sa	17	haba:6
+di ko	67	alam:10 pa:6 gusto:5
+dilaw ang	41	buhok:8
+dilaw na	38	bulaklak:5
+din ako	23	sa:9 ng:8
+din ang	64	mga:10 manedyer:5
+din po	31	ang:10 ako:6
+dito sa	170	isla:125 loob:8 hilagang:7
+diyos ang	21	sinasamba:5
+doon sa	19	labas:5
+dumaan ako	20	sa:20
+dumaan sa	19	rutang:6
+dumalaw ako	33	sa:33
+dumalaw ang	19	isang:8
+dumalaw na	68	mga:7 dalawang:5 guwapong:5 mag:5
+dumating ako	21	sa:11
+dumating ang	36	mga:8 pagkakataon:5
+dumating sa	30	oras:5
+dumating si	41	greg:14
+ebidensiya ng	22	ekstraterestre:16
+edad na	40	labing:7 sesenta:6
+eksperimento ang	32	teorya:18
+epekto ng	17	mga:6
+esperanto at	24	interlingua:7
+espesyal na	45	okasyon:16
+estados unidos	28	ang:5 ay:5
+estudyante sa	29	iksamen:6 pagsusulit:6
+gaano karaming	19	tao:8
+gaano po	42	ba:23
+gabi sa	27	bukid:6
+gagawa ng	26	kalokohan:5
+gagawin iyan	23	maliban:7 ni:5
+gagawin iyon	26	maliban:7 ni:5
+gagawin ko	45	ang:10 po:8 iyan:6
+gagawin mo	25	ngayong:5
+gagawin ninyo	23	ngayong:10
+gamit ang	158	kanyang:24 isang:22 mga:9 kutsilyo:8 baril:6
+gamit na	46	ito:20 kailangan:7
+gamitin ang	63	kawaling:6 flashlight:5 plaslayt:5
+gamot na	32	ito:23
+ganda ng	33	mga:6
+ganda po	17	ng:11
+ganoon din	22	ang:11 sa:5
+gatas na	18	may:9
+gawa po	30	sa:30
+gawa sa	107	kahoy:18 bulak:15 koton:7 plastik:7 bakal:5
+gawin ang	39	trabaho:6 trabahong:6
+gawin ito	29	nang:10
+gawin iyan	58	nang:11 hindi:10 ngayon:7 sa:6 ni:5
+gawin iyon	53	nang:12 hindi:11 ni:6 sa:6
+gawin mo	38	ang:9
+gawin ng	29	kahit:20 isa:6
+gawin sa	20	mga:8
+gilid ng	25	malaking:7 salamin:7 bilog:5
+ginagamit ang	19	mga:5
+ginagamit ko	22	ang:16
+ginagawa ko	27	ang:12 po:7
+ginagawa mo	16	sa:7
+ginagawa ng	40	mga:7
+ginawa iyon	19	ni:16
+ginawa ko	51	ang:7 iyan:7 lang:7 iyon:6 ito:5
+ginawa mo	32	sa:11
+ginawa niya	33	ang:13 ito:6
+ginawa po	17	iyan:5
+gitna ng	36	silid:6
+gramatika ng	16	esperanto:6
+greg ang	33	mga:7
+greg na	106	pilipino:21 ang:15 may:7 pilipinong:7 sa:5
+greg sa	27	tsaahan:5
+grupo ng	16	mga:16
+gubat ng	18	brasil:8
+gulang na	61	po:26 ang:12 ako:7 siya:7
+gumagamit ng	33	dahas:6
+gumagana ang	34	preno:5 utak:5
+gumagawa ng	89	mga:15 libo:8
+gumagawa po	21	ng:11 ang:8
+gumagawa si	19	ariel:16
+gumamela sa	22	tabi:9
+gumawa ng	132	mga:19 isang:11 ilang:7 kahit:6
+gumising nang	19	maaga:16
+guni guni	26	ko:5
+guro ang	19	mga:10
+gusto ang	64	mga:7
+gusto ba	58	ninyong:29 ninyo:16
+gusto kitang	35	makita:6 kausapin:5
+gusto ko	597	ang:174 pong:91 po:75 ng:53 lang:32
+gusto kong	458	maging:30 malaman:28 makita:18 mag:14 pumunta:13
+gusto mo	252	bang:102 ba:74 ng:18 ang:10 pa:5
+gusto mong	116	gawin:9 maging:7 malaman:6 pumunta:6
+gusto namin	18	ng:11
+gusto ng	74	mga:20 lahat:8
+gusto ni	130	tomas:7 totong:7 joel:5
+gusto nila	16	ang:10
+gusto niya	69	ang:30 raw:12 ng:8
+gusto niyang	79	maging:7 makita:7
+gusto niyo	56	po:24 bang:15 ba:11
+gusto po	88	ba:35 naming:9 nating:9 sana:5
+gustong gawin	20	iyan:7 iyon:6
+gustong gusto	40	ko:26
+gutom na	19	ako:9 gutom:8
+haba ng	24	biyahe:6 kotse:5 sasakyan:5
+habang wala	52	ako:32 kayo:10 ka:6
+halaga ng	25	pera:9
+halos araw	17	araw:17
+halos hindi	29	ako:6 na:5
+halos lahat	32	ng:30
+halos wala	17	nang:6
+hanapin ang	26	bahay:7
+handa ka	18	na:14
+handa na	49	ang:10 ba:9 po:8 akong:7
+handa para	17	sa:16
+hanga ako	20	sa:18
+hanggang madaling	22	araw:22
+hanggang sa	208	harapan:33 susunod:11 siyudad:10 kilu:9 tabi:7
+hangin ang	33	pula:6 gulong:5
+hans na	34	olandes:31
+hapon nang	63	ika:52 una:5
+hapon sa	28	pizzeria:5
+hapones at	18	tsino:5
+harap ng	64	bintana:12 bahay:7 mga:7
+harapan ng	95	bahay:13 berdeng:11 bintana:10 kulay:5 naranghang:5
+hardin ng	65	kastilyo:11 kulay:9 puting:9
+hardin ni	26	juan:11 alex:9
+hawakan mo	17	ang:9 nang:6
+hayaan mo	21	akong:15
+heto ang	29	kinita:6 kita:6 suweldo:6
+higit na	42	mas:21
+higit pa	17	sa:7
+higit sa	30	lahat:12
+hilaw na	18	karot:6
+hilig ko	28	ang:16 po:8
+hinahanap ko	25	ang:16 po:6
+hinahangaan ko	22	ang:19
+hinalikan niya	19	ang:7
+hindi ako	682	ang:25 sigurado:24 marunong:23 puwedeng:21 naniniwala:11
+hindi alam	69	ni:51 ang:9 ng:5
+hindi ang	45	mahalaga:8 kalidad:7
+hindi ba	83	ninyo:21 kayo:14
+hindi bababa	20	sa:20
+hindi dapat	51	kayo:7 natin:5
+hindi gumagana	18	ang:12 nang:5
+hindi ito	154	ang:18
+hindi iyan	77	ang:12 mangyayari:6
+hindi iyon	74	ang:16 mangyayari:5
+hindi ka	356	ba:38 dapat:26 pa:21 na:17 puwedeng:8
+hindi kami	91	puwedeng:12
+hindi kayang	37	ipahayag:5
+hindi kita	84	puwedeng:10 marinig:6
+hindi ko	1569	po:294 alam:223 na:85 kayang:83 pa:57
+hindi lahat	21	ng:13
+hindi lamang	22	sa:7
+hindi lang	56	basta:8 po:7 talaga:6
+hindi man	18	lang:17
+hindi mo	411	ako:46 ba:46 kailangang:37 dapat:23 alam:15
+hindi na	328	po:51 ako:47 lang:29 siya:18 niya:13
+hindi naman	67	ganoon:9 po:6 siya:6 masyadong:5 talaga:5
+hindi namin	113	kayang:20 kailangang:8 puwedeng:8 magagawa:7 alam:6
+hindi natin	118	kayang:29 puwedeng:11 kailangang:9 alam:8 ito:7
+hindi nila	101	alam:20 ako:15 naiintindihan:5
+hindi ninyo	106	kailangang:18 ako:13 dapat:8 gusto:5 kinakailangang:5
+hindi niya	223	raw:27 alam:22 po:18 kayang:12 ako:11
+hindi niyo	68	po:29 ba:16 kailangang:6
+hindi pa	334	ako:70 po:44 rin:40 siya:14 kami:10
+hindi po	980	ako:168 ba:51 ninyo:46 ito:44 kayo:38
+hindi raw	71	siya:17 po:16 sila:7 niya:5
+hindi rin	61	po:22 ako:20
+hindi sa	35	akin:8
+hindi siya	248	marunong:16 ang:8 pumunta:8 masaya:7 sumipot:7
+hindi tayo	87	puwedeng:14
+hindi yata	20	iyan:5
+hinding hindi	125	ko:25 po:22 ako:15 na:7 sila:7
+hiramin ang	33	flashlight:6 plaslayt:6 kotse:5 sasakyan:5
+hubarin mo	17	ang:17
+huli nang	24	umaga:18
+huling beses	21	na:19
+humahanga ako	19	sa:19
+humingi ng	50	tawad:10 pahintulot:9 mas:5
+huwag ka	30	nang:20
+huwag kang	233	mag:21 magsalita:9 masyadong:6 magtitiwala:5 matakot:5
+huwag kayong	56	mag:7
+huwag mo	131	akong:57 nang:23 na:14 siyang:14 kaming:6
+huwag mong	233	kalimutang:22 sabihin:15 kalimutan:10 gawin:9 hawakan:9
+huwag na	65	po:17 ninyong:12 huwag:11 niyang:6 kayong:5
+huwag ninyo	28	akong:12 silang:7 siyang:6
+huwag ninyong	50	kalimutang:14
+huwag niyo	42	pong:18 po:8 akong:7
+huwag niyong	20	kalimutang:10
+huwag po	98	ninyong:40 kayong:39 ninyo:13
+iba ang	93	mga:19 opinyon:6
+iba iba	16	ang:12
+iba ibang	78	kulay:18 klaseng:6
+iba pa	23	bang:7
+iba pang	46	mga:11
+ibabaw ng	79	mesa:32 lamesa:13 tubig:6
+ibalik ang	16	libro:7 aklat:6
+ibang bansa	29	ang:9 sa:5
+ibang kulay	18	na:16
+ibang magagawa	21	kung:17
+ibang mesa	19	ay:6 may:5
+ibang mga	51	babae:7
+ibang tao	20	sa:7
+ibig sabihin	108	ng:36 nito:10 ni:9 niyan:8 ay:6
+ibigay mo	37	sa:25 ang:5
+ibon sa	30	parke:7 langit:5
+ikaapat na	23	buwan:5 palapag:5
+ikaw ay	43	isang:6
+ikaw ba	23	ang:13 ay:5
+ikaw lang	17	ang:17
+ikaw na	16	ang:7
+ilagay mo	28	ang:17
+ilalim ng	203	kama:18 dagat:15 mesa:15 lamesa:13 puno:12
+ilan pong	19	mga:16
+ilan sa	26	mga:23
+ilang araw	18	na:5
+ilang beses	30	na:9 sa:9
+ilang buwan	27	ang:8 na:8
+ilang mga	119	pagbabago:9 kagamitan:7 bansa:5 gamit:5 libro:5
+ilang oras	36	kung:8 na:7
+ilang tao	25	ang:16
+ilang taon	63	na:25 ka:14 ko:5
+ilaw ilaw	42	sa:31 na:5
+ilaw sa	43	pook:14
+ilog ang	44	kulay:18
+ilog na	19	ito:7 may:5
+ilog sa	36	tabi:14 pamamagitan:5
+importante sa	18	akin:6
+indiya at	17	si:9
+indiyang si	19	sachet:10
+indiyang tinderong	16	si:14
+inggit si	18	melissa:18
+ingles at	32	si:5
+ingles ay	22	hindi:7
+ingles na	44	mestiso:6
+ingles sa	26	edad:8
+inihaw na	20	manok:5
+inihurnong patatas	18	at:10 na:7
+iniisip ko	48	kung:18 ang:11 po:6
+inosente ang	20	anak:8 kanyang:8
+inumin ang	22	tubig:10 gamot:6
+inyo kung	19	ano:7
+ipagtanggol ang	31	sarili:15 mga:8
+ipakita mo	17	sa:11
+ipaliwanag ang	18	hindi:8
+ipapakita ko	17	sa:10 po:5
+ipinagdiriwang ang	18	pasko:6
+ipinanganak po	20	ako:6 siya:6 si:5
+isa itong	71	patibong:13
+isa lang	33	ang:17 po:8
+isa pang	61	pagkakataon:5
+isa po	130	itong:30 siyang:19 iyong:16 akong:13 sa:10
+isa sa	171	mga:103 kanila:9 aming:7 ating:6 kanilang:5
+isa siyang	57	eksperto:12
+isang araw	50	na:10 ng:6
+isang bagay	24	na:18
+isang bahay	18	na:9 kubo:6
+isang baso	35	ng:34
+isang beses	63	sa:26 ko:12 mo:9 pa:5
+isang buwan	21	bago:8
+isang daang	31	piso:6 taon:6
+isang libong	17	dolyar:8
+isang magandang	36	weytres:8 mungkahi:5 panukala:5
+isang maliit	34	na:34
+isang mesa	34	ay:11 sa:6
+isang piraso	62	ng:49
+isang sako	28	ng:25
+isang sulok	19	ng:9
+isang tao	31	ay:8 kung:5
+isang taong	16	gulang:6
+isara ang	27	pinto:7 bintana:5
+isda ang	19	mga:8
+isda sa	66	malaking:51
+isip ng	33	ilang:6 tao:5
+isla lulu	213	rito:39 ako:23 para:21 nitong:19 at:12
+isla lulung	43	kapihan:14 pizzeria:10 istarbak:9 parke:5
+istarbak ako	28	para:14 sa:6
+istarbak para	24	kumain:6
+istarbak sa	16	isla:5
+istasyon ng	28	metro:12 tren:11
+itago ang	16	kanyang:11
+itanong mo	18	sa:7
+itim ang	59	buhok:21
+itim na	234	tsaa:56 may:40 mayelo:19 kapeng:14 tsaang:10
+itlog ng	30	mahikang:11 pugo:9 butiki:6
+ito ang	253	mga:20 unang:17 buong:8 aking:7 tamang:7
+ito ay	184	isang:24 may:17 naglalaman:8 tungkol:7 ang:6
+ito ba	16	ang:15
+ito hindi	32	ba:9
+ito kahit	17	kailan:13
+ito kaysa	19	sa:12
+ito mula	19	sa:12 rito:5
+ito nang	59	mag:7 isang:6 walang:6 sarili:5
+ito ng	105	mga:9 lahat:8 ating:5
+ito para	88	sa:48 kay:5
+ito po	49	ang:44
+ito sa	228	mga:29 akin:15 iyo:7 kanya:7 loob:6
+itong gawin	16	ng:10
+iyan ang	138	dahilan:17 sanhi:11 kanyang:8 gusto:6 nangyari:6
+iyan ay	33	hindi:5
+iyan hindi	18	ba:14
+iyan nang	27	mag:6 walang:5
+iyan ng	43	mga:6 kahit:5 plano:5
+iyan po	33	ang:26
+iyan sa	91	mga:11 akin:10 estante:10 lunes:5
+iyo kung	21	ano:5
+iyo na	41	gumawa:6
+iyo ng	32	pahintulot:5 permiso:5
+iyon ang	113	dahilan:7 gusto:7 mga:7 unang:7
+iyon ay	59	si:5
+iyon hindi	19	ba:14
+iyon nang	28	mag:5 walang:5
+iyon ng	39	plano:5
+iyon para	16	sa:10
+iyon po	30	ang:25
+iyon sa	80	mga:11 estante:10 iyo:5 lunes:5
+iyong gawin	20	ng:8
+ka ba	367	sa:117 ng:58 nang:12 rito:9 kay:6
+ka bang	229	gusto:6 mag:5 magluto:5
+ka lang	20	ba:8
+ka na	265	ba:114 bang:22 sa:18 lang:17 bago:6
+ka nag	16	aaral:7
+ka nang	110	mas:8 mabuti:7 mag:5
+ka ng	311	isang:17 mga:16 isa:6 kaunting:5 maraming:5
+ka pa	78	ba:14 rin:12 ng:10
+ka sa	280	akin:55 mga:13 kanya:10 amin:9 aking:8
+kabila ng	29	mga:7 kalye:6
+kabilang ang	16	pagluluto:12
+kahaba ang	16	buhay:6
+kahit ano	28	sa:6
+kahit kailan	22	hindi:5
+kahit na	190	anong:45 ano:22 sino:16 alin:11 ang:8
+kahit sino	20	sa:7 puwedeng:6
+kahon ng	36	mga:12
+kaibigan ko	52	dahil:14 ang:11 sa:11
+kaibigan kong	22	si:10
+kaibigan niya	21	sa:15
+kailan ba	17	ang:6
+kailan ka	33	ba:5
+kailan ko	17	po:8
+kailangan ang	26	mga:5 tulong:5
+kailangan ba	18	ninyo:5
+kailangan ko	225	ng:78 pong:56 po:36 ang:9 bang:9
+kailangan kong	193	malaman:9 mag:8 sundin:8 gawin:7 pumunta:5
+kailangan mo	65	ng:12 ba:11 bang:9 lang:9
+kailangan mong	130	gawin:9 maging:8
+kailangan namin	40	ng:31
+kailangan natin	45	ng:33
+kailangan ng	54	mga:5
+kailangan niya	27	ng:13
+kailangan niyang	26	gawin:6
+kailangan niyo	25	pong:7 po:6
+kailangan pa	38	natin:9 po:9 namin:8
+kailangan po	160	nating:33 ninyong:30 naming:26 natin:18 namin:16
+kailangang gawin	53	iyan:16 iyon:12 pero:6 ito:5
+kailangang pumunta	20	riyan:6 roon:6 sa:5
+kakaunti lang	18	po:8 ang:7
+kalahati ng	35	mga:10
+kalesa sa	25	tabi:12
+kalimutan ang	17	mga:8
+kalimutan na	18	lang:8
+kamay ko	19	pero:6 para:5
+kambas na	17	sako:10 sakong:7
+kami nang	44	ilang:5 malaki:5
+kami ng	281	mga:32 gasolina:8 kuya:8 ilang:7 bagong:6
+kami ni	92	greg:37 itay:6
+kami sa	232	isang:11 mga:11 inyo:8 mabilis:8 bahay:5
+kaming lahat	19	sa:7
+kaming mag	16	usap:6
+kaming pinag	18	usapan:15
+kamukha ng	20	sulat:6
+kang mag	28	alala:11 aksaya:5
+kanilang mga	89	anak:12 ninuno:10 magulang:8 pangalan:6
+kanino ang	23	mga:6
+kanser sa	16	suso:10
+kantidad ng	28	pagkain:12 pagkaing:8
+kantones na	21	si:6
+kanya ang	82	totoo:9 maleta:8 mga:8 katotohanan:7
+kanya ay	18	ebidensiya:11
+kanya ng	32	tatlong:8 mga:5
+kanyang anak	17	na:16
+kanyang mga	161	magulang:16 kaibigan:14 mata:13 anak:8 kapatid:8
+kapalit ng	32	isang:16
+kapani paniwalang	18	katibayan:12
+kapatid ko	54	ang:12 po:11 sa:7
+kapatid kong	64	babae:37 lalaki:15 si:10
+kapatid na	58	babae:33 lalaki:21
+kapatid niyang	17	babae:11 lalaki:5
+kapeng may	22	yelo:13 abenang:5
+kapeng unikorniyo	28	ang:16 ng:11
+kapihang istarbak	68	para:14 ako:11 sa:5
+kapihang tim	27	hortons:27
+kapitbahay ko	17	sa:8
+kapitbahay kong	43	si:20
+kapitbahay na	26	si:5
+karamihan ng	57	mga:42
+karapat dapat	25	na:5
+karne ng	38	baka:28 baboy:8
+kasama ang	80	mga:12 kanyang:11 rosas:6
+kasama ng	20	mga:7
+kastilang librong	19	crónicas:16
+katao ang	19	namatay:6
+katapusan ng	29	taon:12
+katibayan na	16	ginawa:8
+katulad ko	21	si:11 ang:9
+katulad ng	87	mga:12 sa:5
+kaunti ang	29	iskrin:9
+kay greg	65	na:44 sa:7 ang:5 nitong:5
+kaya ako	16	ni:5
+kaya ba	34	ninyong:20 ninyo:6
+kaya hindi	36	ako:5 siya:5
+kaya ko	52	pong:13 po:11 itong:5
+kaya lang	19	nakalimutan:6
+kaya mo	80	bang:44 ba:14
+kaya niyo	27	po:10 bang:9
+kaya po	40	ba:22
+kayang gawin	43	ni:14 ito:10 iyon:10 iyan:9
+kayang ipaliwanag	23	ang:7 ito:5
+kayo ng	216	mga:14 gamot:6 isa:5
+kayo sa	240	akin:27 mga:19 kanya:8 amin:7 kusina:7
+kayong gawin	28	iyan:13 iyon:13
+kayong mag	21	alala:7
+kaysa sa	445	akin:47 mga:26 iyo:24 kayamanan:14 inaasahan:13
+kayumanggi ang	39	mga:14 buhok:7
+keyk ni	21	cassandra:15
+kilala ang	31	kapatid:6
+kilala ko	58	ang:34 po:11
+kilala mo	17	ba:10
+kilala po	16	ba:9 ang:5
+kilo ng	17	melokoton:9
+kinain ko	25	ang:9 sa:9
+kinain ni	45	juan:13
+kinakain ko	16	ang:9
+kinakausap ko	21	si:7 ang:6
+kinausap ko	50	si:28 ang:9
+kinumpirma po	18	nila:12 ng:6
+kita ang	19	mga:5
+kita ko	28	ang:17 sa:6
+kita sa	28	labas:5 mukha:5
+klase ng	55	mga:19 halaman:5
+ko alam	225	kung:143 na:32 ang:24 anong:7
+ko ang	1772	mga:223 aking:59 lahat:51 isang:40 sarili:23
+ko at	54	hindi:11 ang:8 gusto:6
+ko ay	158	ang:14 si:14 isang:8 may:8 katulad:7
+ko ba	70	ang:8 iyan:6 siya:5
+ko bang	95	hiramin:18 makita:15 gamitin:8 hawakan:8 buksan:6
+ko dahil	46	sa:21
+ko gusto	39	ang:23 mo:5
+ko habang	28	wala:14
+ko hindi	73	mo:9 ka:6 niya:5
+ko ito	96	sa:17 para:8 kay:7 gagawin:6
+ko itong	31	gawin:6
+ko iyan	46	gagawin:7 sa:7 ginawa:6 nang:6
+ko iyon	56	sa:7 gagawin:6 ginawa:6 nang:5
+ko kailangan	31	ang:11 ng:9
+ko kay	138	greg:57 michael:10 yaroslav:7 adil:6 hans:5
+ko kaya	30	ang:11
+ko kayang	83	ipaliwanag:8 gawin:7 tiisin:6
+ko kayo	32	ng:7
+ko kaysa	18	sa:16
+ko kung	111	ano:27 bakit:16 paano:12 saan:9 sino:8
+ko lamang	25	ang:5
+ko lang	159	po:36 ng:18 ang:9 malaman:6 kung:5
+ko mahanap	16	ang:14
+ko muli	16	si:7
+ko na	399	ang:82 po:46 lang:28 pong:15 kung:14
+ko naiintindihan	24	ang:13 kung:7
+ko nakita	48	ko:33 ang:6 kong:5
+ko naman	30	ay:5 sa:5
+ko nang	134	gustong:14 hindi:8 makita:5
+ko ng	247	mga:21 isang:14 bagong:10
+ko ngayon	17	ang:5 ay:5
+ko noong	37	labintatlong:8 nakaraang:7
+ko pa	126	rin:21 po:13 ang:10 lang:8 nakikita:5
+ko para	56	sa:17 tratuhin:5
+ko pero	37	hindi:16
+ko po	1135	ang:333 alam:57 sa:40 siya:38 ng:36
+ko pong	373	hindi:17 maging:13 malaman:13 pumunta:12 makita:11
+ko puwedeng	38	sabihin:8
+ko rin	95	ang:25 po:17 si:12 iyon:5
+ko sa	873	iyo:91 kanya:60 inyo:34 daan:33 kanyang:31
+ko si	341	michael:57 greg:12 hans:10 rod:9 joanne:5
+ko sila	34	sa:6
+ko siya	138	sa:25 ng:13 nang:7 at:5 kung:5
+ko talaga	29	alam:9
+kolang pangdiyeta	43	ako:22 at:8 sa:5
+kong ang	36	mga:6
+kong babae	19	sa:7
+kong bumili	18	ng:18
+kong gawin	55	ito:10 para:9 iyan:8 sa:8 iyon:5
+kong hindi	87	ko:26 ako:7 ka:6
+kong mag	44	aral:26
+kong makita	36	ang:9
+kong malaman	38	kung:27 ang:5
+kong maraming	20	mga:7
+kong may	74	mga:11
+kong pumunta	28	sa:18
+kong sabihin	32	sa:17 mo:6
+kong si	73	eva:8 jacques:8
+kontento na	27	po:5 si:5
+kotse sa	22	tapat:5
+krisis na	24	iyon:14 ito:10
+kuki ni	19	ariel:19
+kukunin ko	24	po:9 ang:7
+kulay abo	63	ang:41 po:8 at:5
+kulay abong	40	kastilyo:9 touque:6
+kulay ang	25	bandila:6 watawat:6
+kulay kape	21	ang:17
+kulay kapeng	47	unikorniyo:43
+kulay ng	50	bahaghari:8
+kulay rosas	70	na:37 ang:22 po:9
+kulay tsokolate	17	ang:14
+kulay tsokolateng	68	unikorniyo:55 kastilyo:5
+kumain ako	80	ng:69 sa:6
+kumain ka	34	ng:18 na:7
+kumain nang	24	kumain:12
+kumain ng	249	damo:33 isda:10 berdeng:9 isang:8 tinapay:8
+kumain si	42	ariel:6
+kumain tayo	26	sa:19 ng:7
+kumakain ako	92	ng:76 sa:7
+kumakain nang	16	kumakain:5
+kumakain ng	174	karne:17 sardinas:8
+kumakain po	20	ng:5
+kumalat sa	17	buong:16
+kumpara sa	32	kayang:6
+kumuha ako	16	ng:13
+kumuha ka	19	ng:13
+kumuha ng	75	isang:8 mga:8 pagsusulit:7 abogado:6
+kumuha po	21	si:7
+kung ako	28	sa:12 ikaw:6
+kung alam	24	ko:8 niya:5
+kung ano	381	ang:319 iyon:13 ito:11 iyan:8
+kung anong	79	oras:8 panganib:6 klase:5 uri:5
+kung ayaw	28	mo:9 ninyo:7 mong:6
+kung bakit	184	hindi:26 ang:17 wala:11 kailangan:9 mo:8
+kung gaano	59	karami:7 kabigat:6 ko:6 siya:6 ka:5
+kung gusto	81	mo:29 mong:11 ninyo:9 po:7
+kung hindi	270	ka:37 mo:27 ninyo:17 ang:16 po:15
+kung kailan	39	siya:6
+kung kanino	19	ang:7
+kung kaya	23	mo:7 ko:5
+kung magkano	16	ang:14
+kung may	104	mga:11 mangyari:7 pera:5 sapat:5
+kung minsan	33	ay:7
+kung nasaan	49	ang:9 si:8 kami:6 tayo:5
+kung paano	215	ito:13 gawin:12 sindihan:12 kumalat:10 buksan:7
+kung saan	284	siya:35 ang:25 ako:19 saan:17 mo:13
+kung sino	145	ang:105 ako:10 ka:7 sila:5
+kung wala	60	ang:9 ka:9 kang:7 kayo:6 po:6
+kunin mo	24	ang:15
+labag sa	27	kalooban:24
+laban sa	29	kanya:7
+labas ng	143	bintana:37 bahay:17 tiyera:17 pizzeria:14 kastilyo:6
+labas sa	23	harap:6 harapan:5
+labintatlong taong	24	gulang:23
+lagay ng	16	panahon:11
+lahat ay	56	may:7
+lahat maliban	40	sa:29 ang:8
+lahat na	59	gusto:5 may:5
+lahat ng	643	mga:307 tao:25 bagay:15 kailangan:15 ito:12
+lahat para	39	sa:22 protektahan:5
+lahat sa	60	gitna:8
+lahi ng	17	aso:8
+lahing taga	16	sri:15
+lakad ako	107	papuntang:60 sa:20 at:9 hanggang:9
+lakad akong	17	papuntang:6
+lakad ko	21	papuntang:5
+lakas ng	59	loob:44
+laki po	29	ng:24
+lalaki ang	44	mga:6
+lalaki at	45	isang:14 apat:8 babae:8 ang:5
+lalaki ay	27	isang:8
+lalo na	18	ang:10 sa:6
+laman ang	39	ref:6
+laman ng	39	kaha:6
+lamang ako	22	sa:8 ng:6
+lamang ang	135	mga:15 tao:6 buhay:5 gusto:5 kailangan:5
+lambak ng	25	mga:20
+lang ako	69	ng:18 sa:8 para:5
+lang ang	266	lahat:13 mga:12 nag:9 kailangan:7 buhay:5
+lang ba	21	ang:6
+lang kung	47	gusto:8 tutulong:6 tutulungan:6
+lang ng	60	mga:6
+lang po	318	ang:72 ako:27 ito:20 akong:18 ng:14
+lang sa	54	brasil:12 akin:7
+lata ng	21	kamatis:6 tuna:5
+lawa ang	31	kulay:22
+libo libong	27	bote:12 botelya:12
+libro sa	83	esperanto:11 lengguwaheng:7 ibabaw:5 loob:5
+librong crónicas	16	de:16
+librong ito	24	sa:9 ay:6
+ligaw na	19	bala:8
+likas na	22	yaman:6 kapaligiran:5
+likod ng	51	mga:11 bahay:10 kastilyo:5 rehas:5 unikorniyo:5
+linisin ang	24	mga:7
+litrato ng	23	kanyang:9 mga:6
+lolo ko	16	sa:5
+loob na	18	gawin:12
+loob ng	392	isang:42 sasakyan:23 hardin:20 ref:19 aparador:15
+loob para	25	gawin:8
+lugar na	93	ito:53 pagtatayuan:10 iyon:8
+lulu ako	18	para:9
+lulu nitong	19	umaga:7
+lulu para	21	isang:5
+lumilipad sa	50	tabi:6
+lumulutang ang	22	mga:7 langis:6
+lungsod ng	23	quezon:6
+maaari ba	31	akong:10 kitang:6
+maaari ko	57	bang:33 po:17
+maaari mo	32	bang:15 ba:12
+maaari na	17	po:6
+maaari po	25	ba:18
+maanghang na	19	pagkain:12
+maaraw na	86	umaga:27 ika:14 hapon:13 tanghali:7
+maayos ang	76	makina:7 motor:7
+mabilis na	60	pagpapatakbo:18 pagmamaneho:14 pag:8
+mabuti ang	33	kanyang:5
+madalang lang	33	akong:7 kaming:6 po:6 tayong:6
+madalas ang	27	mga:14 presyon:8
+madalas po	42	akong:17 kaming:6 tayong:6
+madali para	17	sa:17
+madaling araw	33	nang:12 ang:7 na:6
+madilaw na	16	berdeng:5
+mag aaral	74	sa:24 ang:10 na:9
+mag alas	49	dos:13 otso:5
+mag aral	138	ng:91 ka:9 nang:9 sa:7 para:5
+mag asawa	17	sa:7
+mag asawang	19	taga:5
+mag ingat	47	ka:20 sa:12 po:6
+mag isa	59	ang:6 lang:6 siyang:6 ka:5 sa:5
+mag isip	17	ng:7
+mag usap	26	sa:8 tayo:6
+magagawa kung	19	hindi:19
+magaling na	60	tagaluto:5
+magaling po	16	akong:5
+maganda ang	120	panahon:11 mga:8 pakiramdam:6 sulat:6 ginawa:5
+maganda po	33	ang:17
+magandang lugar	28	para:10 na:9 ito:8
+magandang umaga	22	po:11
+magbasa ng	38	mga:15 libro:5
+magbigay ng	26	maikling:8
+maghanap ng	35	trabaho:6
+magkakaroon ng	28	pagkakataong:9
+magkano ang	88	isang:11 dapat:6 ibinayad:6 nagagastos:6 nagastos:5
+magkano po	35	ang:27 sa:8
+magkaroon ng	56	mga:9 bagong:5 bakanteng:5
+magkita tayo	16	sa:12
+maglaro ng	37	tenis:7 baraha:6 golf:5
+magmaneho ng	19	kotse:8
+magpalit ng	26	damit:15
+magsalita ang	28	mga:16 batang:9
+magsalita nang	16	mas:6
+magsalita ng	88	pranses:38 ingles:15 intsik:5
+magsuot ng	27	seatbelt:5
+mahaba ang	34	buhok:16
+mahal ko	63	ang:28 po:10 si:7 siya:5
+mahal na	16	pusang:5
+mahal niya	18	ang:5
+mahalaga kung	17	hindi:10
+mahalaga po	23	ang:16
+mahilig ako	65	sa:63
+mahilig akong	45	kumain:5 mag:5
+mahilig ka	30	ba:16 sa:7 bang:5
+mahilig po	74	akong:21 ako:20 ba:6 si:6
+mahilig sa	62	mga:8
+mahirap na	31	konsepto:6
+mahiwagang ilaw	36	ilaw:36
+mainit na	58	tubig:11 tsokolate:5
+maitim ang	21	buhok:13
+maitim na	20	kulay:5
+majipur ni	27	robert:27
+makahanap ng	18	lunas:7
+makakita ng	38	mga:12 kahit:5
+makapal na	18	hamog:5
+makikita ni	31	silvestre:31
+makipag usap	66	sa:43 kay:9 ka:6
+makipagkita sa	17	inyo:9 iyo:5
+makita ang	76	mga:22 aklat:8 librong:8
+makita kung	16	bakit:8
+makulay kulay	19	na:13
+malakas ang	40	ulan:8
+malakas na	29	ulan:7
+malaki ang	134	tsansang:8
+malaki po	47	ang:37
+malaking kantidad	20	ng:16
+malaking malaking	39	akwaryo:35
+malalagpasan ang	22	krisis:20
+malaman kung	64	ano:17 sino:16 bakit:8
+malamang ay	20	hindi:7
+malamig na	64	malamig:6 umaga:6
+malapit na	101	po:18 ang:11 naming:7 nating:7 pong:6
+malapit nang	25	matapos:5
+malapit sa	94	parke:9 bahay:8 aklatan:6 mga:5
+malawak na	32	lawa:7
+mali ang	29	mga:5
+mali po	21	ang:9
+maliban na	48	lang:47
+maliban sa	83	pranses:10 repolyo:10 ginang:8 akin:7 pagiging:7
+maliit ang	57	bahay:5
+maliit na	128	batang:9 bayan:7 bahay:6 negosyo:6 apartment:5
+maliliit na	44	bagay:7
+malinis ang	18	kuwarto:6 silid:5
+malinis na	28	hangin:13
+mamaya pa	71	nasa:22 may:9 sa:5
+man lang	29	nila:8
+manatili sa	37	bahay:19 australia:5
+manok na	18	ito:6
+manood ng	31	telebisyon:10 pagtotoro:9 mga:5
+mansanas na	42	tsip:23 tsaang:5
+mantsa ng	22	dugo:9 tinta:7
+mapa ng	20	ruta:10
+marami akong	56	mga:9
+marami ang	18	mga:6
+marami kaming	39	pinag:18
+marami na	27	akong:10 po:6
+marami po	35	akong:17 kaming:5
+marami pong	59	mga:6
+marami sa	16	mga:7
+maraming mga	154	puno:15 babae:7 bagay:6
+maraming paniki	21	ang:19
+maraming puno	27	ng:20
+maraming tao	29	ang:15 sa:8
+marlin yaong	18	pilipina:15
+marunong ka	36	bang:25 ba:6
+marunong magsalita	20	ng:18
+marunong ng	29	pranses:6
+marunong po	19	ba:10
+marunong siya	18	ng:15
+mas bata	39	kaysa:7 po:7 kong:6 kang:5
+mas gusto	185	ko:59 ni:28 mo:27 kong:16 niya:14
+mas maayos	26	na:15 ang:5
+mas mabuti	40	nang:8 na:7
+mas magaling	61	ang:10 kang:5
+mas maganda	57	ang:17 kung:6 po:5 pong:5
+mas mahal	18	ang:7
+mas mahalaga	26	po:11 ang:10
+mas malaki	49	ang:16 kaysa:7 po:6 sa:5
+mas maliit	32	na:13 ang:5
+mas marami	17	ang:5
+mas maraming	39	oras:7
+mas masarap	19	ang:11
+mas masaya	30	na:5 po:5
+mas mataas	21	na:8
+mas matanda	29	ka:10 ako:5
+mas pipiliin	19	kong:8 ko:6
+masakit ang	41	mga:5
+masama ang	34	loob:18
+masarap ang	102	kape:6 pagkain:6
+masaya ako	18	sa:5
+masaya ang	19	mga:10
+masyado akong	22	maraming:6
+masyado po	29	akong:10 kayong:6
+masyado pong	33	malaki:5 maliit:5
+mata ng	26	unikorniyo:8
+mataas ang	25	presyon:5
+mataas na	27	suweldo:6
+matagal ko	24	nang:21
+matagal na	44	akong:8 matagal:6
+matanda na	23	ang:6
+matibay na	19	ebidensiya:6
+matigas ang	16	ulo:10
+maulap na	70	umaga:23 hapon:18 ika:8 maaraw:6
+may abenang	35	gatas:35
+may alam	45	kung:11 ka:5 ng:5
+may apat	17	na:16
+may ari	63	ng:50
+may aring	18	si:12
+may bagong	29	baristang:6
+may balbas	25	na:5
+may binili	17	akong:7 po:6
+may buhay	22	sa:10
+may dala	31	akong:10 dalang:5 siyang:5
+may dalang	30	flashlight:5 plaslayt:5
+may dalawa	21	akong:8 siyang:5
+may dalawang	60	anak:11
+may dumalaw	68	na:60
+may gusto	68	ka:13 ng:11 sa:10 akong:7 po:6
+may hawak	20	na:8
+may higit	16	sa:5
+may iba	37	pa:12 ibang:7 ka:7
+may ilan	25	pong:16
+may ilang	52	mga:26
+may isa	34	pa:5 pang:5
+may itim	23	na:23
+may kailangan	17	akong:11
+may kakaunti	16	po:6
+may kasamang	51	mga:6
+may kaugnayan	20	sa:12
+may kilala	18	ka:5
+may kolang	28	pangdiyeta:28
+may lahing	70	taga:16 tsino:7
+may malaki	20	siyang:6 po:5 pong:5
+may malaking	49	lalaking:5 parke:5
+may mantsa	16	po:8 ang:5
+may maraming	46	mga:15 puno:7
+may mas	18	malaki:6
+may mga	1037	puno:67 tanim:28 taong:26 unggoy:19 asul:15
+may nahanap	42	akong:17 po:8 na:6
+may nakikita	21	akong:8
+may nakita	98	akong:41 po:12 si:10 raw:9 siyang:6
+may narinig	26	akong:11
+may oras	21	pa:5
+may pera	18	ako:5
+may sakit	63	siya:15 ang:8 si:8 ako:6
+may sapat	16	ba:5
+may suot	47	na:16 suot:13 siyang:7
+may tatlo	37	pong:6 akong:5 kaming:5 po:5
+may tatlong	56	kulay:12
+may tsaang	25	itim:13
+may utang	20	ako:5 na:5
+may yelo	59	ako:37 at:10
+mayelong itim	55	na:54
+mayroon ba	29	kayong:18
+mayroon ka	42	bang:31
+mayroon po	88	akong:32 ba:20 bang:10 kaming:6 siyang:6
+mayroon pong	56	tatlong:8 asnong:5 burikong:5 mga:5
+melissa dahil	31	naiinggit:13 alam:6 kumain:6 may:6
+mesa ay	24	si:9
+mesa ko	26	ang:5
+mesa sa	48	labas:14 harapan:5 kapihan:5 tabi:5 tsokolateriya:5
+mestisong tsino	22	ingles:11 aleman:7
+metro ang	16	haba:14
+mga aklat	47	na:14 sa:5
+mga anak	99	ko:22 niya:17 mo:12 namin:5 natin:5
+mga araw	49	sa:10 na:8
+mga aso	31	niya:6 kaya:5
+mga asul	24	na:11 berde:9
+mga babae	46	ang:8 sa:6 ay:5
+mga babaeng	47	iyon:13 ito:10 iyan:5
+mga bagay	102	na:60 bagay:18 ng:6 sa:5
+mga bagong	73	litrato:6 kagamitan:5
+mga bahay	26	na:15
+mga baka	20	sa:5
+mga barista	25	ay:11 ngayon:5
+mga baristang	22	si:21
+mga bata	115	sa:35 ang:22 ng:9 ay:7 lang:7
+mga batang	50	ito:12 babae:9 lalaki:9
+mga berdeng	20	kalesang:5
+mga bintana	19	sa:11 ng:6
+mga binti	30	niya:13 ko:6
+mga bisita	25	ni:18
+mga braso	17	ko:8
+mga bulaklak	36	sa:9 at:6
+mga dahon	33	ng:24 sa:8
+mga damit	26	na:11 ko:5
+mga datos	17	na:13
+mga espesyal	16	na:16
+mga estatwa	21	ng:9 ang:6
+mga estudyante	55	sa:25 ang:9 niya:6
+mga gamit	75	na:39 ko:10 sa:8 mo:7
+mga ganoong	19	bagay:7 lalaki:6
+mga ganyang	16	bagay:7 lalaki:6
+mga hayop	47	ang:13 na:10 sa:8
+mga iba	38	ibang:29
+mga ibon	38	sa:21
+mga ito	20	ay:8 sa:5
+mga kaibigan	90	ko:36 niya:19 mo:10 ninyo:6 sa:5
+mga kaklase	24	ko:12 niya:6
+mga kamay	47	niya:13 mo:7 ko:5 ninyo:5 sa:5
+mga kapatid	36	ko:19 niya:5
+mga kapitbahay	55	kong:13 ko:12 namin:8 natin:8 na:5
+mga kasing	24	edad:13
+mga kuki	19	ni:19
+mga kulay	27	ng:6
+mga lalaki	36	sa:10 at:9 ng:5
+mga lalaking	34	ito:8
+mga larawan	29	at:5
+mga larawang	21	ito:18
+mga libro	69	sa:25 para:12 ang:9
+mga librong	24	iyon:6 iyan:5
+mga litrato	22	ng:7
+mga litratong	19	ito:12 iyan:5
+mga lumang	24	damit:7
+mga mag	63	aaral:62
+mga magulang	132	niya:30 ko:27 mo:14 ninyo:11 ang:10
+mga mahiwagang	34	ilaw:32
+mga maliliit	20	na:20
+mga mansanas	28	na:22
+mga mata	102	niya:29 mo:20 ng:10 ninyo:9 nila:8
+mga muwebles	37	ang:8 ng:8 niya:8 sa:5
+mga paa	18	ko:10
+mga paborito	23	kong:20
+mga pag	18	aari:6
+mga pangarap	20	namin:6 natin:6
+mga pangungusap	27	na:6
+mga paniniwala	25	ko:14
+mga paruparo	17	sa:8 ang:6
+mga personal	16	kong:9 na:7
+mga plano	20	niya:9
+mga pulis	48	ang:30 sa:11 na:5
+mga puno	126	ng:83 sa:16 roon:10 at:5
+mga pusa	35	sa:6 kaysa:5
+mga salita	63	ang:14 sa:9 niya:7
+mga sapatos	27	na:8 ko:7
+mga sarili	33	ninyo:11 namin:6 natin:6 nila:5
+mga sinabi	16	ni:11
+mga sinasabi	16	mo:5
+mga sundalo	27	ang:16
+mga susi	16	ko:6
+mga taga	62	indiyang:13 ibang:7 berlin:6 europa:5 tiyera:5
+mga tanim	28	ng:28
+mga tao	175	sa:51 na:17 ang:16 ay:11 rito:11
+mga taong	144	ito:14 may:9 gustong:8 katulad:8 hindi:7
+mga tinderong	20	si:11 taga:8
+mga trabahador	16	ang:10
+mga tsip	26	na:24
+mga unggoy	20	sa:16
+mga wika	26	ang:7
+mga wikang	44	guni:6
+michael na	126	danes:81 tsino:9 mestisong:8 tsinong:6
+militar na	28	dyaket:5
+minatamis na	16	munggo:6
+miss ko	20	na:12
+mo ako	171	ng:52 sa:12 kayang:9 nang:7
+mo akong	101	tanungin:6 kausapin:5
+mo ang	769	mga:98 iyong:22 sarili:21 kapatid:13 lahat:12
+mo ba	703	ang:192 kung:96 ng:44 akong:41 ako:38
+mo bang	286	gawin:15 pumunta:14 tulungan:12 maging:9 sabihin:9
+mo dahil	26	sobrang:6
+mo dapat	38	sa:7
+mo hindi	22	ba:5
+mo ito	48	sa:7 hindi:5
+mo iyan	38	sa:15
+mo kailangang	37	pumunta:7 gawin:5
+mo kung	61	ano:13 paano:9 sino:8 saan:6
+mo lang	50	gamitin:6 iyan:6
+mo muna	18	ang:10
+mo na	197	ba:62 ang:24 lang:21 akong:12 bang:12
+mo nang	84	mabuti:6 maigi:5 uulitin:5
+mo ng	95	tubig:7 kaunting:6 tulong:5
+mo nga	23	ako:12
+mo ngayong	22	araw:13
+mo pa	36	ng:7 rin:7 ba:6
+mo para	33	sa:18
+mo sa	351	akin:142 kanya:20 mga:20 aking:10 loob:7
+mo sila	23	dahil:5
+mong gawin	52	iyan:9 iyon:8 ito:7 sa:5
+mong sabihin	29	sa:5
+mukha kang	35	mas:5
+mukha po	21	kayong:15
+mula sa	686	mga:33 ilog:20 gripo:18 ref:15 isang:14
+muna ang	19	mga:8
+muna tayo	17	sa:14
+muntik na	34	po:11 akong:9 pong:7
+muwebles sa	23	loob:8 kuwarto:5
+na ako	245	sa:83 ng:25 ngayon:15 nang:8 para:8
+na akong	138	hindi:9 ibang:8
+na ang	922	mga:103 lahat:28 nakalipas:23 bahala:12 kalesang:12
+na anong	46	katibayan:9 pruweba:9 gulay:6 makakain:5
+na ayaw	24	ko:13 kong:5
+na ba	282	ang:60 ng:48 sa:39 kayo:27 si:16
+na babae	49	sa:13 ang:7 ni:6
+na bagay	34	sa:5
+na batang	18	sumigaw:8
+na biyahe	16	ng:6
+na buwan	23	ng:9
+na danes	87	pranses:85
+na dapat	37	siyang:7 gawin:6
+na gagawin	21	niya:8
+na galing	16	sa:14
+na gawa	36	sa:32
+na gawin	97	iyon:36 iyan:34 ito:13
+na ginawa	36	iyon:10 iyan:9
+na gusto	49	niya:8 niyang:8 mong:7 ko:6 ang:5
+na hapon	45	nang:33
+na hindi	248	ko:25 niya:17 siya:16 ako:15 raw:14
+na huwag	58	kang:8 kong:8 gawin:6
+na intelihensiya	37	ang:7 at:6 ay:6 ng:5
+na isa	22	sa:8
+na isda	22	sa:13
+na ito	223	sa:46 ay:44 para:27 pero:14 ang:12
+na iyan	43	sa:9 pero:5
+na iyon	45	sa:11
+na kahit	17	ano:8
+na kailangan	36	niyang:7 niya:5
+na kailangang	19	gawin:12
+na kami	32	ng:8
+na kulay	24	abong:9 abo:8
+na kung	40	saan:10 gaano:5 sino:5
+na lalaki	57	ay:10 ni:8 sa:8 si:8 at:7
+na lamang	40	ako:12 ang:8
+na lang	266	kung:43 po:35 ang:21 ako:19 sa:9
+na mag	42	aral:11 aaral:7
+na malamig	21	na:12
+na mangyayari	18	po:6
+na mas	48	masaya:7
+na may	546	mga:50 yelo:48 abenang:17 hamon:13 buhay:10
+na mayelo	16	ako:13
+na mestisong	47	tsino:16 hapones:10 amerindiyong:8
+na mga	104	taong:8
+na nag	16	aaral:5
+na nakita	24	ko:16
+na naman	85	ako:19 ang:19 po:14 si:7
+na namin	31	ang:14
+na natin	35	ang:13 ito:5
+na ng	49	mga:6
+na nila	21	ang:8
+na niya	27	ang:7
+na olandes	31	na:14 sa:12
+na pag	32	unlad:9
+na pagkain	19	sa:7
+na pilipinang	19	tindera:6 si:5
+na pilipino	29	sa:10 at:7
+na pilipinong	34	may:6
+na po	602	ang:136 ba:53 ako:51 akong:41 si:28
+na pong	76	gustong:5
+na pumunta	24	sa:11 roon:5
+na raw	42	ang:11 siya:5
+na rin	36	ang:10 sa:6
+na sa	146	kanya:15 akin:7 mga:7 labas:5
+na sabihin	17	kay:11
+na salsitsas	26	cheddar:14 tsedar:6 kesong:5
+na siya	85	sa:18 ay:12 ng:7 ngayon:6
+na siyang	49	hindi:5
+na taga	48	indiya:18 indiyang:9
+na tao	26	sa:7
+na taong	40	gulang:22 may:9 kilala:6
+na tayo	29	ng:6
+na tsaa	20	at:9 ako:5
+na tsaang	21	may:13
+na umaga	63	nang:51 ng:6
+na wala	37	siyang:5
+na walang	48	laman:6
+na wika	26	sa:8
+naaalala ko	37	ang:12 pa:9 po:8
+nabanggit ko	16	kay:7 ang:5
+nabasa ko	18	na:7 ang:5
+nag aalaga	22	ng:9 sa:6
+nag aalala	47	ako:7 po:7 pa:5
+nag aaral	132	ng:41 ako:33 si:11 siya:10 ka:7
+nag aaway	25	na:8 po:5
+nag aral	43	ako:13 siya:11 ng:8
+nag order	19	ako:8 siya:5
+nagawa ko	26	lang:6 para:6
+nagbabantay sa	16	pintuan:7
+nagbabasa ako	43	ng:36
+nagbabasa ng	34	libro:8 kastilang:5
+nagbapor si	26	luis:11 oswaldo:11
+nagbebenta ng	25	mga:10
+nagbigay sa	17	iyo:9 akin:7
+naghihintay sa	18	labas:7
+naging simbolo	16	ng:16
+nagkalesa si	30	ariel:12 simon:12
+nagkalesa sina	19	edmundo:13 oswaldo:6
+naglakad ako	38	papuntang:16 hanggang:5 sa:5
+naglakad lakad	19	kami:6
+naglakad po	16	ako:7
+naglalaro ng	32	sudoku:6
+nagluluto ng	84	sisig:11 tsitsaron:10 pansit:5
+nagluluto si	22	jerry:14 ariel:6
+nagmamay ari	17	ng:15
+nagmula sa	33	griyego:5
+nagsabi sa	19	akin:11 iyo:5
+nagsasalita ng	39	pranses:12 ingles:6
+nagsimula po	20	siyang:5
+nagtataka ako	16	kung:16
+nagtatrabaho ako	22	sa:9
+nahanap ko	18	ang:10
+nahuli po	18	ng:6 akong:5
+naiintindihan ang	34	konsepto:5
+naiintindihan ko	41	ang:26 po:6 na:5
+naiintindihan mo	22	ba:13
+nakaahit ang	25	ulo:16 ulong:9
+nakabukas ang	19	ilaw:5
+nakakakita ng	33	mga:6
+nakalimutan ko	42	ang:16 na:8 po:7 pong:6
+nakalipas na	22	taon:5
+nakapunta na	18	ako:7
+nakatakas na	23	bilanggo:8 preso:8 kriminal:6
+nakatira ako	24	sa:19
+nakatira po	20	sa:10 ako:5
+nakatira sa	59	bahay:8
+nakatira siya	17	sa:16
+nakaupo ako	21	sa:20
+nakaupo sa	45	bar:6 bangko:5
+nakikipag usap	48	kay:11 si:11 sa:8 ka:5
+nakikita ko	41	ang:19
+nakikita mo	21	ba:13
+nakilala ko	25	siya:8 si:6 ang:5
+nakipag usap	22	ako:5
+nakita akong	41	mga:7 lalaking:5
+nakita ko	325	si:108 sa:53 ang:48 na:22 siyang:13
+nakita kong	36	may:5
+nakita mo	44	ba:32 na:6
+nakita ni	68	silvestre:41
+nakita niya	25	ang:8
+nakita niyo	24	po:10 ba:9
+nakita po	52	ba:11 ni:10 si:5
+nakuha ko	21	ang:9
+naman ako	33	sa:13 para:5
+naman ang	58	mga:9 kulay:6
+naman ay	86	may:8 ang:5
+naman po	45	ang:6 kayo:6
+namatay ang	33	kanyang:8
+namatay po	24	ang:11 si:11
+namin ang	349	mga:87 aming:15 lahat:10 problema:9 kaligayahan:5
+namin ng	88	mas:8 isang:5 mga:5
+namin ni	53	greg:35 michael:5
+nanay ko	47	ang:9 sa:8 habang:5 ng:5
+nang alas	116	sais:19 siyete:19 otso:11 diyes:6 dos:6
+nang buong	28	linggo:11 gabi:6 araw:5
+nang dahan	21	dahan:21
+nang dalawang	40	beses:11 linggo:7 minuto:7
+nang hindi	86	ko:9 inaasahan:6 nagpapaalam:6 bababa:5 ito:5
+nang ilang	73	oras:15 taon:14 araw:11 beses:8
+nang isang	52	beses:18 linggo:9 gabi:5
+nang kasama	17	ang:12
+nang kaunti	33	ang:24
+nang labag	20	sa:20
+nang maaga	25	bukas:7
+nang maaraw	34	na:30
+nang maayos	35	ang:27
+nang mabilis	17	ang:10
+nang mabuti	35	ang:14 bago:5
+nang madaling	34	araw:33
+nang mag	83	isa:71
+nang makita	27	niya:7
+nang maraming	18	taon:6 beses:5
+nang mas	77	dahan:14 mabuti:12 maaga:9 madalas:5 mahigpit:5
+nang masyadong	16	matagal:7
+nang matagal	18	na:12
+nang maulap	27	na:23
+nang may	50	kasamang:10 mga:7
+nang mga	76	alas:18
+nang pasado	16	nang:16
+nang sarili	37	ko:13 niya:10 mo:5
+nang tatlong	27	beses:14 araw:6
+nang umaga	55	nang:18 nasa:8 ng:6
+nang walang	141	kahirap:26 tulong:15 paalam:8 balita:7 bayad:7
+nangabayo si	32	ronaldo:18 octavio:8 simon:6
+nangyari sa	31	kanya:8
+naniniwala ako	23	sa:19
+naniniwala ka	24	ba:11 bang:10
+naniniwala sa	29	mga:5
+narinig ko	32	ang:9 na:5 po:5
+narinig mo	16	na:8 ba:7
+naroon ako	33	sa:30
+naroon ang	92	mga:50 tinderong:10 tinderang:6
+naroon din	28	ang:18 si:9
+naroon sa	27	pizzeria:7
+naroon si	45	bal:5
+nasa bahay	38	si:7 ka:5
+nasa hardin	33	ng:25
+nasa hustong	17	gulang:17
+nasa ibabaw	21	ng:15
+nasa ilalim	30	ng:19 po:5
+nasa isip	18	mo:5
+nasa istarbak	26	ako:16
+nasa kapihang	18	istarbak:16
+nasa korte	22	ng:20
+nasa labas	20	ng:6
+nasa loob	73	ng:54
+nasa pizzeria	81	ako:31 na:13 sa:11 muli:7
+nasa tsaahan	35	ako:14 sa:11
+nasaan ang	153	mga:20 pinakamalapit:6
+nasaan po	48	ang:35 ba:8
+nasira ang	25	kotse:6 sasakyan:5
+nasunog ang	25	mga:6
+natagpo ko	22	si:11
+natanggap ko	26	ang:21
+natatakpan ng	20	niyebe:7
+natatandaan ko	20	ang:7
+natin ang	223	mga:47 ating:11 problema:11 lahat:8
+natin kailangang	16	basahin:6
+natin kayang	39	baguhin:12
+natin na	20	tama:8
+natin ng	72	mas:8 mga:7
+natin sa	41	pamamagitan:9
+nating palitan	16	ang:12
+naubusan na	21	ako:5 po:5
+nawala ang	22	lahat:5
+nawala ko	36	ang:22 po:9
+nawala na	18	ang:10
+nawalan ng	31	balanse:7 buhay:6 tirahan:5
+nawawala ang	22	panyo:8
+ng abril	38	ng:37
+ng agosto	61	ng:56
+ng aking	91	mga:9 anak:7 ama:5 nobya:5
+ng aklat	33	na:15
+ng aming	24	mga:6
+ng anak	44	ko:11 kong:6 mo:5 mong:5
+ng araw	82	ang:32 sa:15 ng:6
+ng asawa	35	ko:13 niya:8 mo:5
+ng aso	45	ang:16 sa:10 ni:6 mo:5
+ng ate	22	ko:14 niya:6
+ng ating	59	mga:14 araw:10 tiyera:5
+ng babae	17	ang:10
+ng babaeng	20	iyan:5
+ng bagong	172	kotse:18 sasakyan:15 modelo:12 makinarya:8 awto:7
+ng bahay	154	ni:39 na:19 ko:13 ninyo:9 sa:8
+ng baka	27	ang:9
+ng bansang	17	ito:11
+ng bata	34	ang:20 ng:6
+ng batang	29	babae:12 iyan:6
+ng bato	17	ang:11
+ng berdeng	69	damo:23 kastilyo:12 talahib:7
+ng bintana	60	sa:15 ay:8 ng:6
+ng buhay	73	na:14 sa:12 ay:6 ang:5 ko:5
+ng buhok	30	ng:7 mo:5
+ng buko	21	si:8
+ng bundok	19	fuji:8
+ng buong	31	mundo:17 araw:7
+ng dalawang	87	araw:6 baterya:6
+ng damo	39	sa:29 ang:10
+ng disyembre	71	ng:71
+ng diyos	33	ang:7 na:5
+ng doktor	23	na:9 ang:5
+ng dugo	27	sa:9 ang:5
+ng eksperimento	30	ang:30
+ng enero	50	ng:46
+ng esperanto	17	at:5
+ng estados	17	unidos:17
+ng gamot	25	na:20
+ng gasolina	16	habang:6
+ng gatas	17	ang:7
+ng gulay	19	ang:7
+ng gumamela	17	sa:15
+ng guro	44	ang:17 kung:6 namin:5
+ng halaman	21	ito:10
+ng hangin	27	ang:19
+ng hapon	32	at:6
+ng hapones	42	ay:11 na:10 sa:7
+ng hardin	17	ni:11
+ng hindi	29	bababa:8 pagkakaunawaan:8
+ng hopyang	18	ube:7
+ng hulyo	73	ng:64
+ng hunyo	69	ng:65
+ng iba	26	ibang:8 pang:7
+ng ibang	98	tao:19 mga:11 trabaho:9
+ng ilang	136	mga:47 oras:11 araw:6 paraan:6 linggo:5
+ng ilog	26	nang:5
+ng ingles	67	sa:17 ang:9 si:7 at:6
+ng isa	75	pang:32 sa:25 nito:6
+ng isang	797	piraso:44 babae:18 sako:18 linggo:17 oras:17
+ng itim	20	na:13 ang:6
+ng kahit	123	na:52 sino:33 ano:15 sinong:9 isang:6
+ng kaibigan	16	ko:7
+ng kalye	19	ang:5 papuntang:5
+ng kanilang	61	mga:17 kasal:5
+ng kanyang	195	mga:18 asawa:9 ama:8 anak:7 nanay:6
+ng kapatid	80	ko:31 kong:20 niya:7 niyang:7 na:5
+ng kape	31	ang:9
+ng karne	34	ng:14 ang:5
+ng kaunting	66	paminta:15 asin:9 gatas:6 meryenda:6 mantika:5
+ng keyk	19	ang:7
+ng kolang	33	pangdiyeta:31
+ng kotse	33	ko:9 ang:5 ninyo:5
+ng kulay	65	kapeng:20 tsokolateng:19 rosas:8 abong:6
+ng kuwarto	34	ko:10 niya:9
+ng kuya	24	ko:14
+ng lahat	116	ng:50 na:28 ang:15 ay:5
+ng lakas	24	ng:16
+ng lalaki	22	ang:8 na:7
+ng lalaking	26	magugustuhan:6
+ng libro	31	sa:6
+ng librong	27	ito:17
+ng limang	27	minuto:7
+ng lolo	16	ko:9
+ng loob	46	para:23 si:14
+ng lugar	16	na:9 kung:7
+ng madaling	24	araw:23
+ng mag	23	aaral:9 isa:6
+ng magandang	45	lugar:10 trabaho:7
+ng mainit	16	na:16
+ng malaking	92	kantidad:12 pera:10 biluhabang:7 halaga:7
+ng maliit	19	na:19
+ng manok	21	na:9
+ng mansanas	26	na:7 sa:5
+ng maraming	137	pera:15 asukal:13 mga:9
+ng marso	51	ng:39
+ng mas	85	maraming:17 maayos:12 magandang:8 malaking:8 mataas:6
+ng mayelong	59	itim:42
+ng mayo	91	ng:90
+ng melokoton	18	si:10
+ng mga	2920	tao:87 pulis:51 salita:50 bata:48 libro:48
+ng nanay	60	ko:33 niya:9
+ng nars	18	ang:7
+ng niyebe	22	bukas:7 ang:6
+ng niyog	20	na:7 sa:5
+ng nobyembre	52	ng:40 taong:8
+ng oktubre	76	ng:74
+ng oras	67	para:31 sa:9
+ng pag	61	asa:15 iisip:12 aaral:9 ibig:5
+ng paggawa	17	ng:16
+ng pagkain	51	ang:12 sa:9 para:6
+ng pahintulot	21	para:12
+ng pamilya	23	sa:8 ko:5
+ng panahon	20	ang:8
+ng papel	19	ang:5
+ng pebrero	49	ng:22 taong:17
+ng pera	59	ang:13 sa:10 niya:9 pambili:5 si:5
+ng pizza	17	at:7
+ng pizzeria	21	rito:5
+ng pranses	80	sa:14 si:11 noong:9 ang:6 at:5
+ng prut	17	salad:17
+ng pulang	26	kastilyo:5
+ng pulis	21	ang:15
+ng pulisya	31	ang:17 wala:6
+ng puno	20	ng:7
+ng pusa	28	ang:11
+ng puting	29	kastilyo:13
+ng regalo	22	ng:9 sa:6
+ng saging	25	sa:16
+ng salamin	16	at:6 si:5
+ng sampung	26	minuto:10
+ng sanwits	16	na:13
+ng sapatos	20	ni:5
+ng sarili	25	mong:7 kong:5 niyang:5
+ng sasakyan	31	ko:12 ninyo:5
+ng setyembre	91	ng:89
+ng silid	18	aralan:7
+ng siyensiyang	21	piksiyon:16
+ng sulat	33	kamay:11 mo:5
+ng tao	101	sa:31 ang:21 ay:15 at:11
+ng taon	23	dahil:8 ang:6 ay:5
+ng tatay	82	ko:50 niya:14 mo:8 ang:6
+ng tatlong	104	piraso:16 aklat:12 daang:8 taon:8 oras:7
+ng tawad	18	kay:8 sa:7
+ng tent	26	natin:12 namin:10
+ng trabaho	25	ko:6
+ng trak	25	ang:8 para:8
+ng tsaang	18	itim:5
+ng tsokolateng	16	croissant:11
+ng tubig	102	mula:27 ang:26 ng:8 at:7 na:5
+ng tulong	26	sa:7 bakit:6
+ng ube	16	sa:6 si:5
+ng ulan	26	ang:10 sa:7
+ng uling	16	ang:7
+ng wikang	36	pranses:9
+nga ako	30	ng:18 sa:9
+nga ang	34	mga:5
+nga po	28	ng:8 ang:6
+ngayon ang	61	mga:8
+ngayon ay	107	ika:27 ang:23 si:8
+ngayon dito	36	sa:36
+ngayon sa	68	isla:17 bahay:10
+ngayong araw	26	ang:6
+ngayong tag	24	araw:12 init:12
+ni antonio	16	ang:13
+ni ariel	19	ang:14
+ni greg	115	na:37 ang:28 sa:11 nang:5
+ni isang	16	tao:6
+ni michael	33	na:23
+ni robert	38	silverberg:27 heinlein:6
+ni silvestre	79	ang:79
+ni tomas	86	ang:34 na:16 ng:11 kung:5
+ni yanni	43	ang:28 si:9
+ni ziri	41	ang:25
+nila ako	38	ng:9 sa:6
+nila alam	22	ang:9 kung:6
+nila ang	248	mga:38 kanilang:13 lahat:5
+nila hindi	23	raw:12
+nila sa	100	aking:26 akin:18 mga:6 kanilang:5
+ninyo ako	76	ng:30 kayang:7 sa:5
+ninyo akong	77	tulungan:7 tanungin:6 turuan:6
+ninyo ang	483	mga:94 palabas:8 sarili:8 inyong:6 konsepto:6
+ninyo kailangang	39	pumunta:12 gawin:10
+ninyo kung	67	ano:17 paano:17 anong:10 sino:10
+ninyo ng	67	kaunting:6 tulong:5
+ninyo ngayong	18	tag:8
+ninyo para	25	sa:16
+ninyo sa	102	akin:52 kanya:5 mga:5
+ninyong gawin	23	iyan:6 iyon:5
+ninyong kalimutang	28	magsuot:5
+nito sa	32	buong:6 kanya:6
+nitong mga	49	araw:35
+nitong umaga	45	nang:39
+niya ako	132	ng:54 sa:22 kung:11 nang:10
+niya alam	28	kung:15 na:6 ang:5
+niya ang	880	mga:109 kanyang:93 lahat:24 sarili:13 isang:11
+niya ay	60	ang:8 hindi:6
+niya dahil	18	sa:6
+niya hindi	23	niya:5
+niya ng	98	sikolohiya:9 isang:7 mga:5 tulong:5
+niya para	32	sa:7
+niya pero	20	hindi:5
+niya po	182	ang:71 siya:27 ako:26 akong:9 sa:7
+niya raw	55	gagawin:16
+niya sa	368	akin:68 mga:18 lahat:15 siyudad:14 kanyang:13
+niya siya	58	ng:22 sa:6
+niyang gawin	16	iyon:6 iyan:5
+niyang inosente	18	ang:16
+niyo ang	74	mga:17
+niyo ba	115	ang:23 si:14 kung:10 ako:7 akong:7
+niyo bang	40	ipaliwanag:5
+niyo na	29	po:9 ba:8 ang:5
+niyo po	262	ba:87 ang:42 bang:34 ako:18 akong:11
+niyo pong	43	kalimutang:11
+niyo sa	20	akin:9
+noong bata	69	pa:44 ako:10
+noong isang	77	araw:64
+noong kabataan	22	niya:7 namin:6 natin:6
+noong labintatlong	20	taong:20
+noong mga	16	panahong:5
+noong nakaraang	73	linggo:24 taon:19 huwebes:10 miyerkules:6
+opisyal na	33	wika:8 lengguwahe:7 biyahe:6
+oras ang	33	barko:6
+oras na	75	para:26 akong:6
+oras para	97	pag:24 gawin:9 sa:6
+pa ako	121	nakakakita:12 sa:10 kumakain:6
+pa akong	28	nakikitang:9
+pa ang	124	mga:14 posibleng:6
+pa ba	69	ang:25 sa:8 kayo:6
+pa lang	40	makakita:6 sa:5
+pa mag	30	alas:27
+pa namin	17	ng:8
+pa nasa	22	pizzeria:9
+pa natin	18	ng:9
+pa ng	33	kaunting:7
+pa po	184	ang:26 ba:26 ako:21 akong:11 kami:7
+pa rin	290	po:63 ang:36 ako:23 ba:20 si:16
+pa siya	41	sa:7
+paano ba	40	ito:6
+paano ko	28	ba:7
+paano mo	63	siya:5
+paano po	66	ba:20 ninyo:12 kayo:6
+paborito kong	62	pagkain:7 ulam:7 panahon:5
+paborito mong	49	panghimagas:7
+pag aaral	59	ng:20 niya:13 na:5
+pag aari	35	ko:8 niya:7 ni:5
+pag alis	17	ko:5
+pag aralan	18	ang:13
+pag iisip	19	na:5
+pag isipan	34	ito:11 iyan:5 iyon:5
+pag usapan	45	ang:23 natin:9
+pag uugali	17	ni:6
+pag uusap	19	tungkol:12
+pag uwi	94	ko:77 niya:5
+pagbabasa ng	23	magasin:5 mga:5
+paggawa ng	30	mantikilya:16
+pagitan ng	63	mga:35
+pagkain sa	30	bahay:5
+pagkatapos ng	116	hapunan:16 ilang:8 isang:8 mahabang:6 klase:5
+paglalarawan ng	17	magnanakaw:8
+paglipas ng	17	panahon:16
+pagod na	39	ako:9 pagod:8 po:5
+pagsapit ng	20	madaling:20
+pagsikat ng	19	araw:19
+pakainin ang	21	mga:9
+pakiusap huwag	24	mo:9
+pala ang	21	nararamdaman:5
+palagay ko	38	hindi:5
+palagi akong	38	may:5
+palagi po	38	akong:11 siyang:10
+paligid ng	61	bahay:28 hardin:5 munting:5
+palitan ang	26	bandera:6 bandila:6 watawat:6
+pamamagitan ng	86	mga:22 isang:15 paglangoy:5
+pamilya ko	24	sa:8
+pamilya niya	16	sa:9
+pampang ng	18	lawa:13
+panahon ang	17	mga:5
+panahon na	21	para:8 po:6
+pangalan ko	29	ay:16 po:8
+pangalan ng	56	pamangkin:6
+pangalan niya	19	sa:5
+panganib ang	16	mayroon:6
+pangdiyeta ako	21	roon:11 sa:5
+panghimagas na	17	may:6 sopas:6
+pangit ng	19	sulat:5
+pangungusap na	26	ito:15
+paniki ang	19	lumilipad:19
+panoorin ang	16	pelikula:8
+papasok sa	52	trabaho:16 eskuwelahan:11 eskwela:11 paaralan:8
+papel na	22	ito:9
+papuntang kapihang	25	istarbak:19 tim:5
+papuntang pizzeria	17	rito:6
+para bumili	27	ng:25
+para damputin	16	ang:16
+para gawin	71	iyon:21 iyan:20 ang:19 ito:11
+para hindi	33	ako:8
+para isang	50	baso:22 maliit:6
+para kumain	30	ng:29
+para kumuha	26	ng:26
+para mag	27	aral:14
+para makita	24	ang:5 mo:5
+para pag	29	isipan:24
+para sa	956	akin:90 mga:86 iyo:56 isang:33 lahat:30
+para uminom	21	ng:21
+paraan ng	27	paggawa:8
+parang ang	24	dami:10
+parang hindi	39	nila:7
+pareho po	52	kaming:12 tayong:10 kami:8 tayo:7 silang:6
+parke ng	19	bayan:12
+pasado nang	62	alas:34 hatinggabi:8
+pasensiya na	55	at:17 po:12 pero:8
+patak ng	19	tubig:8 ulan:5
+patatas na	20	tsip:7
+patay na	55	ang:13 po:7 si:5
+patayin ang	19	mga:6 ilaw:5
+patungo sa	32	kastilyo:7
+paubos na	16	ang:14
+pera sa	29	bangko:7
+pero hindi	208	ko:38 siya:28 po:21 ako:19 niya:15
+pero mas	23	gusto:5
+pero may	36	mga:5
+pero wala	37	akong:8 na:6 siyang:5
+pigilan ang	26	pagkalat:12
+pinag aaralan	27	ko:10 ang:5
+pinag aralan	17	niya:5
+pinag usapan	162	namin:117 din:9 na:6 naming:5 ni:5
+pinag uusapan	55	namin:18 ang:13 nila:5
+pinagtutuunan ng	16	pansin:16
+pinakamalapit na	39	istasyon:16
+pinakita niya	20	sa:13 ang:6
+pinatay po	22	ni:8 si:7
+pinayagan ng	16	tatay:7
+piraso ng	96	keyk:29 papel:8 tinapay:8 tisa:7 tsok:7
+pizza at	25	uminom:5
+pizzeria ako	24	sa:9 para:8
+pizzeria may	20	dumalaw:5
+pizzeria rito	33	sa:33
+pizzeria sa	48	isla:28 umaga:8
+planeta sa	18	ating:7
+po ako	898	sa:220 ng:204 ni:29 nang:20 para:18
+po akong	517	ibang:11 mga:10 nakikitang:9 oras:9 alam:8
+po alam	69	kung:38 na:12 ang:11 ni:8
+po ang	2734	mga:287 lahat:56 kanyang:27 sasakyan:24 kotse:18
+po ay	44	ang:16
+po ba	1062	ninyo:181 kayo:169 ang:164 kayong:98 ninyong:68
+po bang	116	makita:13 hiramin:6 ipaliwanag:5 pumunta:5
+po dapat	38	ang:13 kayo:7
+po ito	142	ng:23 ni:17 sa:8 ang:6 hindi:5
+po iyan	83	ni:17 ng:10 sa:7 ang:5
+po iyon	89	ni:16 ng:8 sa:6 ang:5
+po iyong	43	suot:6
+po kami	151	ng:55 sa:27 ni:8 nang:6
+po kaming	115	lahat:7
+po kaya	26	ang:12
+po kayang	54	ipaliwanag:6 ipahayag:5
+po kayo	234	sa:53 ng:47 nang:8 ni:7 puwedeng:7
+po kayong	173	mag:7 makilala:6 tingnan:6 gawin:5 mas:5
+po kung	44	ano:15 bakit:6 paano:5 saan:5
+po muna	18	ako:5
+po namin	145	ang:47 ng:18 ito:10 kayo:7 kailangang:5
+po naming	89	baguhin:5
+po natin	134	ang:49 ng:16 ito:10 kayang:10 iyan:7
+po nating	113	baguhin:5
+po ng	827	mga:140 isang:20 eksperimento:13 ilang:11 lahat:11
+po ni	459	yanni:7 ziri:7 david:6
+po nila	129	ang:33 sa:20 ako:10 hindi:7 ito:5
+po ninyo	378	ang:130 ako:42 sa:27 akong:20 kailangang:17
+po ninyong	128	kalimutang:14 gawin:5 hawakan:5
+po niya	86	ang:65
+po niyang	41	inosente:8 walang:6
+po para	16	sa:7
+po sa	384	akin:45 mga:30 inyo:21 loob:11 tingin:11
+po sana	22	akong:6
+po si	804	julia:7 tomas:6
+po siguro	28	ang:6
+po sila	85	sa:22 ng:19
+po siya	345	sa:127 ng:88 noong:13 nang:9 pero:7
+po siyang	201	mag:7 nabalisa:6
+po talaga	45	ako:5 ang:5 si:5
+po tayo	133	ng:42 sa:26 nang:6 dapat:5 rito:5
+po tayong	115	lahat:6
+po yata	41	ito:5
+pong hindi	22	ko:6
+pong mag	17	aral:7
+pong mga	48	hayop:5
+pong pumunta	16	sa:8
+pook na	19	sa:12
+posibilidad na	20	hindi:12
+pranses ang	30	mga:9
+pranses at	35	saka:6 pinag:5
+pranses na	50	librong:12 ufolohista:7
+pranses sa	47	mga:9 daan:5
+presyo ng	21	langis:5
+presyon ng	26	dugo:11 mga:10
+problema sa	25	loob:8
+proseso ng	16	paggawa:8
+protektahan ang	22	ating:5
+prut salad	36	ni:17 na:16
+prutas na	19	ito:10
+pula ang	55	buhok:17 mga:5
+pula at	32	itim:8 puting:6
+pulis ang	50	isang:8 bata:5
+pulis sa	21	ilalim:9
+pulisya sa	20	loob:8 eskuwelahan:6 paaralan:6
+pumasok sa	60	bahay:9 eskwela:6 trabaho:5
+pumunta ako	70	sa:54 para:5
+pumunta ka	29	sa:10 ba:6 rito:5
+pumunta kami	16	sa:10
+pumunta po	39	ako:8 si:8 siya:8 tayo:5
+pumunta roon	32	kung:12 nang:7
+pumunta sa	193	ibang:14 tindahan:12 malaking:10 australia:9 pizzeria:6
+pumunta siya	23	sa:19
+puno ng	211	mga:17 mansanas:16 sinigwelas:14 melokoton:11 kamatsili:9
+puno po	19	ng:10 ang:9
+puno sa	33	bakuran:6 pamamagitan:5 parke:5
+punong puno	28	ng:12 ang:5
+pupunta ako	43	sa:32
+pupunta ka	18	ba:15
+pupunta po	19	ako:10
+pusa ang	26	kulay:5
+pusa sa	19	dilim:5
+puti at	53	pula:25
+putik ang	25	dingding:6 mga:5
+puting unikorniyo	18	ay:17
+puwede ba	85	akong:30 kitang:11 ninyong:9 tayong:8 ninyo:7
+puwede ka	18	bang:9
+puwede ko	77	bang:43 po:20 pong:6
+puwede kong	47	hiramin:12 gawin:7
+puwede mo	70	bang:36 ba:22 akong:5
+puwede mong	38	gamitin:8
+puwede na	23	ba:6 po:6
+puwede po	105	ba:40 ninyong:13 tayong:7 akong:6 kaming:6
+puwedeng baguhin	18	ang:9 ito:5
+raw ang	65	mga:15
+raw gagawin	16	iyan:8 iyon:8
+raw niya	17	ang:6
+raw po	35	sila:6
+raw siya	45	sa:14
+regalo sa	18	pasko:7 ilalim:6
+regular na	23	kostumer:9
+rin ako	51	sa:9 ng:5 pupunta:5
+rin ang	117	mga:10 lahat:5
+rin ba	29	kayo:7
+rin ng	24	mga:6
+rin po	133	ako:23 ang:13 ba:10 iyan:8 iyon:8
+rin siya	16	ng:7 sa:5
+rito sa	110	isla:80 kapihan:10
+ronaldo hanggang	18	sa:18
+roon ay	17	si:6
+roon nang	26	sarili:5
+rosas na	45	iskuwirel:10
+rose na	34	pilipina:13 pilipinang:8 tinderang:7
+sa akin	812	ang:268 kung:83 ng:60 na:51 ni:46
+sa aking	220	mga:17 wala:9 hindi:6 bahay:5
+sa amin	94	kung:19 ang:18 ng:11 ni:9 si:7
+sa aming	54	dalawa:6 sang:5 sumang:5
+sa anumang	24	emerhensiya:7
+sa araw	56	na:21 ng:9 nang:8
+sa aso	16	ko:5
+sa atin	67	ng:10 ang:8 kung:7 ni:7 si:6
+sa ating	68	sistemang:9 tiyera:9 dalawa:7
+sa australia	45	ang:11 sa:10
+sa bago	23	niyang:10 kong:7
+sa bahay	363	niya:57 ng:31 na:27 ko:21 sa:19
+sa balkonahe	25	sa:6 ng:5
+sa bansa	20	ko:5 namin:5 natin:5
+sa bansang	33	hapon:14 ito:10 iyon:6
+sa bayan	28	nang:7 ko:6
+sa bintana	22	ng:6
+sa buhay	89	ko:24 sa:21 ay:9 ng:5
+sa bukid	41	ni:23
+sa bulsa	22	niya:14
+sa buong	131	mundo:41 buhay:34 lungsod:10 siyudad:10 bansa:5
+sa canada	22	mula:5
+sa daan	120	nakita:28 papuntang:14 si:12 ang:10 sa:10
+sa dalawang	37	grupo:7
+sa diyos	21	at:7
+sa edad	47	na:36 niya:5
+sa eskinita	21	sa:8
+sa esperanto	29	kometo:5
+sa estados	21	unidos:21
+sa gabi	54	sa:16
+sa ganitong	27	klase:6 kalagayan:5
+sa gitna	33	ng:30
+sa grupo	18	namin:5 natin:5
+sa gubat	37	ng:15 na:12 ang:6
+sa hapon	129	nang:13 ang:11 at:10 sa:8 nakita:7
+sa hapones	29	ay:9 na:6
+sa harap	74	ng:63
+sa harapan	99	ng:88
+sa hardin	70	ng:34 ni:14 niya:6
+sa hilagang	31	amerika:25
+sa huli	31	nang:14 ng:5
+sa huling	37	buwan:17
+sa iba	57	ibang:15 ang:13 pang:8
+sa ibabaw	61	ng:59
+sa ibang	238	bansa:52 tema:29 mesa:24 mga:14 planeta:14
+sa ilalim	188	ng:182
+sa ilang	28	mga:15
+sa ilog	48	ang:25 na:9 sa:6
+sa ingles	35	ang:5 na:5
+sa inyo	141	ang:33 kung:19 na:12 ng:9 sa:9
+sa inyong	62	dalawa:9
+sa isang	627	mesa:43 buwan:30 araw:29 sulok:20 bahay:15
+sa isip	37	ko:10 ni:6 at:5
+sa isla	420	lulu:368 lulung:32 ng:5
+sa istarbak	59	may:7 dito:6 para:6 sa:5
+sa itaas	18	ng:14
+sa iyo	257	ang:42 na:37 ng:32 kung:21 sa:12
+sa iyong	85	gawin:8 mga:7
+sa kabila	30	ng:28
+sa kahoy	16	ang:7
+sa kaibigan	16	ng:6
+sa kakulangan	16	ng:8 sa:8
+sa kalooban	24	niya:10 ko:8 mo:6
+sa kalusugan	22	ang:9 ni:5
+sa kamay	25	ko:6 niya:5
+sa kanila	71	ang:18 ay:14 na:7
+sa kanilang	115	mga:27
+sa kanya	269	ang:74 ng:32 na:24 sa:19 ay:18
+sa kanyang	477	mga:42 ismartpon:17 asawa:10 bakuran:10 trabaho:10
+sa kapatid	26	ko:6 mo:5
+sa kapihan	71	doon:25 may:7 erwin:6
+sa kapihang	92	istarbak:53 tim:18 istarbaks:12
+sa katapusan	18	ng:17
+sa klase	23	niya:6
+sa kotse	18	ko:5
+sa kung	26	ano:7 anong:5 paano:5
+sa kusina	25	ay:5
+sa kuwarto	76	niya:34 ko:23 ni:7
+sa labas	227	ng:134 sa:23 nang:7 ang:6 at:5
+sa lahat	107	ng:76 ang:5 na:5
+sa lambak	17	ng:14
+sa langit	24	habang:6
+sa lawa	17	sa:6 ang:5
+sa likod	68	ng:46
+sa likuran	29	ng:21
+sa loob	381	ng:330 ang:9 at:7
+sa lugar	46	na:39
+sa lungsod	19	ng:7
+sa lupa	16	ang:6
+sa maaraw	24	na:23
+sa mabilis	30	na:26
+sa madaling	27	salita:14 araw:9
+sa malaking	104	malaking:35 akwaryo:16 tindahan:9 bote:7
+sa malapit	22	na:11 sa:9
+sa maliit	18	na:13
+sa maraming	33	tao:5
+sa maulap	20	na:18
+sa mesa	72	ko:36 sa:26
+sa mga	1747	taong:39 babae:29 kaibigan:27 bata:26 bagay:20
+sa mukha	19	niya:7
+sa mundo	29	ng:6
+sa mundong	21	ito:12 pangkanluran:5
+sa nakaraang	21	buwan:17
+sa nanay	27	mo:7 ninyo:7 ko:5
+sa oras	28	na:10 ang:9 ng:5
+sa pag	117	aaral:20 ibig:14 inom:11 uugali:7 uusap:7
+sa pagbabasa	18	ng:13
+sa pagiging	23	doktor:7 malingat:6
+sa pagitan	69	ng:59 nina:5
+sa pagkakataong	19	ito:19
+sa palagay	48	ko:36 mo:8
+sa paligid	74	ng:55 niya:5
+sa pamamagitan	88	ng:86
+sa pamilya	27	ko:11
+sa paris	21	para:5
+sa parke	83	roon:51 ng:15
+sa parkeng	18	eskinita:11
+sa pilipinas	65	ang:10 at:5 may:5
+sa pisngi	24	ng:6
+sa pizzeria	179	sa:28 may:19 rito:15 naroon:12 at:10
+sa pizzeriang	19	yami:10
+sa planetang	19	irding:6
+sa pook	31	na:16
+sa pranses	29	matatas:6 at:5
+sa prut	17	salad:17
+sa relihiyon	16	ninyo:5
+sa sahig	18	sa:10 ang:6
+sa sakit	16	na:11
+sa sarili	55	ko:22 niya:8 mo:5 niyang:5
+sa sasakyan	16	ang:5
+sa silid	33	aralan:9 aklatan:8 kainan:8
+sa siyensiyang	20	piksiyon:11 piksiyong:5
+sa siyudad	87	ni:63 sa:8
+sa sulok	16	na:7
+sa sunod	19	na:16
+sa susunod	130	na:125
+sa tabi	283	ng:259 ko:8
+sa tabing	56	dagat:32 pruteriya:7 mesa:5
+sa tablet	25	ko:24
+sa tag	17	init:14
+sa tanghali	16	sa:5
+sa taong	18	ito:13
+sa tapat	48	ng:41
+sa tatay	22	ko:6
+sa tema	34	ng:34
+sa timog	42	ng:13 amerika:8 korea:7
+sa tindahan	34	ng:14 sa:7
+sa tindahang	26	iyan:10 iyon:6
+sa tingin	461	ko:303 mo:83 ninyo:22 po:10 niya:9
+sa totoo	34	lang:33
+sa trabaho	57	niya:13 ko:9 mo:7 sa:5
+sa tren	19	ang:18
+sa tsaahan	103	sa:38 at:7 may:6 para:6 ang:5
+sa tsaahang	18	may:5
+sa tsina	25	itong:6 ang:5
+sa tubig	24	na:9
+sa tuktok	23	ng:22
+sa tuwing	33	dumarating:5
+sa ulo	19	ko:7
+sa umaga	118	at:32 sa:11 nang:10 rin:6 ang:5
+sa unang	29	hilera:6 tingin:6
+sa unibersidad	19	ng:10
+sa wakas	44	ay:7
+sa wikang	44	pranses:7 ingles:6
+saan ang	57	mga:9 pinakamalapit:5
+saan ba	65	ako:6 ito:6 ang:5 ninyo:5
+saan ka	54	pupunta:5
+saan mo	57	sila:7 ba:5 gusto:5 nakuha:5
+saan po	56	ba:25 ang:5 ninyo:5
+saan siya	43	nakasakay:8 nanggaling:7 nakatira:5
+saan tayo	18	pupunta:9
+sabaw na	21	ito:18
+sabi ko	182	kay:77 sa:38 namang:10 may:5
+sabi kong	155	ang:15 may:12 sa:12 hindi:8 maraming:7
+sabi ng	85	isang:10
+sabi ni	175	michael:10 greg:5 rose:5
+sabi nila	26	hindi:7
+sabi niya	62	sa:10 hindi:6
+sabi niyang	51	may:5
+sabi po	31	ni:13 nila:8 ng:7
+sabi sa	33	akin:8 balita:6
+sabihin mo	83	sa:49 kay:13 ang:6 na:6
+sabihin sa	95	kanya:24 iyo:21 akin:15 inyo:13
+sachet at	24	si:20
+sachet na	23	taga:12
+saging sa	16	tabi:6
+sagutin ang	18	lahat:12
+sakit na	25	ito:11 iyan:5
+sakit po	16	ng:8
+sako ng	42	mga:16
+saksi ni	20	jehova:19
+salad na	16	may:16
+salad ni	17	ariel:17
+salamat sa	61	diyos:6 inyong:5
+salamin ang	18	lababo:11
+sana hindi	75	ko:28 na:22 ka:5
+sanay na	19	ako:9 akong:5
+sang ayon	62	kaming:20 ako:9 kami:8 sa:5
+sanwits na	49	salsitsas:24 beykon:6 may:5
+sapat na	94	pera:20 lakas:13 ang:8 po:7 oras:5
+sarili ko	22	sa:11
+sarili niya	30	sa:8 habang:6 ng:6
+sasabihin ko	31	sa:15
+sasakyan sa	34	kalsadang:5
+sasama sa	22	akin:11 amin:5
+si ariel	77	ng:29 hanggang:24 papuntang:12 sa:10
+si bal	25	na:11 at:5
+si chris	20	na:17
+si daniel	22	sa:22
+si dennis	18	na:10 yaong:7
+si francis	17	na:10 yaong:6
+si ginoong	35	jackson:5 wood:5
+si greg	71	na:25 sa:9 at:8 ay:6
+si hans	28	na:20
+si jam	19	na:10 yaong:5
+si jerry	16	ng:14
+si lola	18	joey:7
+si marlin	21	yaong:17
+si melissa	43	dahil:31 sa:10
+si michael	121	na:94 ng:6
+si navjot	17	at:7 na:7
+si rafael	17	hanggang:15
+si rod	21	na:9 at:5
+si ronaldo	19	hanggang:18
+si rose	34	na:25
+si sachet	56	at:24 na:21
+si sarah	19	yaong:14
+si silvestre	46	sa:46
+si simar	24	na:10 yaong:7
+si simon	46	hanggang:45
+si tanya	16	yaong:11
+si tharsan	25	yaong:18
+si tomas	62	sa:21 ng:8
+si ziri	52	sa:23 ng:18
+sigurado ba	16	kayong:13
+sigurado ka	35	bang:30
+sigurado kung	29	ano:7 paano:5
+sigurado po	29	ba:14 akong:11
+siguradong sigurado	25	po:9 ba:7 ka:7
+sikat na	33	sikat:6 artista:5 mang:5
+sila dahil	18	hindi:6
+sila ng	172	mga:28 bagong:17 pera:8 mas:5
+sila sa	239	mga:20 loob:11 isang:9 akin:8 pag:7
+silvestre sa	46	bahay:31 kuwarto:15
+simbolo ng	38	tagalog:6
+simon hanggang	45	sa:45
+sinabi ko	76	sa:31 kay:15 iyon:10 na:6 iyan:5
+sinabi ni	138	cindy:10
+sinabi niya	42	sa:28 na:8
+sinabi sa	72	akin:40 iyo:8 kanya:8 amin:7 atin:5
+sinasabi ko	24	lang:16 sa:6
+sinasabi ng	26	mga:6 iba:5
+sindihan ang	16	aparatong:5 kagamitang:5
+sino ang	496	gumawa:28 may:20 mga:20 nagsabi:15 babaeng:14
+sino ba	22	ang:11
+sino po	72	ang:63
+sino sa	16	inyo:12
+sinong may	21	gusto:7
+sinu sino	21	ang:7 po:5
+siya ang	95	pinakamagaling:6 unang:6
+siya at	85	hindi:6 ang:5
+siya ay	176	isang:15 may:9 hindi:6
+siya dahil	36	sa:9
+siya kung	16	saan:5
+siya mula	21	sa:18
+siya na	20	may:6
+siya nang	121	kaunti:7 malaki:7 hindi:6 mabuti:6 walang:6
+siya ng	713	mga:49 isang:34 kanyang:13 libro:12 maraming:12
+siya noong	44	ika:8
+siya para	38	sa:14
+siya pero	40	hindi:11
+siya po	21	ang:13 ay:8
+siya rito	16	sa:6
+siya sa	981	mga:66 kanyang:61 akin:48 kanya:43 isang:37
+siyang gawin	19	iyon:8 iyan:6 ito:5
+siyang mag	36	aral:12 ingles:6 aaral:5 isa:5
+siyensiyang piksiyon	43	sa:7 at:6
+siyensiyang piksiyong	32	librong:10 libro:6
+siyudad ni	63	silvestre:62
+siyudad sa	16	kabilang:6
+sukat ng	24	sapatos:7 baywang:5
+sulat kamay	26	ko:6 mo:5
+sulat na	20	ito:7
+sumakay ng	39	kabayo:28
+sumali sa	18	hukbo:7 banda:5
+sumama sa	20	akin:10
+sumang ayon	19	sa:9
+sumasakit ang	39	mga:6
+sumunod sa	18	mga:11
+sundin ang	27	mga:26
+sunod na	43	aytem:6
+suot ko	27	ang:23
+suot na	49	damit:6
+suot suot	27	na:14 niya:5
+susunod na	135	linggo:29 taon:28 buwan:22 lunes:15 tag:9
+tabatsoy na	26	mukhang:5
+tabi ng	275	magsasaka:31 mga:21 ilog:20 lawa:20 kastilyo:15
+taga indiya	36	at:12 rin:8
+taga indiyang	60	si:19 tinderong:16 tindero:7
+taga sri	16	lanka:16
+tagalog ay	18	parang:5
+takdang aralin	39	ko:8 mo:5 niya:5
+takot ako	17	sa:14
+talaga ako	23	sa:10
+talaga ang	70	mga:8
+tama ka	17	nga:5
+tama na	19	ang:8
+tanggapan ng	20	koreo:20
+tanggapin ang	26	alok:8 kakaibang:5
+tanghali nang	21	ika:21
+tanim ng	29	gumamela:15 saging:11
+tanungin mo	17	siya:5
+tao ang	119	mga:10 dadalo:5
+tao at	28	ang:8
+tao ay	62	hindi:5
+tao na	28	ang:6
+tao ng	18	mga:10
+tao po	19	ang:13
+tao sa	185	mga:14 mundo:13 bahay:7 loob:7 handaan:6
+taon ang	31	proseso:6
+taon ka	18	na:11
+taon na	91	ang:40 po:8 akong:7 pong:6
+taong gulang	106	na:45 ako:25 siya:9 ang:5 ka:5
+taong may	30	ganyang:9
+tapat ng	43	bahay:9
+tapos na	83	ang:34 po:15 ba:6
+tapos nasa	17	pizzeria:7
+tasa ng	29	kape:13 krimen:5
+tatay ko	77	sa:16 ang:9 noong:9 na:7 ay:5
+tatlong aklat	16	aralin:12
+tatlong araw	29	na:11 nang:7 ang:5
+tatlong beses	24	sa:9
+tatlong daang	30	dolyar:19
+tatlong kulay	21	ang:15 po:6
+tatlong piraso	18	ng:16
+tatlong taon	29	na:18 nang:5
+tawag sa	44	akin:5 mga:5
+tawagan mo	21	ako:13
+tayo ng	218	mga:18 gasolina:8 ibang:6 taksi:6
+tayo sa	214	restawrang:18 loob:10 sunod:9 salas:8 isang:7
+tayong mag	22	usap:8
+tema ng	38	araw:34
+tharsan yaong	19	may:13
+tiisin ang	21	kirot:5 sakit:5
+tim hortons	41	para:6 dito:5 sa:5
+tinanggihan niya	16	ang:16
+tinanong ko	30	siya:11
+tinanong niya	22	ako:11 kung:5
+tinapay na	19	may:10
+tindahan ng	26	mga:7
+tinderang si	21	rose:7
+tindero ay	17	si:13
+tinderong si	33	sachet:17 bal:8
+tinderong taga	22	indiyang:13 indiya:8
+tingin ko	313	hindi:47 po:23 mas:13 ang:9 sa:9
+tingin mo	88	ba:28 ang:23 sa:9
+tingin ninyo	23	ang:17
+tingnan mo	50	ang:24 kung:6
+tiningnan ko	16	ang:5
+tiyak na	61	mangyayari:12 malalaman:6
+tomas ang	40	mga:5
+tomas na	26	maliit:6
+totoo lang	33	po:14 ayaw:7 hindi:7
+trabahong kailangan	16	naming:8 nating:8
+tsaahan sa	52	isla:27 hardin:13
+tsaang itim	27	na:26
+tsaang may	26	yelo:18
+tsansang hindi	16	iyan:8 iyon:8
+tsip na	31	inihurnong:8 patatas:7 mansanas:6
+tsokolate ang	22	mga:6
+tsokolateng unikorniyo	26	ang:11 ng:9 ay:6
+tubig ang	35	mga:6
+tubig at	23	langis:5
+tubig mula	48	sa:48
+tubig na	23	may:12
+tuktok ng	38	bundok:28 burol:7
+tulad ng	99	mga:9 isang:6
+tulungan mo	22	ako:6
+tumakbo si	21	ariel:6
+tumawag sa	21	akin:9
+tumigil ang	37	mga:11 kalesa:7
+tumigil ka	17	sa:8 na:6
+tumigil sa	20	paninigarilyo:6
+tumira sa	30	isang:6
+tumulong sa	50	akin:12 amin:11 atin:9 kanya:6 iyo:5
+tunay na	85	kaibigan:7 buhay:6 artista:5 pag:5
+tungkol sa	460	mga:92 kanyang:19 isang:18 buhay:15 akin:13
+ubos na	37	ang:26 po:9
+umaga at	37	sa:20
+umaga nang	136	ika:124
+umaga nasa	17	tsaahan:7
+umaga ng	22	ika:16
+umalis na	26	ang:5 sila:5 tayo:5
+umalis siya	17	nang:6
+umiinom ako	74	ng:60 roon:10
+umiinom ng	57	tubig:10 mayelong:7
+uminom ng	91	mayelong:9 kape:8 tubig:8 alak:7 diet:7
+umupo sa	16	likod:5
+unang beses	51	na:24 kong:13 ko:8
+unggoy sa	23	gubat:10
+unikorniyo ang	40	berdeng:30 mga:9
+unikorniyo ay	45	nasa:45
+unikorniyo ng	20	berdeng:20
+unikorniyo sa	33	hardin:10 landas:7 labas:6
+uri ng	94	mga:18 pagkakamali:12 tao:8 halaman:5
+usap sa	66	iyo:13 mga:9 pasilyo:8 inyo:6 akin:5
+usapan ang	26	mga:6
+usapan na	18	namin:6 natin:6
+usapan namin	123	ang:79 ni:31 tungkol:5
+uto uto	27	po:10
+uusapan namin	18	ang:13
+uwi ko	75	nakita:31 sa:13 dumaan:10 binati:5
+wala akong	430	pakialam:30 oras:23 alam:21 pera:15 sapat:12
+wala ang	32	tulong:8 mga:5
+wala ka	41	bang:17 sa:6 namang:5
+wala kaming	56	oras:6 panahon:5
+wala na	159	akong:34 po:31 pong:28 kaming:8 tayong:8
+wala naman	22	akong:5
+wala nang	99	ibang:10 mas:6 natitirang:6
+wala pa	67	akong:17 po:15 rin:12
+wala po	222	akong:108 kaming:14 siyang:14 iyong:11 silang:11
+wala pong	186	may:9 kapantay:7 bayad:5 kailangang:5 kinakailangang:5
+wala sa	50	amin:9 bahay:5
+wala siya	21	rito:10 sa:8
+wala siyang	100	masamang:5
+wala tayong	42	oras:7 sapat:5
+walang kahirap	26	hirap:26
+walang laman	29	ang:27
+walang may	28	alam:11 gustong:7
+walang nakakaalam	17	ng:8 kung:5
+wika ang	27	gusto:6
+wika ng	26	mga:5
+wika sa	29	buong:6
+wikang guni	22	guni:14 guning:8
+yaong anglo	23	sahona:12 sahonang:10
+yaong may	26	lahing:11
+yaong taga	35	indiya:13 indiyang:6
+yari sa	18	kahoy:5
+yumuko po	19	si:9 ako:8
+ziri ang	25	kanyang:10
+ziri sa	25	ilalim:9

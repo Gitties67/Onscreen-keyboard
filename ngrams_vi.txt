@@ -1,0 +1,2582 @@
+# Word phrase model (bigrams + trigrams) for the on-screen keyboard.
+# Derived from Tatoeba vie sentences, https://tatoeba.org,
+# CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
+# Regenerate with tools/build_ngrams.py / tools/build_lang.py.
+#
+# Format: a '[2]' or '[3]' section header, then one line per context:
+#   <context words, space-separated>TAB<context total>TAB<w:count w:count ...>
+# '<s>' is the sentence-start token. Context totals are counted before
+# pruning; continuations are pruned (min count, top-K) and sorted by count.
+[2]
+<s>	34141	tôi:6362 bạn:2160 anh:1814 chúng:1104 cô:1059 có:541 hãy:476 họ:455 không:430 nó:352 đừng:350 cái:322 đó:306 con:292
+ai	707	cũng:66 đã:61 đó:60 có:36 trong:24 sẽ:23 biết:22 vậy:20 không:15 cả:14 đến:14 làm:13 là:12 muốn:11
+an	78	toàn:32 ủi:8 ninh:5 giê:4
+anh	3732	ấy:2106 ta:790 có:59 không:50 trai:46 em:31 hãy:24 đã:23 là:21 muốn:20 chị:17 yêu:16 sẽ:15 đi:14
+ba	324	năm:30 mươi:29 lần:22 ngày:17 người:13 tháng:10 tiếng:10 tôi:8 tuổi:7 cái:6 giờ:6 lan:6 mẹ:6 tui:6
+ban	59	nha:25 đầu:12 đêm:11
+bao	652	giờ:339 nhiêu:203 lâu:44 gồm:15 xa:15 phủ:5 quanh:4
+bay	126	đã:10 của:6 này:6 đến:6 qua:5 từ:5 trên:4
+bia	35	không:5
+biến	48	mất:15 thành:6 đổi:6
+biết	1232	là:112 rằng:48 nói:44 gì:33 anh:30 bạn:30 tên:28 ai:27 cách:21 tôi:21 mình:20 điều:20 được:19 bao:18
+biển	69	báo:11 bơi:4
+biểu	40	diễn:9 của:6
+biệt	50	được:6 trong:4 đối:4
+buýt	46	số:4 đến:4
+buồn	67	ngủ:15 cười:6 khi:6 chân:4 của:4
+buổi	168	sáng:43 tối:27 hòa:14 chiều:13 họp:12 tiệc:10 trưa:8 học:5 biểu:4 lễ:4
+buộc	44	phải:17 tội:8
+bà	212	ấy:102 ta:21 tôi:12 của:8 cụ:4 già:4 nội:4
+bài	348	tập:143 hát:39 kiểm:29 thơ:22 học:12 thuyết:11 này:10 thi:7 toán:7 phát:6 giảng:5 luận:4 mà:4 viết:4
+bàn	93	này:11 tay:7 có:4 là:4 về:4
+bày	23	bán:6
+bác	122	sĩ:86 sỹ:16 tôi:7 bỏ:5
+bán	113	hàng:7 rất:7 chiếc:6 xe:6 chạy:4 hoa:4 nhà:4
+bánh	117	mì:39 ngọt:9 mỳ:8 quy:7 này:6 pizza:5 trung:4 xe:4
+báo	139	cáo:22 cho:15 giao:8 thức:7 này:5
+bây	228	giờ:215 có:4
+bãi	31	biển:17 cỏ:5 bỏ:4
+bão	39	đã:5
+bè	31	của:12
+bé	142	gái:14 đang:9 đó:8 đã:7 trai:6 của:4
+béo	25	phì:4
+bên	170	ngoài:32 trong:27 cạnh:22 trái:9 phải:8 tôi:7 kia:6 nhau:5 dưới:4
+bình	136	thường:34 tĩnh:32 luận:12 đẳng:8 an:4 thế:4
+bí	54	mật:27 ẩn:9 tỉ:5
+bò	30	và:5
+bóng	119	chày:27 đá:26 tối:13 rổ:9
+bông	34	hoa:23
+bút	67	chì:44 này:4
+băng	51	qua:10
+bơi	88	không:8 lội:8 giỏi:7 được:7 nhanh:6 qua:4
+bưu	20	điện:15
+bước	65	vào:24 ra:7 đi:7 chân:5
+bại	31	của:9 thì:4
+bạn	4401	có:859 đã:357 không:271 đang:151 sẽ:144 nên:124 là:107 phải:99 muốn:89 nghĩ:73 làm:70 hãy:62 biết:56 cần:56
+bản	277	thân:67 dịch:20 đã:12 đồ:9 báo:8 là:7 của:5 gốc:5 phân:5 chất:4 không:4 mới:4 ngữ:4 nhạc:4
+bảng	35	chữ:19
+bảo	226	vệ:38 tôi:34 rằng:15 tàng:13 hiểm:11 anh:10 bạn:8 cô:6 là:6 với:6 họ:5 quản:5 chúng:4
+bảy	43	giờ:8 mươi:5
+bất	257	cứ:105 kỳ:33 kì:14 khả:12 ngờ:12 hạnh:7 an:6 cẩn:5 lực:5 thường:5 chấp:4 kể:4 tỉnh:4 tử:4
+bầu	56	trời:34 cử:8
+bậc	30	nhận:6
+bận	69	rộn:23 tâm:6 không:4
+bật	33	đèn:6
+bắc	23	kinh:10
+bắt	408	đầu:243 buộc:15 tôi:14 cóc:10 giữ:10 chuyện:8 nạt:8 được:8 kịp:7 con:5 gặp:5 phải:5 cô:4 nguồn:4
+bằng	393	xe:34 tiếng:32 cách:31 lái:17 một:13 đũa:12 máy:11 chứng:10 tay:8 chữ:7 ngôn:6 tuổi:6 hai:5 lời:5
+bếp	31	giỏi:6 xuất:4
+bệnh	120	viện:47 nhân:10 tật:8 ung:6 cúm:4
+bị	1003	đau:58 thương:35 bắt:32 ốm:31 mất:25 cho:19 cảm:19 hỏng:18 trộm:18 bệnh:16 gãy:15 lạc:15 sa:14 buộc:10
+bọn	102	họ:35 trẻ:17 mình:14 tôi:7 tớ:7 tao:4
+bỏ	186	cuộc:12 thuốc:11 lỡ:10 phiếu:10 học:8 đi:7 chạy:6 qua:6 hút:5 mọi:5 quên:4
+bố	236	tôi:75 mẹ:60 anh:11 bạn:9 của:7 cô:5 mày:5 mình:5 bản:4
+bốn	50	mươi:10 năm:6 trăm:4
+bộ	278	phim:61 đến:16 của:8 phận:7 đồ:7 câu:5 quần:5 trưởng:5 tới:5 được:5 bài:4 hành:4 mỗi:4 này:4
+bờ	24	biển:10 sông:6
+bởi	76	vì:32 một:5
+bụng	24	không:4
+bức	146	tranh:49 thư:40 ảnh:29 tường:12 tượng:6
+bữa	182	tiệc:49 tối:42 sáng:31 ăn:25 trưa:18
+ca	45	sĩ:18
+cam	20	kết:4
+cao	166	hơn:25 nhất:12 cấp:10 su:10 bằng:7 của:5 cổ:4 không:4
+cha	125	mẹ:45 tôi:25 của:16 mình:7
+chai	33	rượu:10 đó:5
+che	23	giấu:7
+chi	46	tiết:14 phí:9 trả:8
+chia	52	tay:14 sẻ:11 buồn:8
+chim	64	đang:6 đó:5
+chiếc	388	xe:137 máy:27 váy:18 áo:15 quần:14 ghế:10 bánh:8 mũ:8 hộp:7 đồng:7 nhẫn:6 túi:6 điện:6 bút:5
+chiến	92	tranh:42 thắng:19 đấu:16
+chiếu	54	phim:10 của:7 giá:5 hết:4
+chiều	73	nay:26 hôm:4
+cho	1796	tôi:373 bạn:130 anh:61 cô:59 đến:50 chúng:47 rằng:43 nên:40 dù:38 con:37 người:34 phép:33 một:27 mình:26
+chung	48	sống:4 với:4
+chuyên	44	gia:12 nghiệp:9 môn:7 ngành:4
+chuyến	90	đi:26 tàu:24 bay:12 xe:11 tầu:8 du:5
+chuyển	87	nhà:11 sang:11 đến:11 cái:5
+chuyện	523	với:126 gì:63 đó:63 này:44 của:26 đã:11 về:9 như:7 nhỏ:5 trong:5 bằng:4 có:4 xảy:4 được:4
+chuông	24	điện:7 báo:5
+chuẩn	69	bị:58
+chuột	21	lột:4 này:4
+chàng	22	trai:15
+chào	104	buổi:10 mừng:10 bạn:7 đón:7 tôi:6 cô:4
+chán	38	nản:5 lắm:4
+cháu	30	nó:5
+chân	110	của:11 thành:10 tôi:9 thật:7 bạn:5 lên:4 phải:4
+châu	75	âu:35 phi:12 mỹ:4
+chì	41	của:12 này:6
+chìa	38	khóa:32 khoá:5
+chí	59	còn:12 minh:9 không:5
+chín	31	giờ:6 là:4
+chính	186	xác:33 mình:28 phủ:24 trị:24 là:15 sách:5 thức:4 tôi:4 tả:4
+chó	211	của:40 ăn:12 này:11 nhà:8 có:6 không:6 sủa:6 đang:6 đi:6 đã:5 đó:4
+chóng	24	mặt:7
+chú	111	chó:10 tôi:9 chim:6 của:5 mèo:5
+chúc	44	mừng:16 bạn:9 ngủ:4
+chúng	2037	tôi:1140 ta:787 mình:13 nó:13 là:5 đi:5 đều:5 có:4 không:4 sẽ:4
+chút	136	nào:24 không:9 đi:9 tiếng:7 được:6 nữa:5 nhé:4 tiền:4 đồ:4
+chăm	84	chỉ:43 sóc:30 chú:6
+chơi	301	bóng:24 với:19 cờ:18 piano:16 quần:16 tennis:14 gôn:11 đàn:11 đùa:9 trò:8 được:8 ghi:6 golf:6 thể:4
+chưa	370	bao:83 từng:53 nói:15 biết:14 có:14 ăn:10 đến:9 đi:8 chắc:7 làm:7 vậy:7 thể:6 tìm:6 được:6
+chương	32	trình:23
+chạy	150	nhanh:26 đi:13 bộ:10 xe:7 rất:5 chậm:4 nhất:4 trốn:4 về:4
+chả	37	có:7 biết:5 hiểu:4
+chảy	32	máu:13
+chấp	36	nhận:28
+chất	67	lượng:16 lỏng:6 của:4
+chậm	43	hơn:12 lại:8 thôi:5
+chắc	249	chắn:81 là:53 hẳn:19 rằng:12 sẽ:10 có:7 phải:7 tôi:4
+chắn	82	là:18 sẽ:15 rằng:11 anh:4 về:4
+chằm	31	chằm:16 vào:13
+chẳng	197	có:40 bao:23 biết:18 ai:16 phải:13 còn:9 thể:7 cần:5 hạn:5 làm:5
+chặt	23	vào:4
+chế	34	độ:13
+chết	161	vì:18 đi:8 rồi:7 không:6 đói:6 là:5 vào:5 của:4 trong:4 đuối:4
+chỉ	502	có:69 là:36 muốn:26 cần:17 biết:14 còn:14 của:14 hơn:13 đang:13 cho:9 một:9 ra:8 nhìn:7 vì:7
+chị	216	ấy:108 tôi:24 em:16 có:10 của:10 gái:10
+chịu	90	đựng:24 được:15 trách:8 nổi:7
+chọn	90	nào:10 một:8 lựa:4
+chối	38	lời:6 một:4
+chống	27	lại:11
+chồng	43	cô:7 tôi:7 của:6
+chỗ	159	nào:27 này:22 đó:11 đèn:10 cho:9 ngồi:9 khác:6 trống:5 của:4 trước:4
+chờ	140	đợi:48 xe:8 một:7 lâu:4
+chụp	38	ảnh:18
+chủ	131	nhật:35 đề:15 nghĩa:9 của:7 quyền:6 tịch:6 yếu:6 là:4
+chứ	25	không:15
+chức	56	một:8 trách:5 năng:4
+chứng	60	minh:13 khoán:11 kiến:6
+chữ	79	cái:38 viết:5 của:4 hán:4 này:4
+coi	52	là:11 chừng:5 như:4
+con	1060	chó:137 người:98 gái:78 mèo:75 trai:64 đường:37 chim:22 chuột:20 tàu:20 của:19 có:18 dao:18 cá:16 sông:15
+cung	26	cấp:11
+cuả	29	ông:6 cô:4
+cuối	172	cùng:109 tuần:26 tháng:5 của:4
+cuốn	209	sách:152 tiểu:23 từ:13
+cuộc	332	sống:121 đời:53 họp:39 chiến:7 thi:7 tranh:6 trò:6 đua:6 bầu:5 gọi:5
+cà	144	phê:103 chua:15 rốt:11 rồng:6 vạt:6
+càng	75	tốt:11 sớm:9 nhiều:6 có:5 trở:4
+cá	111	nhân:10 voi:6 là:5 với:5 chân:4 cùng:4 không:4 lóc:4 sấu:4
+các	535	bạn:79 nhà:22 câu:12 loại:12 bé:10 con:10 cậu:10 học:10 công:9 sinh:9 cô:8 cửa:8 anh:7 bài:7
+cách	346	nào:26 đây:21 làm:14 suy:12 mà:8 giải:7 khác:6 là:6 lái:6 này:6 sử:6 anh:5 gấp:5 không:5
+cái	1286	gì:174 này:168 đó:99 máy:30 bàn:26 bút:23 nào:21 hộp:20 áo:20 bánh:19 xe:19 kia:16 mũ:15 tên:15
+cám	27	ơn:25
+cánh	58	cửa:15 đồng:10 tay:7
+cáo	43	buộc:4
+cân	31	nhắc:10
+câu	381	hỏi:97 chuyện:60 trả:32 cá:30 này:28 lạc:23 nói:9 đó:8 ví:7 truyện:6 đố:6 bạn:5 của:4 tiếng:4
+cây	145	cầu:11 bút:8 này:7 sồi:7 đàn:6 trong:5 vợt:5 táo:4
+cãi	23	nhau:14
+còn	552	là:33 trẻ:31 lại:29 không:20 có:16 hơn:16 nhỏ:15 sống:15 một:12 nhiều:11 đang:11 chưa:10 nhớ:10 rất:10
+có	5583	thể:1115 một:348 nhiều:168 phải:147 vẻ:138 lẽ:135 biết:112 ai:96 gì:95 muốn:79 rất:71 thật:57 những:55 được:54
+cô	2083	ấy:1548 ta:177 gái:69 đơn:24 giáo:22 đã:17 bé:15 la:13 không:10 có:9 biết:7 hà:7 con:5 nàng:5
+côn	21	trùng:20
+công	480	việc:173 ty:65 viên:47 nhân:15 nghiệp:12 bằng:10 cụ:10 tác:8 an:7 chúa:7 trình:7 bố:6 cộng:6 của:6
+cùng	358	nhau:40 với:32 tôi:26 một:23 cũng:19 lớp:15 bạn:12 của:11 thì:10 chúng:7 đã:7 anh:5 cô:5 đi:5
+căn	116	phòng:38 nhà:35 hộ:22 bệnh:9 cứ:7
+căng	20	thẳng:15
+cũ	45	của:20
+cũng	593	có:59 không:44 là:34 sẽ:26 đã:24 vậy:22 được:22 như:19 biết:18 muốn:16 làm:13 phải:11 thế:10 thích:9
+cơ	170	sở:43 hội:31 thể:20 mà:18 bắp:9 bản:7 chứ:6 quan:5 mắc:4
+cơm	44	tối:8 với:5
+cơn	88	bão:34 mưa:15 đau:14 gió:7 giận:4
+cư	30	xử:12
+cưới	35	của:7 nhau:4
+cười	86	khi:6 nhạo:6 và:6 lên:4
+cạnh	51	tranh:5 tôi:5 nhau:4
+cả	541	những:58 mọi:55 các:38 ngày:34 hai:25 chúng:21 khi:17 đêm:11 thế:9 của:8 tiếng:8 bạn:7 một:7 đời:6
+cải	42	thiện:17 cách:6 trang:6 tiến:5
+cảm	328	thấy:146 ơn:67 giác:30 xúc:19 động:8 lạnh:7 nhận:7 cúm:6 hứng:6 với:4
+cảnh	128	sát:60 báo:11 giới:8
+cấm	30	tôi:4
+cấp	63	ba:7 cứu:5 hai:5
+cầm	34	một:4
+cần	636	phải:136 một:55 thiết:40 làm:21 tiền:19 thêm:18 nói:15 được:13 biết:12 giúp:10 không:10 bạn:9 sự:9 thời:9
+cầu	113	thủ:10 của:7 nguyện:7 thang:7 này:6 tôi:5 được:5 chúng:4 không:4 xin:4
+cẩn	73	thận:67
+cập	24	nhật:10 vào:6 đến:4
+cậu	460	ấy:70 bé:47 ta:47 có:46 đã:17 không:16 là:14 nên:9 sẽ:9 làm:7 lại:7 đang:7 bị:6 biết:5
+cắt	44	tóc:10 cỏ:6
+cố	171	gắng:79 tình:5 giết:4 tỏ:4
+cốc	42	cà:11 của:4 nước:4
+cổ	59	đại:8 họng:6 tích:4 vũ:4 điển:4
+cộng	23	của:4 sản:4
+cờ	67	vua:33 gặp:8
+cụ	34	thể:6 già:5
+của	3349	tôi:646 bạn:401 mình:329 anh:283 chúng:206 cô:129 họ:86 nó:66 ông:59 cậu:37 người:36 con:35 ai:30 một:26
+cứ	269	ai:24 điều:18 tưởng:17 lúc:12 thứ:12 như:9 đi:9 nói:6 việc:6 đâu:6 mưa:5 nghĩ:5 hỏi:4 khi:4
+cứu	84	hỏa:8 tôi:6 thương:4
+cử	21	động:4
+cửa	243	hàng:78 sổ:57 mở:8 vào:6 lại:5 đi:5 nhà:4 này:4 rồi:4 đã:4
+cực	66	kỳ:35 kì:8
+da	37	của:5 trời:4 đầu:4
+danh	47	sách:21 tiếng:5
+dao	23	này:6
+di	68	chuyển:27 động:17 sản:8 chúc:6 cư:4
+diễn	72	viên:20 ra:16 tả:7
+diện	31	của:7 với:4
+do	196	tại:20 gì:11 tôi:10 vì:10 và:8 để:6 đó:5 bị:4 không:4 mà:4 sự:4
+doanh	31	nghiệp:8 nhân:5 thu:4
+du	98	lịch:74 học:11 hành:4
+duy	70	nhất:63 trì:5
+dài	83	và:7 bao:4 của:4 không:4 này:4
+dàng	23	hơn:6
+dành	94	cho:29 nhiều:11 một:7 quá:7 cả:6 thời:6
+dân	93	chủ:11 tộc:9 số:8 của:6 làng:4
+dây	28	giày:4
+dòng	20	sông:8
+dù	160	anh:12 có:9 của:9 bạn:8 chỉ:6 không:6 trời:6 đã:6 cho:4 sao:4 sở:4
+dùng	193	để:9 cái:7 điện:7 từ:6 máy:5 cà:4 khăn:4 thêm:4 tiền:4 được:4
+dương	24	cầm:10
+dưới	67	tầng:5 bàn:4
+dường	38	như:38
+dạo	62	này:27 gần:6 chơi:4 một:4
+dạy	85	tiếng:22 tôi:19 học:6 bạn:4 cho:4
+dấu	35	hiệu:10 chấm:6 chân:5
+dầu	25	mỏ:7
+dẫn	57	đến:11 tôi:5 chúng:4 tới:4
+dậy	102	sớm:33 lúc:16 vào:8 và:5 đi:5 thì:4
+dễ	148	thương:34 dàng:28 bị:9 chịu:8 để:8 hơn:7 dùng:4 đọc:4
+dịch	131	vụ:13 sang:12 từ:8 viên:8 covid:5 này:4 thuật:4 được:4
+dọn	36	dẹp:18 phòng:4
+dối	56	chúng:4 không:4 tôi:4
+dụ	25	như:4
+dục	51	có:8 của:4 là:4 nhiều:4
+dụng	108	cụ:5 của:5 nó:5 các:4 thời:4
+dừng	66	lại:38
+dữ	62	liệu:48
+dự	123	án:20 định:19 đoán:17 bữa:11 báo:9 buổi:6 tiệc:6 kiến:4
+em	369	trai:57 gái:38 bé:25 có:20 không:18 ấy:14 là:10 muốn:9 sẽ:9 yêu:8 đi:6 phải:5 thích:5 anh:4
+ghi	43	ta:13 nhớ:5 chú:4
+ghét	166	những:9 anh:8 bạn:7 chúng:5 cà:5 mọi:4 phải:4 tất:4
+ghế	45	sofa:6 bành:5
+gia	234	đình:85 cuộc:6 có:6 cư:6 nhập:5 này:4 việc:4 vào:4 đó:4
+gian	223	để:39 rảnh:16 của:12 không:11 cho:8 là:8 nên:5 thì:5 xem:5 đã:5 làm:4 lận:4 trôi:4
+giao	131	thông:89 tiếp:14 cho:7
+già	68	đi:11 noel:10 hơn:6
+giàu	57	có:27
+giày	40	của:8 này:5
+giá	182	trị:23 bao:16 cả:13 của:9 thấp:7 mà:6 cao:5 là:5 rẻ:5 sách:5
+giác	62	là:12 của:6 quan:6
+giám	28	đốc:22 sát:6
+giáng	30	sinh:29
+giáo	217	viên:106 dục:16 của:11 đó:11 sư:8 và:7 nói:5 khoa:4 đã:4
+gió	46	thổi:13 mạnh:5
+giúp	322	đỡ:78 tôi:61 bạn:19 chúng:17 anh:13 họ:13 gì:10 được:7 cô:6 mẹ:5 bảo:4 của:4 mình:4 người:4
+giường	32	của:5
+giả	65	vờ:20 của:5 thuyết:4
+giải	187	thích:60 quyết:43 pháp:15 lao:7 thưởng:6 được:6 nhất:4 nobel:4 trí:4
+giảm	62	cân:20 giá:6 đau:4
+giản	27	là:6
+giấc	48	mơ:34 ngủ:7
+giấu	33	đi:4
+giấy	37	phép:5
+giận	47	dữ:9 của:6 tôi:5 với:5
+giết	89	người:23 chết:16 anh:7 tôi:6
+giọng	24	nói:8 của:4
+giỏi	109	nhất:15 tiếng:10 lắm:8 chơi:6 môn:6 trong:6 hơn:5 nấu:5 nói:4
+giống	120	như:36 nhau:14 hệt:8 bạn:7 mẹ:6 bố:5
+giới	126	thiệu:17 cuộc:8 hạn:8 không:6 này:6 có:5 đã:5
+giờ	773	tôi:49 là:46 thì:28 có:24 chưa:23 học:21 rồi:20 sáng:19 nói:18 bạn:17 quên:16 rưỡi:14 làm:13 đi:13
+giữ	95	lời:13 liên:10 im:8 yên:5 bình:4 bí:4
+giữa	76	các:9 hai:8 đường:4
+gà	40	có:4
+gái	216	tôi:42 của:26 mình:8 đang:7 anh:6 đó:6 bạn:5 xinh:5 mà:4 mới:4 sẽ:4 trẻ:4
+gây	62	ra:27 ảnh:4
+gì	1168	đó:93 cả:81 không:48 về:48 vậy:46 để:44 với:41 tôi:39 thế:36 bạn:33 mà:32 đã:32 nữa:25 hết:24
+gấp	26	ba:4 đôi:4
+gần	158	đây:45 như:22 nhà:6 nhất:6 ba:4
+gắng	73	hết:6 lên:4 tìm:4
+gặp	390	anh:37 nhau:37 bạn:31 cô:26 lại:26 khó:19 tôi:13 một:11 được:9 rắc:8 phải:6 ông:6 gỡ:5 mặt:5
+gọi	263	cho:42 điện:39 là:30 tôi:26 lại:14 bạn:6 một:6 anh:5 cảnh:5 xe:5 các:4 của:4 tên:4
+gửi	66	cho:14 lời:9 một:7 thư:4
+hai	402	người:45 mươi:24 cái:15 giờ:14 lần:14 con:13 năm:13 bạn:10 ngày:10 tuần:10 ba:9 chúng:8 bằng:7 đứa:7
+hay	349	không:67 là:32 đi:16 bị:9 quên:8 nhất:7 nói:7 gì:6 hơn:6 đấy:6 đến:6 sao:5 về:5 chơi:4
+hi	36	vọng:27 sinh:4
+hiếm	30	khi:21
+hiểu	233	được:31 biết:12 tôi:11 nổi:9 lầm:8 vì:8 bạn:7 tiếng:7 điều:7 câu:6 rằng:6 anh:5 lý:5 rồi:5
+hiện	164	tại:30 ra:17 thực:15 đại:14 đang:9 tượng:7
+hiệu	53	quả:9 sách:7 cho:5
+hoa	153	kỳ:19 quả:14 hồng:13 này:10 đẹp:7 dại:5 anh:4 cho:4 xong:4
+hoàn	214	toàn:103 thành:64 hảo:18 cảnh:10 tất:5
+hoàng	29	hôn:6 tử:5
+hoá	27	ra:5 học:4
+hoạch	50	của:9 đó:5 này:4
+hoạt	44	động:38
+hoặc	64	là:9 không:5
+hy	81	vọng:68 lạp:9 sinh:4
+hà	43	nội:18 lan:6 có:5
+hài	53	lòng:35 hước:12
+hàn	20	quốc:14
+hàng	270	xóm:29 đó:20 này:17 của:12 ngày:10 rào:9 khác:7 đã:7 mới:5 triệu:5 trăm:5 với:5 hóa:4 ngàn:4
+hành	180	động:33 tinh:29 khách:11 xử:8 vi:7 chăm:6 một:6 lý:5 tây:5 lang:4
+hào	28	về:11 hứng:7
+hát	99	này:13 không:8 đó:8 bài:6 một:5
+hãy	785	nói:50 cho:42 để:29 đến:26 đi:23 gọi:20 nhìn:19 làm:16 thử:16 bắt:13 đưa:12 cùng:11 cẩn:11 mang:11
+hè	35	năm:8 này:6
+hình	140	như:35 thức:8 này:5 ảnh:5 của:4 thành:4 tròn:4
+hò	27	với:20
+hòa	39	nhạc:15 bình:8 hợp:4
+hòn	24	đảo:18 đá:5
+hóa	51	học:10 đơn:8 ra:7
+hôm	563	nay:284 qua:231 đó:16 nọ:6 trước:6 sau:5
+hôn	136	với:26 nhân:10 rồi:6 tôi:6 lên:5 vào:5 anh:4 bạn:4 em:4 không:4 đi:4 được:4
+hút	97	thuốc:66 một:4
+hơi	120	của:8 thật:6 bị:5 mới:5 đắt:5 này:4 thở:4
+hơn	576	tôi:44 là:36 một:31 nữa:21 những:14 không:11 so:10 mọi:9 bạn:8 cả:8 nếu:8 của:7 nhiều:7 tiếng:6
+hướng	56	dẫn:10 tây:5 nội:4
+hưởng	46	đến:9
+hạ	27	cánh:5
+hại	35	cho:8 của:5
+hạn	30	như:5 của:4
+hạnh	96	phúc:85
+hạt	29	nhân:11 giống:7
+hấp	27	dẫn:21 thụ:4
+hầu	63	như:34 hết:22
+hậu	32	quả:4
+hắn	31	ta:8 là:4
+hằng	40	ngày:28 tuần:5 năm:4
+hẳn	46	là:16 phải:7 đã:5
+hẹn	48	hò:27 gặp:8
+hết	198	sức:17 rồi:11 các:9 cả:8 tất:7 mình:6 những:6 tiền:6 bơ:4 hạn:4 là:4 mùa:4 mọi:4 quyển:4
+hề	30	biết:6
+hệ	89	điều:20 thống:19 với:6 mặt:4
+họ	868	đã:127 không:78 đang:58 sẽ:42 có:40 nói:36 là:35 làm:16 hàng:15 đều:15 cần:10 của:10 muốn:9 phải:9
+học	824	tiếng:144 sinh:92 một:20 cách:19 tập:16 được:16 thuộc:14 hành:10 của:9 không:9 này:9 và:9 đã:9 hỏi:8
+họp	42	sẽ:7
+hỏi	314	tôi:29 anh:17 của:12 bạn:10 một:10 không:8 đó:8 gì:7 liệu:7 này:7 là:6 thăm:6 ai:5 họ:5
+hối	23	hận:12 tiếc:5
+hồ	104	này:13 chí:9 đeo:9 của:7 sơ:7 nữa:4 đó:4
+hồi	92	giáo:14 phục:14 còn:11 nhỏ:6 hôm:5 tôi:4
+hỗ	20	trợ:20
+hộ	57	chiếu:15 tôi:6 của:5 bạn:4
+hội	92	nhập:6 nghị:5 đồng:5 này:4 trường:4 tốt:4 để:4
+hộp	40	đó:7 này:6
+hợp	109	với:27 tác:8 pháp:6 đồng:6 cho:4 quốc:4
+hủy	22	bỏ:5 diệt:5 hoại:5
+hứa	42	với:16 là:6
+hứng	42	thú:27 ăn:4
+hữu	57	một:13 ích:12
+im	52	lặng:32 đi:6 mồm:5
+khi	1005	nào:128 tôi:109 bạn:38 nghe:29 đi:28 anh:26 chúng:22 ăn:22 trời:21 có:19 cô:18 nói:15 còn:14 làm:14
+khiến	94	tôi:23 bạn:17 cho:9 anh:4
+khoa	51	học:42
+khoá	20	cửa:5 của:4
+khoản	20	tiền:4
+khoảng	84	thời:11 ba:8 độ:8 cách:7 một:4
+khu	55	vực:28 rừng:8 vườn:7
+khuyên	41	của:11 anh:7 bạn:4 tôi:4
+khá	78	là:19 giỏi:6 chắc:5 nhiều:4
+khác	246	nhau:62 biệt:17 đi:12 không:10 với:8 có:7 trong:7 ngoài:6 được:6 là:5 nữa:5 phải:5 thì:5 thường:4
+khách	89	sạn:35 hàng:7
+khí	68	hậu:18 trong:5
+khó	225	khăn:65 chịu:21 để:16 tin:9 mà:8 đọc:6 hiểu:5 quá:5 có:4 học:4 không:4 nhưng:4
+khóa	52	của:7 cửa:4
+không	5408	thể:555 có:549 biết:377 phải:348 muốn:237 thích:176 bao:142 được:117 ai:115 cần:96 làm:93 nghĩ:91 còn:89 nói:81
+khăn	60	với:6 tắm:5 về:4
+khả	68	năng:48 thi:15
+khẩu	34	súng:7 trang:5
+khắp	35	nơi:12 mọi:4
+khỏe	85	không:17 mạnh:15 của:11 hơn:6
+khỏi	164	nhà:20 đây:18 phòng:12 căn:5 nơi:5 thành:4
+khổ	25	đến:5
+khởi	30	hành:11 động:7 đầu:5
+khủng	30	khiếp:12 hoảng:7 long:4
+kia	90	là:26 có:8 đi:4
+kim	30	loại:11 cương:7
+kinh	95	tế:20 doanh:17 nghiệm:15 khủng:13 ngạc:7 thánh:5
+kiên	25	nhẫn:20
+kiếm	74	tiền:15 được:14 một:6 sống:4
+kiến	93	của:22 trúc:10 thức:7 với:5 cải:4 hay:4
+kiểm	106	tra:82 soát:17
+kiểu	39	tóc:10 gì:7 đó:5
+kiệm	28	tiền:15
+kéo	42	dài:19
+kêu	23	gọi:8
+kì	55	lạ:10 thi:4
+kính	39	của:7 râm:5
+ký	51	của:5
+kẻ	83	thù:12 địch:7 nói:5 ngốc:4
+kế	102	hoạch:58 của:6 bên:5 tiếp:4
+kết	194	hôn:73 thúc:45 quả:31 nối:9 bạn:5 luận:4
+kể	118	từ:41 cho:31 cả:14 với:4
+kịp	40	chuyến:10 giờ:8
+kỳ	165	thi:21 lạ:16 nghỉ:13 ai:12 thích:6 điều:5 mới:4 tích:4
+kỷ	28	niệm:10
+kỹ	43	sư:10 thuật:10 năng:6
+la	57	tinh:6 mã:5 một:4
+lai	21	của:7
+lan	26	rộng:4 truyền:4
+lao	30	động:17
+liên	89	quan:29 lạc:25 hệ:8 tục:8 kết:5 hợp:4 tưởng:4
+liệu	118	của:12 này:9 anh:7 có:6 tôi:6 những:4 quan:4
+lo	80	lắng:47 cho:6 nghĩ:4 sợ:4
+loài	86	người:21 động:18 chim:8 hoa:4 sinh:4
+loại	118	người:8 thuốc:5 chất:4 quần:4 vải:4
+luyện	32	tập:8 viên:7
+luôn	227	luôn:47 có:8 là:6 làm:6 đi:6 được:6 như:5 đúng:5 cảm:4 dậy:4 muốn:4 nghĩ:4 nói:4
+luận	47	của:9 về:7 này:4
+luật	47	sư:23
+ly	46	hôn:17 dị:5 rượu:5
+là	5012	một:934 người:314 bạn:178 tôi:154 gì:114 anh:99 của:76 ai:72 cô:64 cái:62 không:56 những:53 họ:51 có:47
+làm	2025	việc:341 điều:243 gì:206 bài:77 ơn:64 được:55 thế:54 xong:46 sao:43 tôi:39 cho:33 cái:26 bạn:25 chuyện:23
+làng	40	này:6 quê:4
+lá	72	thư:25 cờ:7
+lái	117	xe:82 chiếc:5 một:4
+lát	20	được:5 là:4
+lâu	108	rồi:27 hơn:17 đài:11 để:7 lắm:5 tôi:4
+lên	281	xe:13 kế:11 bàn:8 đi:8 trên:7 nào:6 cao:5 mái:5 nhầm:5 một:4 toàn:4 tường:4
+lí	25	do:18
+lòng	155	với:14 cho:8 bài:7 tốt:6 không:5 về:5 chờ:4 yêu:4
+lúc	483	nào:105 đó:70 tôi:27 này:24 nửa:13 mấy:11 bạn:9 mà:8 đầu:5 anh:4 bảy:4 chúng:4 còn:4 sáu:4
+lý	149	do:71 thuyết:8 của:6 tưởng:5 giải:4 một:4 thú:4
+lưng	26	tôi:7
+lương	40	thiện:8 của:6 tâm:5
+lượng	56	lớn:7 cao:4
+lạ	55	mặt:5 thường:5
+lạc	83	bộ:23 với:20 đường:11 quan:6 trong:4
+lại	756	không:36 đây:30 có:27 cho:20 một:20 đi:20 nói:16 sau:16 được:16 làm:13 trong:11 với:11 lần:9 vào:9
+lạnh	72	của:5 quá:5 không:4 lùng:4 lắm:4
+lấy	167	cái:11 chồng:10 một:10 nó:10 làm:7 nước:7 vợ:5 được:5 nhau:4
+lầm	43	của:14
+lần	251	đầu:51 nữa:47 cuối:18 nào:18 một:16 này:14 mỗi:7 rồi:6 sau:5 tôi:4
+lẫn	24	nhau:8 tiếng:4
+lập	84	tức:30 trình:20 gia:4
+lắm	70	đấy:13 rồi:9 nhưng:7 mới:4
+lắng	50	nghe:15 về:13 cho:5
+lẽ	217	ra:60 sẽ:17 tôi:15 bạn:14 là:11 nên:11 đã:11 chúng:7 không:6 anh:4 phải:4
+lễ	31	hội:6
+lịch	124	sử:36 sự:19 một:13 nước:9 vòng:5 không:4 trình:4
+lối	20	đi:4
+lỗi	183	vì:36 tôi:22 cho:17 của:14 nhưng:7 sai:7 lầm:6 thì:5 thời:5 về:4 đã:4
+lớn	171	hơn:24 lên:22 nhất:22 tuổi:10 trong:5 và:5 đã:5 bằng:4 lắm:4 thứ:4
+lớp	76	học:13 của:10 với:7 tôi:4
+lời	282	khuyên:29 nói:24 của:17 hứa:16 câu:11 mời:10 giải:8 tôi:7 đề:7 rằng:6 được:6 chào:5 không:5 nào:5
+lỡ	20	chuyến:7
+lợi	39	dụng:7 cho:6 ích:5
+lừa	21	dối:5 đảo:4
+lựa	53	chọn:49
+lực	56	lượng:8 của:5
+ma	28	cà:6
+mai	196	tôi:34 trời:19 chúng:15 là:15 bạn:12 sẽ:10 có:6 anh:5 gặp:5 hãy:4 không:4
+mang	132	theo:34 đến:12 lại:10 thai:6
+may	63	mắn:25 là:6 quá:4
+minh	79	của:9 ra:9 hơn:7
+miếng	21	bánh:6 thịt:4
+miễn	26	phí:12
+miệng	22	ra:4
+mong	75	muốn:22 là:11 chờ:6 đợi:6 rằng:5 được:5
+mua	445	một:117 cho:33 sắm:25 cái:24 xe:15 được:14 nó:13 chiếc:10 cuốn:10 vé:10 gì:9 bánh:8 nhà:7 những:6
+muốn	1208	đi:94 làm:72 nói:51 biết:42 ăn:40 một:37 sống:34 bạn:30 gặp:29 trở:28 có:27 mua:22 nghe:22 uống:22
+muộn	64	rồi:7 vì:6 để:5 cuộc:4 thế:4
+mà	684	tôi:111 không:66 bạn:65 thôi:26 anh:21 chúng:21 cô:16 là:15 họ:13 nó:12 còn:10 có:10 nói:9 ông:8
+màn	20	hình:10
+màu	181	xanh:41 đỏ:21 trắng:16 vàng:16 đen:14 sắc:13 gì:6 này:5 nâu:5 cam:4
+mày	238	có:25 nghĩ:18 là:14 đã:13 không:9 đang:9 sẽ:8 làm:6 lại:5 rồi:5 đấy:5 ơi:5 nói:4 phải:4
+mái	51	tóc:16 nhà:11 không:4
+máu	29	của:7
+máy	369	tính:71 bay:65 của:33 ảnh:27 vi:16 này:11 không:9 mới:7 được:7 bạn:4 cho:4 có:4 in:4 thu:4
+mã	26	nguồn:5
+mãi	38	mãi:12
+mèo	106	của:12 con:7 không:4 trắng:4 và:4 đen:4 đó:4
+mì	33	và:4
+mình	589	không:38 là:29 trong:29 đang:20 đi:18 có:17 sẽ:17 cho:16 đã:12 được:12 để:12 muốn:11 nên:10 rất:10
+món	85	quà:30 ăn:14 đồ:9 súp:5 gì:4
+môi	28	trường:20
+môn	58	thể:8 học:5 lịch:5 sinh:4 toán:4
+mù	29	dày:6 quáng:5 chữ:4
+mùa	135	đông:48 hè:34 xuân:22 thu:14
+mũ	46	bảo:9 của:4 này:4 đỏ:4
+mũi	22	của:7 tên:5
+mơ	87	của:26 về:7 thấy:5 ước:5 hồ:4
+mưa	185	to:19 không:13 cả:10 thì:9 nhưng:7 rồi:6 vào:6 cô:5 rào:5 như:4 vậy:4 đâu:4 đã:4
+mươi	71	phút:11 tuổi:6 ba:5 lăm:4 mốt:4 năm:4
+mười	106	hai:16 năm:10 một:9 tám:7 giờ:5 lăm:5 phút:5 ba:4 người:4 sáu:4
+mượn	62	cái:13 một:11 tiền:5 xe:5 điện:5
+mạng	34	sống:4 trong:4
+mạnh	70	mẽ:16 hơn:8
+mất	253	rồi:19 bao:15 đi:9 cái:8 một:8 tiền:8 hết:7 tích:6 vào:6 ngủ:5 chìa:4 cắp:4 nhiều:4 thôi:4
+mấy	115	giờ:31 cái:13 con:8 đứa:6 ngày:5
+mật	44	khẩu:12 của:8 ong:8
+mắc	41	sai:6 tại:4
+mắt	130	tôi:15 của:11 một:6 cô:5 lại:5 xanh:5 cá:4 khỏi:4 nhìn:4
+mặc	177	dù:60 một:18 quần:14 áo:11 thử:8 đồng:6 kệ:5 cái:4 gì:4 đồ:4
+mặt	261	trời:52 trăng:19 của:15 đất:12 tôi:10 với:10 tại:9 cô:7 hàng:5 đi:5 bạn:4 khác:4 nạ:4
+mẹ	382	tôi:115 của:41 đẻ:19 bạn:16 cô:16 anh:12 mình:11 ơi:10 đã:8 và:6 không:5 con:4 có:4 luôn:4
+mệt	67	mỏi:28 quá:6
+mọi	499	người:260 thứ:113 khi:16 chuyện:11 việc:8 nơi:7 điều:5
+mối	23	quan:14
+mỗi	206	ngày:62 năm:17 khi:16 sáng:16 người:15 tuần:11 buổi:9 tháng:7 sản:6 lần:5 thứ:4
+một	3894	người:312 cái:184 chiếc:157 con:151 mình:125 chút:120 ngày:90 cách:63 lần:63 nhà:60 số:57 trong:56 câu:55 ít:53
+mới	320	của:28 có:21 phải:17 biết:13 đến:13 bắt:11 chỉ:9 nhất:9 không:8 là:7 sẽ:7 được:7 trong:6 đi:6
+mời	52	tôi:9 bạn:5
+mở	137	cửa:43 ra:8 cái:6 rộng:5 khoá:4
+mục	47	đích:20 tiêu:18
+mức	61	nào:9 có:6 độ:6 không:4 lương:4
+mừng	42	là:8 sinh:4 đến:4
+mỹ	66	của:5
+nam	71	là:6 giới:5 châm:4
+nay	399	tôi:90 là:45 trời:31 bạn:16 chúng:16 có:14 không:9 anh:8 rồi:6 lạnh:5 rất:5 đi:5 quá:4 sẽ:4
+new	22	york:13 zealand:5
+nga	26	có:5
+ngay	153	lập:28 cả:22 sau:16 bây:14 khi:11 bên:5 lúc:5 trước:5 từ:5 đi:5 cạnh:4
+nghe	381	thấy:68 nói:36 nhạc:20 được:19 tin:17 tôi:16 lời:10 một:8 về:8 bạn:6 không:6 những:6 điều:6 câu:5
+nghi	38	ngờ:23 là:4
+nghiêm	38	túc:19 khắc:7 trọng:7
+nghiên	31	cứu:30
+nghiệp	66	của:6
+nghèo	31	nhưng:9 khổ:4
+nghìn	28	yên:9 người:4
+nghĩ	706	là:155 rằng:84 tôi:27 về:26 gì:19 đến:18 bạn:17 như:16 cô:15 của:14 chúng:10 đó:10 anh:9 mày:9
+nghĩa	75	là:22 của:8 gì:7 với:5 trang:4 vụ:4
+nghề	22	gì:6
+nghệ	41	thuật:21 sĩ:7 sỹ:5
+nghỉ	122	ngơi:23 hưu:17 việc:12 học:9 một:8 hè:7
+nghị	42	của:10
+ngon	31	hơn:4
+ngoài	228	đi:14 trời:13 của:11 không:11 hành:9 vào:8 ăn:7 ra:6 và:6 thì:5 để:5 mà:4
+ngoái	24	tôi:4
+ngoại	56	ngữ:17 giao:6 trừ:4 tình:4
+ngu	42	ngốc:12 xuẩn:6 đến:5
+nguy	57	hiểm:43 cơ:9
+nguyên	56	tố:12 nhân:10 tử:6 âm:4
+nguồn	37	gốc:6 mở:5 từ:4
+ngài	21	có:5
+ngày	648	mai:189 hôm:59 nào:26 nay:16 tôi:16 càng:15 thứ:14 sinh:10 chủ:9 trước:9 cuối:8 nọ:8 nữa:7 có:6
+ngân	40	hàng:22 nga:6 sách:6 hà:4
+ngã	32	tư:5 xuống:4
+ngôi	149	nhà:85 làng:22 sao:22 trường:9 đền:5
+ngôn	147	ngữ:139
+ngăn	28	cản:8
+người	2139	ta:98 đàn:84 khác:83 bạn:69 đều:68 đã:61 có:60 phụ:55 đó:43 không:34 anh:32 nhật:31 đang:29 nói:26
+ngược	29	lại:7
+ngạc	53	nhiên:51
+ngại	26	ngùng:5
+ngắn	26	nhất:5 gọn:4
+ngọn	27	núi:14 đồi:7 lửa:4
+ngồi	135	xuống:18 cạnh:11 trên:11 đây:9 trong:7 chỗ:4 dưới:4
+ngờ	35	được:4
+ngủ	217	ngon:14 sớm:12 trên:12 được:12 say:11 một:7 đi:7 rồi:6 cả:5 nhiều:5 thôi:5 có:4 dậy:4 thiếp:4
+ngừng	39	hút:6
+ngữ	172	khác:9 của:8 nào:8 pháp:8 là:7 lập:7 thứ:5 đều:5 chính:4 cảnh:4 khó:4 nhưng:4 và:4
+ngựa	20	của:5
+nha	24	sĩ:4
+nhanh	145	lên:25 hơn:24 chóng:21 như:11 nhất:8 hết:4
+nhau	168	không:11 vào:9 như:7 trong:7 rồi:6 với:6 chỗ:4 giữa:4 trên:4 tại:4 về:4 đi:4
+nhiên	115	là:10 khi:8 cô:4 hơn:4 trời:4 tôi:4 vì:4
+nhiêu	170	tiền:40 tuổi:16 lần:12 thời:7 lâu:6 người:6 ngày:5 con:4
+nhiều	781	người:89 hơn:38 thời:35 tiền:35 năm:20 thứ:20 bạn:17 việc:17 về:17 loại:14 quá:13 sách:13 từ:13 điểm:11
+nhiệm	35	vụ:10 cho:8 sang:4 về:4
+nhiệt	33	độ:14 tình:5
+nhà	841	của:77 hàng:53 tôi:50 ga:33 này:32 thờ:26 không:22 bạn:20 vào:18 anh:17 đó:15 khoa:14 máy:13 mới:13
+nhân	196	viên:19 tạo:16 của:15 dịp:9 loại:7 tiện:7 vật:6 dân:5 đã:5 cách:4 danh:4 thành:4 tài:4 đang:4
+nhìn	350	thấy:121 chằm:16 vào:15 tôi:9 anh:8 những:8 lên:6 chung:5 qua:5 thẳng:5 được:5 cái:4 giống:4 ra:4
+nhóm	29	máu:7
+như	827	thế:149 vậy:103 không:48 một:29 là:27 thể:23 tôi:22 bạn:20 anh:16 mọi:15 người:12 những:11 trước:11 đã:11
+nhưng	455	tôi:95 không:30 anh:22 cô:17 chúng:13 mà:12 nó:11 vẫn:10 bạn:9 lại:9 rất:8 cũng:7 bây:5 có:5
+nhạc	86	sĩ:8 jazz:5 là:4
+nhảy	69	dây:13 múa:6 không:5 xuống:5 cùng:4
+nhất	352	trong:43 là:30 của:29 mà:28 có:24 thế:17 thiết:10 để:10 định:9 một:8 trên:8 trí:7 tôi:7 nhật:5
+nhầm	27	số:6
+nhẫn	28	này:4 nại:4
+nhận	244	ra:45 được:35 thức:23 là:13 rằng:12 vào:8 thấy:7 việc:5 lấy:4 lời:4 một:4 nuôi:4 sai:4
+nhập	63	vào:10 khẩu:6 viện:6 của:4 thành:4
+nhật	286	bản:121 của:25 không:7 tôi:7 bạn:6 là:5 cho:4 có:4 lần:4
+nhắc	35	đến:9 lại:7
+nhắn	20	cho:6 tin:6
+nhẹ	25	nhàng:6
+nhỏ	102	hơn:13 tôi:11 nhặt:5 tuổi:5 trong:4
+nhớ	174	tôi:9 là:7 em:6 mẹ:6 nổi:6 ra:6 tên:6 được:6 anh:5 bạn:5 của:5 gì:5 điều:5 đến:5
+nhờ	73	bạn:7 anh:4 có:4 sự:4
+những	1142	người:174 gì:116 điều:59 thứ:45 con:43 câu:38 đứa:23 cái:22 chiếc:19 năm:14 bức:12 lời:12 ngôi:12 chuyện:11
+niềm	24	vui:10 tin:8
+nuôi	40	dưỡng:6 một:6
+nàn	22	về:9
+nào	684	cũng:68 bạn:43 đó:41 không:40 để:26 nữa:25 tôi:24 mà:20 vậy:18 cả:17 khác:15 thì:15 anh:13 là:13
+này	1416	không:113 có:110 là:102 rất:53 được:35 sẽ:34 tôi:32 bao:27 đi:25 đã:23 cho:22 bạn:18 đang:14 thì:13
+ném	22	đá:6
+nên	669	tôi:77 làm:52 đi:28 nói:24 chúng:16 không:15 gọi:13 anh:11 đến:10 cô:7 dán:7 học:7 hỏi:7 xem:7
+nó	832	không:69 có:61 đã:53 là:49 sẽ:28 đi:28 cho:17 rất:17 vào:14 chỉ:12 lại:12 đang:12 nữa:11 ra:11
+nói	1754	chuyện:201 với:183 tiếng:175 là:112 rằng:99 gì:97 dối:87 về:73 cho:71 được:36 anh:27 tôi:22 thật:18 thế:18
+nóng	55	lên:5 gay:4 quá:4
+nông	30	dân:12 thôn:12
+núi	52	phú:15 cao:7
+năm	470	trước:52 ngoái:44 nay:36 sau:27 học:22 rồi:14 phút:11 kể:10 giờ:8 có:6 năm:6 qua:6 tháng:6 là:5
+năng	112	lượng:10 lực:8 của:7 là:4 làm:4
+nơi	133	làm:10 nào:10 này:9 tôi:9 đó:7 đây:6 mà:5 trên:5 anh:4
+nước	397	ngoài:72 này:13 úc:12 mắt:11 mỹ:11 trong:8 vào:8 anh:7 biển:7 không:7 đó:7 chúng:6 của:6 nào:6
+nạn	59	xe:7 giao:5 đã:5 đó:5
+nấu	88	ăn:35 bữa:13 cơm:7 gì:5 món:5 nướng:5
+nắm	20	cửa:5
+nắng	23	mặt:4 nóng:4
+nằm	76	trên:14 trong:8 xuống:4
+nặng	33	hơn:4
+nếu	456	bạn:123 tôi:59 không:37 có:23 anh:20 chúng:13 một:11 cậu:9 là:7 ngày:7 như:7 cô:6 muốn:6 làm:5
+nền	34	kinh:11 văn:11 tảng:6
+nổi	123	tiếng:56 một:8 bật:5 giận:5 cáu:4
+nỗi	36	sợ:6 buồn:5
+nội	54	tâm:22 dung:7 thất:4 trợ:4
+nửa	61	đêm:26 tiếng:9
+nữ	128	hoàng:7 có:6 không:6 xinh:6 đó:6 diễn:4
+nữa	134	không:16 rồi:15 tôi:12 là:11 thì:8 đâu:7 mà:5 đi:4 được:4
+phi	27	công:5
+phim	109	này:19 đó:7 truyền:6 hay:4 hàn:4 vào:4
+phiền	43	muộn:7 bạn:5
+phong	24	tục:5 cách:4 cảnh:4 tỏa:4
+phàn	29	nàn:29
+phá	44	vỡ:7 hủy:6 ra:5 huỷ:4 sản:4
+pháo	22	hoa:18
+pháp	195	không:14 của:9 nào:8 luật:7 tốt:7 và:7 nhưng:6 sang:6 cho:4 giỏi:4 nghiên:4 tiếng:4 từ:4 xem:4
+phát	200	triển:51 hiện:24 minh:18 biểu:16 âm:15 điên:9 thanh:6 đến:6 hành:5 sóng:5 từ:4
+phân	29	biệt:13 phối:4
+phép	74	tôi:6
+phê	80	của:6 không:6 nhé:6 hay:5 này:5 lên:4
+phí	42	thời:14
+phía	64	trước:15 sau:7 bắc:5 bên:4 nam:4 tây:4
+phòng	241	này:25 của:24 khách:15 học:10 tôi:10 mình:9 ngủ:9 tắm:7 đó:7 bằng:5 có:5 gym:4
+phô	21	mai:17
+phù	20	hợp:16
+phú	22	sĩ:10 sỹ:5
+phúc	50	không:6 lợi:5 là:4
+phút	58	nữa:14 để:5 thôi:4
+phương	63	pháp:22 tiện:7 tây:4
+phạm	39	sai:7
+phải	1488	là:238 làm:141 không:93 đi:68 học:32 nói:24 có:21 trả:20 đến:19 một:14 biết:13 của:13 lo:13 lúc:13
+phản	80	đối:35 bội:13 ứng:11 hồi:5 chiếu:4
+phần	108	lớn:11 mềm:9 trăm:9 còn:7 của:7 lan:5 ba:4 thưởng:4
+phẩm	53	của:8 này:8 điện:6 chất:5 nhanh:5
+phố	108	lớn:18 này:16 của:8 hồ:6
+phụ	153	nữ:115 thuộc:14 trách:8
+phục	66	vụ:12 anh:5 được:4
+phủ	41	nhận:10 đầy:6
+piano	28	giỏi:4
+qua	430	tôi:56 bạn:24 đời:24 là:15 anh:11 đường:11 một:10 trời:8 cửa:7 những:7 rất:7 rồi:7 chúng:6 không:6
+quan	316	trọng:136 tâm:73 hệ:28 điểm:12 đến:10 gì:9 của:4 sát:4
+quanh	64	đây:6
+quay	98	lại:42 trở:26 về:15
+quen	90	với:25 biết:6 thuộc:5 xấu:5 nhau:4
+quy	32	tắc:10 định:6
+quyết	197	định:127 vấn:18 tâm:9 được:4
+quyền	50	lợi:7 được:4
+quyển	113	sách:99 vở:5
+quà	40	cho:8 giáng:6 sinh:6 này:4
+quá	385	nhiều:69 khứ:20 muộn:13 mệt:10 trình:9 trẻ:9 nhanh:8 sức:7 tôi:7 cao:6 dễ:6 già:6 khó:6 không:6
+quán	53	cà:13 bar:6 new:4
+quân	44	đội:11 ta:4
+quên	136	mất:11 đi:6 mang:5 anh:4 dù:4 tên:4 được:4
+quý	52	khách:9 ông:7 giá:5 nhân:5 cô:4
+quả	168	táo:37 bóng:12 là:11 cam:6 thực:6 của:4 trứng:4
+quản	23	lý:14
+quần	129	áo:65 vợt:23 tây:15 jean:5 jeans:4
+quốc	152	gia:64 tế:24 hội:5 đã:5 không:4 tịch:4
+ra	932	ngoài:81 khỏi:67 tôi:31 một:28 thì:17 với:17 là:16 những:16 biển:15 bạn:14 rằng:14 được:14 anh:13 không:13
+rau	23	củ:8
+riêng	29	của:7 mình:6
+ràng	34	là:20
+rõ	73	ràng:35 là:5
+răng	26	trước:4
+rơi	73	xuống:15 vào:13 từ:7
+rượu	76	vang:36
+rảnh	34	rỗi:11 không:6 vào:4
+rất	1142	nhiều:203 vui:61 thích:56 đẹp:37 khó:30 hay:25 tốt:25 nhanh:22 giỏi:20 bận:19 dễ:15 quan:15 ngon:14 thú:14
+rằng	565	anh:93 tôi:59 cô:40 bạn:26 họ:22 chúng:16 có:10 nó:10 mình:9 không:8 đó:7 chị:6 ông:6 hôm:5
+rẻ	21	hơn:7
+rồi	256	đấy:43 tôi:15 mà:13 nhưng:10 đó:10 không:7 cũng:5 sẽ:5 anh:4 bạn:4 cơ:4 kìa:4 mới:4 nhỉ:4
+rộng	32	lớn:5
+rời	123	đi:64 khỏi:32 bỏ:4 nhật:4
+rửa	57	bát:11 tay:9 tiền:5 xe:5
+sa	37	thải:23
+sai	97	lầm:47 rồi:11 hơn:4
+sang	102	tiếng:24 một:8 đường:5 màu:4 ngôn:4 phòng:4
+sao	564	bạn:109 anh:32 tôi:26 không:22 chúng:20 cô:16 lại:13 mà:13 cậu:12 có:11 mọi:11 mày:10 con:9 để:9
+sau	335	khi:95 đó:28 tôi:16 bữa:15 lưng:10 giờ:9 một:7 nửa:7 bạn:6 này:6 đây:6 vụ:5 cơn:4 hai:4
+say	46	rượu:7 rồi:6 bí:5 như:5 xe:4 xỉn:4
+sinh	395	ra:64 viên:63 nhật:58 vật:19 của:15 con:10 cấp:9 học:7 nào:7 trong:7 sống:6 vào:6 rồi:5 đã:5
+siêu	26	thị:18
+so	44	với:34 sánh:10
+suy	77	nghĩ:64
+suốt	66	ngày:16 đêm:8 cả:7
+sàng	42	cho:10 để:6 chưa:4
+sách	372	này:85 của:37 đó:32 nào:12 mà:10 về:10 cho:7 là:7 trong:7 có:6 và:6 hay:5 vở:5 giáo:4
+sáng	185	nay:32 mai:14 hôm:7 hơn:7 đến:6 nào:5 sớm:5 tạo:5 không:4 trong:4 tỏ:4 tới:4
+sát	84	đã:11 hại:6 đang:5 vào:4
+sáu	57	giờ:8 mươi:4 rồi:4 tuổi:4
+sân	47	bay:26 vận:4
+sâu	33	sắc:6
+sóc	42	con:8 đứa:4
+sóng	21	thần:8
+sông	35	này:4
+sĩ	114	đã:12 giỏi:5 mà:5 bảo:4 không:4 người:4 vĩ:4
+sư	44	tử:13 của:4
+sạch	22	sẽ:5
+sạn	26	này:6
+sản	74	xuất:24 phẩm:18 và:6
+sắp	95	mưa:10 đến:9 tới:7 có:5 ngất:5 đi:4
+sẵn	52	sàng:46
+sẽ	1972	không:315 đi:92 làm:82 đến:81 có:51 bị:33 là:33 xảy:31 được:29 mưa:28 phải:26 cho:25 gặp:25 nói:25
+số	285	tiền:27 người:19 điện:18 những:13 các:12 lượng:12 nguyên:10 họ:8 học:6 phận:6 chúng:4 của:4 là:4
+sống	520	trong:40 một:28 của:22 với:19 cùng:13 không:10 thiếu:9 trên:9 được:8 hạnh:7 lâu:7 yên:7 thứ:6 gần:5
+sớm	119	hơn:24 càng:9 nhất:9 thôi:7 muộn:5 vào:5 đi:5 như:4
+sở	123	hữu:40 dữ:36 thích:27 thú:5
+sợ	132	hãi:21 độ:6 bị:5 là:5 làm:5 rắn:5 chết:4 người:4
+sứ	24	quán:13 trẻ:4
+sức	114	khỏe:51 khoẻ:13 mạnh:12 có:4
+sử	96	dụng:66 nước:4
+sửa	51	cái:13 được:5 chữa:4 lỗi:4 xe:4
+sữa	35	bò:5
+sự	659	thật:81 là:23 không:20 giúp:18 muốn:18 rất:17 thích:16 việc:15 khác:12 lựa:12 kiện:10 phát:9 thay:9 hiểu:8
+ta	1897	đã:167 không:136 có:131 sẽ:108 là:83 hãy:58 nên:51 phải:47 đang:47 cần:46 nói:45 bị:33 làm:21 đi:20
+tai	92	nạn:60 nghe:6 dài:4
+tan	29	học:7 nát:5
+tao	187	không:24 sẽ:17 có:11 đã:9 đang:7 cũng:5 muốn:5 biết:4 chẳng:4 đoán:4 đéo:4
+tay	183	của:19 lên:11 trái:11 tôi:11 phải:8 nhau:6 ra:6 với:6 bằng:4 nắm:4 vào:4 đi:4
+tha	21	thứ:15
+tham	88	gia:43 dự:23 quan:5 vọng:4
+thang	33	máy:10
+thanh	55	toán:12 niên:10 đó:5
+thao	23	không:4 tác:4
+thay	173	đổi:115 vì:19 thế:11 quần:4
+theo	253	tôi:10 cách:9 dõi:9 kịp:9 một:9 đuổi:8 con:6 luật:6 những:6 lời:5 thứ:5 anh:4 chiều:4 các:4
+thi	70	thoảng:8 tiếng:5
+thiên	74	nhiên:14 tài:12 đường:9 văn:7 hạ:5
+thiết	82	kế:21 bị:16 phải:14 cho:6 với:4
+thiếu	82	một:5
+thiện	30	và:4 với:4
+thoát	31	khỏi:15 ra:6
+thoại	106	của:29 cho:17 di:11 thông:9 reo:7
+thoải	35	mái:35
+thoảng	29	tôi:9 lại:4
+thu	70	hút:12 nhập:10 hoạch:4 xếp:4 đến:4
+thuyết	102	phục:23 trình:11 này:9 của:7 gia:6 đó:4
+thuê	35	nhà:7 phòng:4
+thuốc	128	lá:39 này:10 không:7 phiện:5
+thuộc	71	vào:14 lòng:13 về:12 địa:5 với:4
+thành	533	phố:121 công:87 một:53 viên:24 hiện:15 sự:10 bài:9 thạo:8 lập:7 thật:7 bác:6 nó:6 đại:6 người:5
+thách	29	thức:9
+thái	56	nhận:9 độ:7 lan:5
+tháng	165	trước:19 sau:13 mười:10 tư:8 tới:6 ba:5 chín:5 rồi:5 sáu:5 một:4 tám:4
+thân	103	mình:19 của:13 thiện:11 thiết:6 nhất:4
+thêm	186	một:36 nữa:12 lần:10 đường:7 không:6 tiền:6 chút:5 thời:5 bất:4 những:4 thông:4 vài:4 vào:4
+thì	716	tôi:53 không:46 bạn:37 sẽ:26 có:25 sao:23 anh:20 hãy:15 cũng:14 tốt:13 phải:12 nó:11 chúng:10 cô:9
+thích	1047	của:42 đi:33 ăn:28 những:24 cái:21 làm:19 nó:19 hợp:18 xem:18 anh:16 cô:15 tôi:13 chơi:12 học:12
+thói	23	quen:20
+thôi	69	nào:14 mà:8 việc:5 đừng:5 là:4
+thông	228	minh:46 tin:42 báo:22 điệp:11 thạo:10 thường:9 qua:8 này:7 bị:6 dịch:6 chuyển:5
+thú	114	vị:49 với:15 nhận:6 vui:4
+thúc	34	đẩy:6
+thăm	78	chúng:7 tôi:5 vợ:4
+thơ	47	này:8 ấu:4
+thư	198	viện:53 cho:25 ký:16 của:11 giãn:9 này:8 điện:7 tình:5 đó:5
+thương	107	mại:8 trong:6 hơn:5 cả:4 hại:4
+thường	232	xuyên:24 hay:13 nói:10 đi:10 có:9 ăn:8 không:6 làm:6 được:6 lệ:4 thức:4 xảy:4 đến:4
+thảo	25	luận:18
+thấp	20	hơn:5 nhất:5
+thất	92	bại:44 vọng:27 nghiệp:14
+thấy	756	một:56 anh:28 cô:26 gì:24 cái:19 bạn:18 tôi:18 tiếng:15 được:15 có:14 rất:14 không:13 ai:12 mình:12
+thần	49	linh:6 kinh:5
+thầy	56	giáo:24 thuốc:6
+thậm	29	chí:29
+thận	52	trọng:9 hơn:6 khi:4 với:4
+thật	426	là:71 sự:63 không:28 đẹp:13 khó:12 đáng:12 đấy:12 sâu:11 tuyệt:10 tốt:9 lòng:7 của:5 ra:5 cho:4
+thắng	51	cuộc:6 giải:4 được:4
+thằng	52	bé:14 nhóc:8 ngu:5
+thẳng	43	vào:6 thắn:5
+thế	538	nào:183 giới:121 này:64 kỷ:16 là:11 kỉ:8 nên:8 không:7 nhỉ:7 đâu:7 mà:5 nhưng:5 tôi:5 thì:4
+thể	1799	làm:115 nói:82 đi:51 giúp:40 tin:40 hiểu:39 dục:34 thao:30 đến:27 có:26 mua:25 giải:24 tìm:24 cho:23
+thỉnh	21	thoảng:21
+thị	83	trấn:31 trường:17 trưởng:6 thực:4
+thịt	60	bò:7 gà:6 lợn:5 chó:4 này:4 trong:4
+thống	46	kê:7 đã:4
+thổ	28	nhĩ:14 lộ:5
+thổi	29	từ:9 sáo:4
+thời	391	gian:238 tiết:66 điểm:16 trang:12 kỳ:11 đại:10 thơ:4
+thở	27	dài:4 phào:4
+thủ	69	đô:13 tướng:9 bóng:6 giỏi:5 công:4
+thứ	459	hai:60 gì:50 ba:28 bảy:21 đó:16 đều:16 mà:15 này:15 sáu:13 cho:12 năm:10 tư:10 bạn:8 không:7
+thức	185	ăn:45 dậy:26 nội:15 của:8 khuya:6 được:6 là:5 tôi:4
+thừa	53	nhận:25 kế:8
+thử	133	thách:25 cái:12 lại:9 đi:5 một:4 nó:4 xem:4 ăn:4
+thực	291	sự:151 hiện:27 tế:23 phẩm:15 ra:12 hành:9 vật:5 thi:4 tiễn:4 tại:4
+ti	55	vi:47
+tim	40	tôi:8 của:5 anh:4
+tin	414	vào:32 rằng:31 tưởng:30 tức:20 đồn:18 được:16 là:13 này:12 tôi:12 anh:11 bạn:11 nhắn:10 đó:10 chắc:9
+tinh	72	thần:13 không:4
+tiên	95	tôi:18 của:15 bạn:4 chúng:4
+tiêu	52	của:8 chuẩn:5 rồi:4
+tiếc	34	là:5 vì:5
+tiến	52	bộ:12 hoá:5 hành:4
+tiếng	903	pháp:218 anh:182 nhật:58 việt:45 đức:39 đồng:24 trung:22 mẹ:18 nga:14 thổ:14 tây:13 ồn:8 ba:7 berber:7
+tiếp	135	tục:60 theo:28 đi:7 cận:6 xúc:6 là:5
+tiết	120	kiệm:28 học:7 lộ:6 này:5 nóng:5 xấu:5 đẹp:5 ấm:5 rất:4 tốt:4
+tiền	305	để:35 cho:23 bạc:13 này:11 của:10 không:10 hơn:9 lẻ:8 vào:8 thuê:7 mua:6 thừa:6 trong:6 từ:6
+tiểu	66	thuyết:53
+tiệc	50	của:6 không:6 sinh:5
+tiện	25	thể:4
+to	76	hơn:9 thế:7 lớn:6 lên:5 quá:4
+toàn	197	bộ:38 không:35 cầu:9 là:6 thế:6 màu:4 sai:4
+toán	57	học:16 bằng:4 hóa:4
+tra	88	các:6 xem:4
+trai	202	tôi:65 của:33 mình:8 bạn:4 chưa:4 duy:4 không:4 thì:4
+trang	86	web:17 trại:8 điểm:7 trí:5 chủ:4
+tranh	104	này:18 đó:9 của:6 luận:5 cãi:4
+triển	51	của:7 bản:4 lãm:4 nhanh:4
+triệu	37	người:8 chứng:5 yên:4
+trong	1403	một:104 những:59 nhà:44 phòng:40 số:39 cuộc:37 công:30 khi:29 lúc:27 lớp:26 vườn:23 hai:20 tiếng:20 việc:19
+trung	144	quốc:49 tâm:24 học:15 thu:9 bình:5 của:4 và:4 vào:4
+truyền	42	hình:14 thông:7 thống:4
+truyện	27	của:4
+trà	44	không:8 của:7
+tràn	20	đầy:9
+trách	48	nhiệm:24
+trái	113	đất:28 tim:25 cây:13 lại:5 ngược:4
+tránh	41	xa:12 khỏi:4
+trèo	21	lên:13
+trên	521	đường:34 bàn:26 thế:24 xe:17 giường:16 bầu:13 trời:13 đời:13 ghế:12 tàu:12 mặt:11 sàn:11 bãi:10 con:9
+trình	96	này:8 của:7 bằng:5 cắm:5 đó:5 viên:4
+trí	85	tuệ:33 của:9 nhớ:7
+trò	74	chơi:23 chuyện:12 quan:6 đùa:6
+trôi	25	chảy:8 qua:8
+trông	209	thấy:41 có:37 rất:24 giống:13 như:10 thật:8 không:6 trẻ:4
+trăm	50	người:8 năm:6 hai:4 đô:4
+trưa	47	với:8 rồi:5
+trước	356	khi:94 đây:39 tôi:17 tiên:9 mặt:8 anh:6 kia:6 bữa:5 thứ:5 đến:5 buổi:4 mắt:4 nữa:4 đã:4
+trường	188	đại:15 hợp:12 của:11 học:11 trong:6 chúng:5 chứng:5 muộn:5 tôi:5 không:4 nào:4 này:4 trung:4
+trưởng	43	thành:12 của:7
+trượt	36	tuyết:14 băng:6 ván:4
+trạng	32	thái:15
+trả	218	lời:116 tiền:34 cho:8 lại:6 giá:4 một:4 thù:4
+trải	33	qua:17 nghiệm:12
+trấn	28	an:4
+trận	44	động:16 đấu:9 đại:4
+trắng	43	không:4 và:4
+trẻ	249	em:43 con:34 đang:14 hơn:9 ra:8 và:8 để:8 thích:7 đó:7 tuổi:6 có:5 đã:5 nhỏ:4 tôi:4
+trị	59	của:11 gia:8
+trọng	161	của:14 trong:13 nhất:12 hơn:11 không:8 với:7 là:6 đối:6 bạn:5 và:5
+trốn	28	thoát:9 học:8
+trống	22	không:9 rỗng:6
+trồng	30	lúa:4
+trộm	45	mất:9 cắp:5 xe:4
+trời	388	mưa:70 sẽ:36 đang:25 đã:19 có:18 không:15 bắt:14 nóng:11 lạnh:9 rất:8 tối:8 lại:7 sắp:7 cho:5
+trở	291	thành:120 nên:63 lại:59 về:39
+trợ	40	giúp:8 lý:6
+trụ	25	là:7 cột:4
+trừ	28	khi:4
+tui	40	không:6 là:6
+tuyết	55	rơi:12 đang:4
+tuyệt	94	vời:55 đối:9 đẹp:6 chủng:5 vọng:4
+tuần	159	trước:42 sau:29 này:14 hoàn:7 rồi:6 tới:5 để:5 nữa:4 tôi:4
+tuệ	30	nhân:12 tầng:6 là:4
+tuổi	148	hơn:13 rồi:9 đấy:7 từ:6 và:6 không:5 nhất:5 thơ:5 của:4 dậy:4
+ty	57	của:9 đó:4
+tài	110	năng:16 sản:16 xế:14 liệu:12 khoản:9 chính:7 là:5 trợ:5 ba:4 nguyên:4
+tàn	24	nhang:5 nhẫn:5
+tàu	97	điện:16 hỏa:9 đã:5 đầu:5 titanic:4 đến:4
+tác	62	giả:14 phẩm:12 dụng:4
+tách	23	rời:5 trà:5 cà:4
+tám	30	tuổi:7 giờ:6
+táo	45	này:7
+tâm	165	đến:45 trí:7 của:5 hồn:5 số:5 mua:4 thành:4
+tây	69	ban:26 dài:5 này:4 tạng:4
+tên	275	tôi:54 của:39 là:26 anh:14 và:10 gì:9 người:9 con:8 bạn:7 cô:7 cho:6 mình:5 trộm:5 khác:4
+tìm	277	thấy:72 ra:30 được:28 kiếm:27 một:12 hiểu:11 cách:9 nó:6 việc:6
+tình	218	yêu:54 cờ:20 huống:17 trạng:15 bạn:14 hình:14 với:13 dục:11 cảm:6 nguyện:5
+tích	38	cực:7 của:4
+tín	21	dụng:7 hiệu:5
+tính	155	của:30 cách:7 mới:6 này:5 toán:5 đi:5 có:4 không:4 đến:4
+tòa	44	nhà:28
+tóc	74	của:11 dài:7 cho:4 vàng:4
+tô	86	của:19 mới:8 đó:6
+tôi	11450	không:1419 đã:1398 sẽ:668 có:558 muốn:401 là:377 đang:348 thích:292 nghĩ:231 biết:213 bị:173 cần:149 phải:149 rất:144
+tôm	29	không:6
+tôn	54	giáo:28 trọng:21
+tùy	22	bạn:4 thuộc:4
+túi	29	này:8 của:5 xách:5
+tăng	57	lên:10 cân:7 lương:6 cường:4
+tĩnh	29	lại:5
+tư	54	tưởng:9 cách:4
+tương	67	lai:32 tự:9 đương:4 đối:4 ứng:4
+tưởng	187	là:23 tượng:16 của:13 bạn:12 tôi:7 hay:6 mình:6 rằng:6 nào:5 không:4 đến:4
+tượng	57	của:7 về:5
+tại	435	sao:231 một:17 nhà:9 nhật:8 đây:8 là:7 vì:6 chỗ:5 công:5 mỹ:5 đó:5 của:4 việt:4
+tạm	26	biệt:13 thời:8
+tạo	80	ra:38 của:4
+tạp	21	chí:7 hơn:4
+tả	30	bằng:5
+tải	26	xuống:4
+tấm	29	ảnh:10 hình:6
+tất	293	cả:272 nhiên:8
+tầm	31	tem:6 mắt:4 quan:4
+tầng	35	bậc:18
+tận	29	hưởng:7 mắt:5 dụng:4
+tập	254	về:109 thể:36 trung:17 chăm:5 hợp:4 tem:4 trước:4 được:4
+tắc	34	xi:8 đường:4
+tắm	32	vào:4
+tắt	41	đèn:6 của:4 tv:4 điện:4
+tặng	40	tôi:7 anh:6 cho:6 phẩm:4
+tế	76	ngữ:14 bào:4 và:4
+tệ	32	hơn:8 nhất:7
+tỉnh	34	dậy:6 giấc:4
+tỏ	23	ra:9
+tối	244	nay:83 qua:43 hôm:14 với:8 xong:7 thiểu:4
+tốn	27	kém:4
+tốt	319	hơn:81 nhất:29 nghiệp:20 cho:19 bụng:18 đẹp:16 biết:11 không:11 của:8 lắm:8 với:8 đấy:7 như:6 nhưng:5
+tồn	28	tại:27
+tổ	47	chức:38
+tổn	23	thương:20
+tổng	41	thống:16 cộng:6 hợp:5 công:4
+tội	53	phạm:13 giết:5 nghiệp:5
+tớ	148	không:16 sẽ:10 nghĩ:9 có:7 muốn:6 đi:5 đã:5 biết:4 mang:4
+tới	294	đây:19 đó:19 trường:10 khi:9 nhà:6 lúc:5 mức:5 nó:5 nơi:5 sớm:5 thư:5 tokyo:5 chỗ:4 cái:4
+tờ	29	báo:10 giấy:7
+tục	67	làm:9 công:5 tĩu:4 đi:4
+tụi	47	tao:18 nó:12 bây:8 mình:6
+tủ	31	lạnh:22
+tức	76	giận:30 gì:4 gọi:4 là:4
+từ	739	khi:39 chối:38 điển:37 đó:25 bỏ:21 này:19 đâu:17 một:16 tiếng:15 sáng:12 lúc:11 trên:11 nhà:10 năm:10
+từng	254	có:20 là:15 làm:14 sống:12 thấy:11 nghĩ:10 đi:10 đọc:10 đến:9 gặp:8 nói:8 rất:7 ăn:6 bị:5
+tử	67	vong:10 hình:6 tế:4
+tự	386	do:40 hỏi:40 nhiên:39 làm:38 hào:20 tử:20 mình:16 sát:14 tin:13 động:12 học:5 vẫn:5 giải:4 mua:4
+uống	216	nước:22 bia:18 trà:17 cà:14 một:14 sữa:13 gì:12 thuốc:12 rượu:11 quá:6 nhiều:5 thêm:5 cái:4 rất:4
+vai	23	trò:9 tôi:4
+vang	34	lên:5 đỏ:4
+vay	21	tiền:10
+vi	70	tính:14 sóng:6 không:4 phạm:4
+viên	253	của:33 đã:13 đó:8 dạy:7 không:7 mới:7 có:6 này:6 nói:5 nổi:5 tiếng:5 trong:5 đại:5 khác:4
+viết	232	một:34 thư:21 bằng:13 cho:13 gì:9 nó:6 những:5 tên:5 cuốn:4 lách:4 tắt:4 về:4
+việc	884	đó:132 này:53 của:48 gì:30 làm:28 cho:20 trong:18 phải:16 học:14 chăm:13 cần:11 tại:11 với:11 tôi:10
+viện	61	để:5 có:4
+việt	105	nam:63 không:7 là:6 hơn:5
+vua	44	không:4
+vui	193	lòng:62 vẻ:23 vì:19 khi:15 sướng:8 không:6 được:5 chơi:4 nhất:4
+và	1246	tôi:79 một:30 tiếng:16 nói:15 không:12 có:11 người:11 đang:11 anh:9 bạn:9 cũng:9 làm:9 những:8 tự:8
+vài	142	người:15 phút:13 tuần:8 câu:7 bức:5 ngày:5 năm:4
+vàng	33	là:4 và:4
+vào	1129	ngày:86 năm:55 lúc:52 mùa:46 trong:34 buổi:33 thứ:30 tháng:29 cuối:25 khoảng:22 một:22 tuần:20 phòng:19 thời:19
+váy	35	ngắn:5 kabyle:4
+vâng	21	tôi:9
+vé	32	có:4 số:4
+vì	616	tôi:52 sao:49 đã:49 anh:21 không:21 trời:19 bạn:17 nó:15 những:13 một:10 vậy:10 quá:9 cô:8 họ:8
+ví	53	dụ:36 của:5
+vòng	37	quanh:10 một:5
+vô	156	cùng:49 tội:12 tình:9 địch:9 dụng:6 gia:6 giá:5 nghĩa:5 thần:5 ích:5
+vùng	31	nông:4
+văn	98	phòng:34 học:12 minh:9 hóa:8 bản:6 hoá:6 này:4
+vũ	47	trụ:22 khí:12
+vườn	27	của:4
+vượt	36	qua:22
+vấn	165	đề:150
+vẫn	326	còn:72 chưa:47 đang:31 không:13 là:11 phải:8 muốn:7 tiếp:7 sẽ:6 có:5 cần:4 luôn:4 làm:4 nghĩ:4
+vận	33	động:14 hành:4
+vật	122	có:12 chất:9 lý:5 này:5 sự:5 hoang:4
+vậy	155	là:14 tôi:11 thì:9 không:8 hả:6 sao:6 mà:5 nhỉ:5 đâu:4
+vẻ	191	như:35 đẹp:13 không:12 bề:10 ổn:6 mệt:5 ngoài:5 thất:5 buồn:4 bận:4 hơi:4 rất:4
+vẽ	43	tranh:9 bức:8 một:4
+về	949	nhà:221 điều:56 chuyện:31 những:26 nó:21 tôi:20 anh:17 phía:17 việc:17 vấn:17 một:12 bạn:11 cô:10 sự:10
+vệ	64	sinh:16 tinh:8 môi:5 những:4
+vị	95	trí:15 của:7 như:6 thần:4
+vọng	120	rằng:15 bạn:11 là:6 về:6 khi:5 sẽ:4 vì:4
+với	1468	tôi:209 bạn:102 anh:79 một:45 cô:44 nhau:43 những:40 chúng:39 ai:28 người:25 nó:19 việc:17 con:15 cậu:15
+vời	24	nhất:5
+vỡ	30	cửa:5 cái:4
+vợ	100	tôi:32 anh:8 của:7 chồng:6 mình:5 bạn:4
+vụ	122	tai:39 án:13 của:6 này:5 nổ:4
+vừa	234	mới:30 nói:18 ăn:9 đi:8 nghe:6 về:5 đến:5 bị:4 hát:4 khóc:4 lịch:4 tự:4 với:4 định:4
+vực	36	này:9 đó:4
+xa	90	nơi:4
+xanh	51	dương:8 lá:6 không:5 da:4 và:4
+xe	617	máy:131 buýt:74 hơi:73 đạp:64 của:33 tải:16 lửa:14 bus:8 này:8 không:7 mới:7 cứu:5 đó:5 được:5
+xem	312	phim:32 tv:29 ti:27 cái:17 một:13 sao:13 xét:13 bộ:8 bạn:7 có:6 nó:5 sách:5 anh:4 nào:4
+xin	378	lỗi:147 hãy:54 chào:42 đừng:21 bạn:11 gửi:6 vui:6 mời:5 anh:4 thêm:4
+xinh	43	đẹp:34 xắn:4
+xong	139	bài:32 rồi:14 chưa:12 việc:11 bữa:6 cái:6 anh:5 công:5
+xu	20	hướng:4
+xung	25	quanh:21 đột:4
+xuân	21	đến:5
+xuất	121	phát:19 bản:14 hiện:13 sắc:13 của:9 tinh:4
+xuống	92	và:5 đất:5 cầu:4 một:4 sàn:4
+xác	41	định:6 là:5 nhận:4
+xây	45	dựng:14 nhà:7 cái:4 một:4
+xã	27	hội:24
+xóm	24	của:5 nhà:4
+xúc	33	của:10 với:6 phạm:5
+xảy	223	ra:211 đến:9
+xấu	63	hổ:14 xí:6 đi:4
+xử	61	lý:12 như:10 với:8 của:5
+yanni	52	đã:12 và:4
+yên	81	tĩnh:11 lặng:7 bình:5 tâm:5
+yêu	335	cầu:49 thích:25 cô:22 em:21 tôi:20 anh:17 của:15 nhau:11 bạn:9 là:8 thương:7 mèo:5 quý:4 thì:4
+yếu	46	tố:7 quá:4 đuối:4
+ziri	48	đã:14 có:4 đang:4
+ác	34	mộng:7
+án	52	giết:6 của:5 này:5 đó:5
+ánh	44	sáng:23 mắt:6 nắng:6
+áo	132	khoác:18 len:17 của:11 sơ:5 mà:4 phông:4 đi:4 để:4
+áp	22	dụng:4
+âm	94	nhạc:40 thanh:15 mưu:4
+ích	32	kỷ:6 cho:5
+ít	154	nhất:21 khi:12 thời:9 không:8 tiếng:7 người:6 tiền:6 hơn:5 nước:4 ỏi:4
+ôm	25	bạn:5
+ông	670	ấy:217 ta:125 có:21 già:18 đã:18 đó:18 tôi:16 là:11 chủ:8 không:6 bà:5 lại:5 brown:4 hãy:4
+úc	42	là:4
+ăn	832	trưa:40 cơm:34 gì:31 tối:31 thịt:28 một:26 sáng:22 đồ:22 cắp:15 hết:15 bánh:14 không:13 bằng:12 bữa:12
+đa	30	số:11 dạng:7
+đang	1646	làm:81 nói:78 học:58 đi:43 ngủ:39 ăn:36 tìm:35 sống:33 đọc:28 chơi:27 cố:24 mưa:24 bị:23 đợi:23
+đau	147	đầu:21 khổ:16 bụng:10 không:9 lưng:8 đớn:8 buồn:6 họng:4 quá:4 răng:4
+đem	21	lòng:4
+đeo	40	tay:9 kính:7 một:5 khẩu:4
+đi	1611	đến:82 bộ:70 ngủ:60 ra:57 du:55 đâu:47 học:41 làm:34 dạo:32 mua:30 xe:28 tới:26 vào:26 cùng:24
+điên	35	rồ:9 rồi:6
+điều	917	đó:414 gì:126 này:111 mà:28 hành:24 kiện:22 tra:15 tôi:12 anh:11 bạn:11 trị:9 quan:8 bất:7 khiển:6
+điểm	104	chung:8 của:8 này:7 tâm:5 tốt:5 yếu:5
+điển	42	này:7 của:6
+điện	215	thoại:125 tử:14 cho:13 máy:6 ảnh:6 lên:4 ngầm:4
+đoàn	20	kết:5 tầu:4
+đoán	54	là:11 được:8 trước:4 xem:4
+đuổi	37	theo:10
+đài	27	loan:5
+đàn	178	ông:113 piano:18 bà:14 ghi:5 dương:4
+đào	25	một:4 nha:4
+đá	57	vào:7 bóng:5 rơi:4
+đám	49	cưới:11 đông:10 trẻ:8 mây:4
+đáng	155	lẽ:45 sợ:15 tin:13 tiếc:10 được:8 kể:7 để:6 yêu:5 kinh:4 ngờ:4
+đánh	175	giá:22 mất:21 răng:11 thức:9 nhau:7 vần:6 đàn:6 bại:5 tôi:5 con:4 lừa:4 piano:4 rơi:4 trống:4
+đáp	20	ứng:9 án:7
+đâu	171	vậy:29 rồi:19 thế:15 đó:10 không:9 cả:7 nhỉ:7 tôi:6 có:5 mất:4 đây:4 đấy:4
+đây	680	là:247 không:77 có:40 tôi:14 đi:11 cả:10 được:10 một:9 ba:8 vào:8 bao:7 để:7 rất:6 chúng:5
+đã	4847	không:235 làm:192 nói:152 đi:138 bị:127 đến:124 mua:111 được:96 có:94 từng:87 ăn:64 bắt:61 xảy:59 trở:55
+đèn	100	giao:58 pin:5 lên:4 trong:4
+đêm	72	qua:16 nay:5 khuya:4
+đình	75	tôi:10 mình:9 công:4 là:4
+đích	25	của:9
+đó	1607	là:357 không:140 có:87 đã:51 tôi:40 một:32 sẽ:30 đang:30 trong:27 cho:25 được:17 rất:16 vào:16 cả:15
+đói	48	bụng:4 không:4 thì:4
+đón	30	tôi:6 bạn:5
+đóng	75	cửa:31 góp:8 băng:6 vai:4
+đô	74	la:50 của:12
+đôi	90	mắt:17 giày:10 khi:7 cánh:4 lúc:4
+đông	71	người:7 năm:5 là:4
+đùa	34	tao:4
+đúng	251	không:122 giờ:24 là:24 lúc:8 rồi:5 đấy:5 hay:4 và:4 vậy:4
+đăng	38	ký:13 kí:6
+đơn	67	giản:29
+đưa	168	cho:33 ra:31 tôi:23 nó:12 cái:7 họ:7 anh:6 bạn:6 đến:5
+đường	185	vào:13 đến:12 đi:10 này:8 cho:7 phố:7 một:4 tới:4 về:4 đã:4
+được	1667	không:201 một:58 sinh:35 điều:30 cho:25 phép:25 tiếng:21 gì:19 làm:19 nữa:19 nhiều:18 những:18 dùng:16 gọi:16
+đại	149	học:49 sứ:19 diện:8 dương:8 nhất:6
+đạo	35	đức:7 diễn:4
+đạp	43	của:13 xe:5 mới:4
+đạt	40	được:20 điểm:5
+đảo	32	ngược:7
+đất	128	nước:40 đã:9 không:6 là:4 lớn:4 xa:4
+đấu	32	với:6
+đấy	112	là:36 không:9 có:6 nhỉ:6 nhé:5
+đầu	510	tiên:101 bếp:17 vào:16 học:15 tôi:15 tư:14 mưa:13 của:10 có:8 gối:8 cho:7 làm:7 bạn:6 hàng:6
+đầy	64	những:5 tuyết:5 đủ:4
+đậu	24	xe:8
+đắt	51	tiền:10 đỏ:9 hơn:7 quá:4
+đằng	39	sau:14 kia:9 trước:4
+đặc	33	biệt:22
+đặt	115	tên:15 chỗ:8 một:7 vào:7 nó:5 chuông:4 hàng:4
+đẹp	153	quá:15 nhất:11 hơn:9 trai:9 của:7 nhưng:6 không:5 trời:5 và:5 cho:4 khi:4 như:4 nhỉ:4 về:4
+đẻ	28	của:15 trứng:4
+đến	1429	từ:68 trường:61 đây:46 nhà:39 đó:38 muộn:36 thăm:34 khi:32 thế:32 mức:31 lúc:22 một:22 được:19 sớm:18
+đề	224	nghị:32 xuất:28 này:21 đó:21 của:13 gì:8 là:7 phòng:7 chính:5 cập:5 về:5 không:4 tài:4
+đều	344	có:37 là:34 đã:25 biết:19 thích:11 đang:10 không:9 rất:9 được:6 nói:5 đến:5 bị:4 cười:4 nghĩ:4
+để	1042	làm:80 tôi:40 mua:36 có:28 nói:24 học:20 cho:19 tìm:17 đi:17 không:15 lại:14 xem:14 giúp:12 giải:12
+địa	80	chỉ:34 ngục:8 phương:7 hình:5 điểm:4
+định	349	đi:35 sẽ:25 làm:20 là:18 của:16 không:10 mua:9 nói:6 được:6 dạng:5 gặp:5 kết:5 trở:5 ăn:5
+đọc	253	sách:44 một:21 được:15 báo:14 cuốn:14 xong:10 hết:9 quyển:7 nhiều:6 cái:5 lại:5 tiểu:5 những:4 nó:4
+đỏ	50	mặt:6 này:4
+đốc	21	đang:4
+đối	184	với:77 xử:15 mặt:13 chiếu:7 phương:6 thủ:6 đãi:6 việc:5 diện:4 không:4
+đồ	182	ăn:52 chơi:9 đạc:9 uống:8 nhật:4
+đồng	261	hồ:77 tình:11 xu:10 nghiệp:8 phục:7 lúa:6 tiền:6 hành:5 chí:4 nghĩa:4 thời:4 đô:4
+đổ	44	lỗi:6 cà:4 mưa:4
+đổi	135	khí:5 suy:5 quá:4 rất:4 thay:4 trong:4
+đỗ	20	xe:12
+độ	112	tuổi:14 cao:7 cho:4 nào:4
+độc	45	lập:11 thân:10 đáo:6 giả:4
+đội	94	của:14 mũ:14 một:9 chúng:7 trưởng:7 bóng:4 tuyển:4
+động	253	vật:51 đất:45 của:17 từ:10 này:7 viên:7 cơ:4 lực:4 như:4
+đột	35	nhiên:12 nhập:12 ngột:5
+đời	121	của:13 tôi:10 mình:9 nào:8 không:7 là:6 vào:6 sống:5
+đỡ	61	của:15 tôi:6 họ:4 không:4 lẫn:4
+đợi	126	bạn:19 đến:8 ai:5 lâu:5 một:5 được:5 anh:4 hơn:4 đã:4
+đủ	114	tiền:25 rồi:14 khả:6 thời:4 tuổi:4
+đứa	139	trẻ:63 con:31 bé:16 nào:4 đang:4
+đức	52	là:6 có:5
+đứng	69	dậy:8 yên:5 lên:4 trên:4
+đừng	513	có:51 nói:43 làm:32 để:24 quên:21 lo:18 bao:11 đánh:10 bắt:7 hỏi:7 tin:7 chạy:6 nghĩ:6 ngại:6
+đựng	32	được:7
+ơi	27	con:7
+ơn	148	bạn:32 cho:12 vì:9 hãy:7 nói:6 đừng:6 cậu:5 sự:5 về:5
+ưa	22	thích:8
+ước	80	mơ:24 gì:19 của:4 là:4 tính:4 tôi:4
+ảnh	129	hưởng:23 này:16 đó:11 của:9 không:5 gia:4 là:4 với:4
+ấm	31	áp:11 hơn:5
+ấn	53	độ:23 tượng:22 nút:4
+ấy	3777	đã:622 không:278 là:212 có:206 đang:170 sẽ:108 nói:96 rất:65 thích:61 bị:56 đi:54 làm:46 muốn:44 cần:34
+ổn	21	chứ:4
+ứng	59	dụng:8 với:7 xử:6 được:5 cử:4
+[3]
+<s> ai	206	đã:43 cũng:34 đó:18 sẽ:13 có:8
+<s> anh	1814	ấy:1155 ta:371 có:39 trai:22 hãy:19
+<s> ba	29	tui:6
+<s> bà	100	ấy:61 ta:12 tôi:8
+<s> bài	28	hát:8
+<s> bác	33	sĩ:23
+<s> bây	105	giờ:104
+<s> bạn	2160	có:660 đã:253 không:118 đang:97 nên:77
+<s> bọn	45	họ:13 trẻ:8 mình:7
+<s> bố	93	tôi:45 mẹ:18 bạn:5
+<s> bộ	29	phim:21
+<s> cha	45	tôi:17 mẹ:14 của:8
+<s> chiếc	82	xe:29 máy:8 quần:5
+<s> cho	104	tôi:36 dù:23 đến:12 hỏi:5
+<s> chuyến	17	bay:8
+<s> chuyện	34	gì:10 đó:9 này:7
+<s> chào	36	buổi:10 mừng:8
+<s> chính	19	phủ:9
+<s> chú	19	tôi:6
+<s> chúc	29	mừng:10 bạn:8
+<s> chúng	1104	tôi:653 ta:407 nó:8 mình:7
+<s> chắc	61	chắn:16 là:15 hẳn:6 có:5
+<s> chẳng	39	có:12 ai:8 phải:6 bao:5
+<s> chỉ	53	có:16 còn:5
+<s> chị	97	ấy:55 tôi:16 có:7 của:5
+<s> con	292	chó:55 người:29 mèo:27 trai:14 đường:12
+<s> cuối	43	cùng:39
+<s> cuốn	45	sách:37 tiểu:7
+<s> cuộc	58	sống:15 đời:14 họp:11
+<s> cà	17	phê:14
+<s> cá	27	voi:6
+<s> các	132	bạn:32 nhà:10 sinh:7 công:5 cậu:5
+<s> cái	322	này:73 đó:45 gì:31 bánh:9 máy:9
+<s> cám	18	ơn:18
+<s> câu	46	chuyện:14 này:7 hỏi:6
+<s> cây	24	cầu:5
+<s> có	541	lẽ:76 phải:47 ai:39 một:37 vẻ:32
+<s> cô	1059	ấy:861 ta:93 gái:15 giáo:11 đã:7
+<s> công	47	việc:16 ty:12 viên:6
+<s> căn	22	nhà:13 phòng:5
+<s> cơn	29	bão:11 mưa:7 đau:5
+<s> cả	51	hai:11 thế:5
+<s> cảm	51	ơn:45
+<s> cảnh	37	sát:26 giới:7
+<s> cậu	193	ấy:33 có:29 bé:26 ta:15 không:9
+<s> cứ	54	đi:6
+<s> cửa	31	hàng:18 sổ:5
+<s> dạo	24	này:18 gần:6
+<s> em	134	trai:22 gái:14 có:11 bé:10 ấy:10
+<s> giá	30	cả:6
+<s> giáo	30	viên:22 dục:7
+<s> giờ	35	thì:10 là:6 tôi:6
+<s> gần	28	đây:13 như:5
+<s> gọi	21	cho:7
+<s> hai	62	người:20 chúng:6 bạn:5
+<s> hay	19	là:13
+<s> hiện	22	tại:17
+<s> hãy	476	cho:30 nói:30 để:21 đến:18 nhìn:15
+<s> hình	24	như:21
+<s> hôm	290	nay:170 qua:108 đó:7
+<s> hầu	21	hết:12 như:9
+<s> hắn	19	ta:7
+<s> họ	455	đã:95 đang:46 không:37 nói:31 có:23
+<s> học	28	tiếng:8
+<s> hồi	24	còn:11 nhỏ:5
+<s> khi	196	nào:44 tôi:26 bạn:12 nhìn:5
+<s> không	430	có:87 ai:78 phải:36 biết:22 được:19
+<s> kể	20	cả:11 từ:7
+<s> làm	125	ơn:45 thế:22 sao:18
+<s> lúc	103	đó:44 nào:12 tôi:9
+<s> lần	29	cuối:9 này:9
+<s> lẽ	27	ra:27
+<s> lời	19	nói:9
+<s> mày	107	có:16 nghĩ:10 đã:10 đang:8 sẽ:5
+<s> máy	44	bay:20 tính:16
+<s> mình	62	không:12 rất:7 sẽ:5
+<s> mùa	24	hè:8 đông:8
+<s> mấy	27	giờ:7
+<s> mắt	18	tôi:8
+<s> mặc	54	dù:47
+<s> mặt	37	trời:18 đất:6 trăng:5
+<s> mẹ	137	tôi:59 của:12 ơi:10 cô:5 đã:5
+<s> mọi	177	người:122 thứ:30
+<s> mỗi	64	ngày:17 người:12 khi:8
+<s> một	249	người:32 ngày:17 số:17 con:16 trong:15
+<s> ngay	23	cả:9
+<s> nghe	25	nói:5
+<s> ngoài	19	ra:5
+<s> ngày	118	mai:75 hôm:9 nào:5 xửa:5
+<s> ngôi	40	nhà:26
+<s> người	220	ta:49 đàn:20 phụ:12 đó:9 nông:7
+<s> nhiều	41	người:28
+<s> nhà	77	của:11 tôi:11 hàng:10 bạn:6 anh:5
+<s> nhân	22	tiện:6
+<s> nhìn	39	chung:5
+<s> nhật	17	bản:17
+<s> những	224	người:45 con:18 gì:12 chiếc:8 thứ:8
+<s> nó	352	có:36 không:36 đã:35 là:27 sẽ:15
+<s> nói	64	cho:8 thật:6 tóm:5
+<s> năm	56	ngoái:16 sau:14 nay:7 học:5
+<s> nếu	292	bạn:84 tôi:39 có:15 không:15 anh:14
+<s> phòng	26	này:7
+<s> quyển	21	sách:18
+<s> rõ	21	ràng:21
+<s> rất	38	nhiều:11 vui:7 khó:5
+<s> sao	142	bạn:45 không:11 lại:9 anh:8 mày:8
+<s> sau	68	khi:38 đó:7
+<s> sáng	31	nay:19
+<s> sẽ	23	không:6 có:5
+<s> số	20	tiền:5
+<s> sở	19	thích:16
+<s> sự	61	thật:6
+<s> tao	91	không:15 có:9 sẽ:9 muốn:5 đang:5
+<s> tay	16	tôi:5
+<s> thành	17	phố:9
+<s> thôi	16	nào:7
+<s> thông	19	tin:12
+<s> thầy	17	giáo:8
+<s> thật	86	là:16 không:11 khó:6 sự:5
+<s> thằng	17	bé:6 nhóc:6
+<s> thế	42	giới:13 nào:6
+<s> thị	16	trường:7
+<s> thời	52	tiết:23 gian:20
+<s> thực	30	sự:11 phẩm:5 ra:5
+<s> tin	22	tôi:5 tức:5
+<s> tiếng	66	anh:13 việt:12 pháp:9
+<s> trong	147	lúc:10 tiếng:8 những:7 khi:5 trường:5
+<s> trái	24	đất:12 tim:6
+<s> trên	48	đường:5
+<s> trước	38	khi:17 đây:10 tiên:5
+<s> trẻ	16	em:12
+<s> trời	112	mưa:21 đang:12 đã:11 bắt:5 sắp:5
+<s> tuần	21	trước:14
+<s> tên	80	tôi:43 của:12
+<s> tình	40	yêu:19 hình:9
+<s> tòa	16	nhà:12
+<s> tôi	6362	không:974 đã:880 sẽ:396 có:341 muốn:330
+<s> tôm	20	không:5
+<s> tại	172	sao:163
+<s> tất	111	cả:103 nhiên:8
+<s> tối	61	nay:32 qua:18 hôm:10
+<s> tớ	74	không:12 sẽ:8 muốn:5 nghĩ:5
+<s> tụi	29	tao:12 bây:7 nó:7
+<s> từ	49	khi:6 nhà:5
+<s> việc	61	này:6
+<s> vui	29	lòng:27
+<s> và	27	nếu:5
+<s> vào	63	năm:8 lúc:7 thời:7 mùa:6
+<s> vâng	19	tôi:9
+<s> vì	102	sao:11 trời:8 không:6
+<s> vấn	25	đề:24
+<s> vậy	31	là:7 thì:5
+<s> vợ	18	tôi:9
+<s> xe	53	buýt:12 máy:10 của:7 hơi:6
+<s> xin	201	hãy:48 lỗi:45 chào:39 đừng:20 bạn:7
+<s> yanni	49	đã:11
+<s> ziri	46	đã:14
+<s> ông	267	ấy:115 ta:59 có:14 tôi:11 già:8
+<s> ăn	47	cơm:5
+<s> đi	57	theo:6
+<s> điều	147	đó:51 này:39 gì:26
+<s> đáng	36	lẽ:25 tiếc:5
+<s> đây	264	là:213 không:23 có:18
+<s> đã	78	có:13 đến:7 một:5
+<s> đèn	23	giao:19
+<s> đêm	19	qua:7
+<s> đó	306	là:239 không:40 có:13
+<s> đúng	29	là:7
+<s> đưa	17	tôi:7
+<s> được	17	rồi:5
+<s> đại	17	sứ:10
+<s> đấy	43	là:29 không:7
+<s> để	62	tôi:17 xem:5
+<s> đối	21	với:11 đãi:6
+<s> đồ	23	ăn:11
+<s> đồng	25	hồ:14
+<s> đứa	21	trẻ:14
+<s> đừng	350	có:36 nói:30 để:20 quên:18 làm:16
+<s> ước	20	mơ:10 gì:9
+ai có	36	thể:27
+ai cũng	66	có:12 biết:10 muốn:5
+ai sẽ	23	đến:5
+ai trong	24	số:12
+ai đã	61	làm:9 viết:5 ăn:5
+ai đó	50	đã:13 đang:6
+anh chị	16	em:5
+anh có	59	thể:19
+anh em	26	trai:10
+anh không	34	thể:9 được:5
+anh ta	692	đã:81 không:44 là:38 có:35 nói:26
+anh trai	43	tôi:18 của:11
+anh ấy	1877	đã:320 không:149 có:102 là:100 đang:89
+ba mươi	25	phút:7
+ba năm	18	trước:8
+bao giờ	323	chưa:23 có:19 nói:18 quên:16 ăn:12
+bao lâu	21	rồi:7
+bao nhiêu	165	tiền:38 tuổi:16 lần:12 thời:7 lâu:6
+biết ai	27	đã:8
+biết anh	30	ấy:22
+biết cô	16	ấy:9
+biết gì	33	về:19 cả:7
+biết liệu	18	anh:5
+biết là	112	bạn:18 tôi:14
+biết mình	20	đang:7
+biết nói	43	tiếng:35 gì:6
+biết phải	18	làm:11
+biết rằng	48	tôi:6
+biết tên	27	của:8 anh:5 tôi:5
+biết tôi	18	là:6
+biết về	17	chuyện:5
+biết điều	20	gì:10 đó:6
+bà ấy	93	đã:19 có:6 là:6
+bài hát	39	này:13 đó:8
+bài kiểm	29	tra:29
+bài thơ	16	này:8
+bài tập	134	về:109
+bác sĩ	55	đã:10
+bây giờ	190	tôi:36 là:27 bạn:11 đang:9 thì:8
+bình tĩnh	20	lại:5
+bí mật	20	của:8
+bông hoa	20	này:8 đẹp:5
+bút chì	38	của:12 này:6
+bạn biết	49	là:5
+bạn bè	29	của:12
+bạn cho	17	tôi:9
+bạn có	858	thể:254 biết:80 muốn:58 nghĩ:23 thích:22
+bạn cũng	32	là:5
+bạn cần	55	phải:22
+bạn của	51	tôi:17 chúng:10
+bạn gái	29	của:5 tôi:5
+bạn hãy	62	nói:5
+bạn không	237	thể:34 nên:18 được:18 phải:16 có:14
+bạn là	107	gì:28 người:18 một:15 ai:8
+bạn làm	67	gì:10 việc:8 điều:8 ơn:6
+bạn lại	49	có:5
+bạn muốn	76	nói:8 làm:7 gì:5 uống:5 ăn:5
+bạn nghĩ	67	là:10 gì:8 sao:7 tôi:7 cô:5
+bạn nên	124	đi:9 dán:7 làm:6 nói:6 gọi:5
+bạn nói	47	gì:6 với:5
+bạn phải	99	làm:11 học:6 biết:5
+bạn rất	24	nhiều:5
+bạn sẽ	144	không:12 làm:11 có:7 đến:7 đi:5
+bạn thân	19	của:12
+bạn trai	21	của:7
+bạn tôi	25	sẽ:7
+bạn vì	17	đã:6
+bạn vẫn	30	còn:10
+bạn đang	151	làm:16 nói:11 học:7 đi:7
+bạn đã	357	bao:28 làm:25 từng:20 nói:18 mua:15
+bạn được	23	không:14
+bạn đến	45	từ:7 đây:5
+bản thân	42	mình:18
+bảng chữ	19	cái:19
+bảo tôi	33	rằng:8
+bảo vệ	35	môi:5
+bất cứ	105	ai:24 điều:18 lúc:12 thứ:12 đâu:6
+bất kỳ	33	ai:12 điều:5
+bắt đầu	225	học:15 mưa:13 vào:11 làm:7 cho:6
+bằng cách	31	nào:15
+bằng lái	16	xe:13
+bằng tiếng	32	pháp:10 anh:8
+bằng xe	34	buýt:10 hơi:7
+bị bắt	29	giữ:5 phải:5
+bị thương	26	trong:6
+bị đau	45	đầu:8 bụng:7 lưng:5
+bọn họ	28	đã:5
+bố mẹ	55	tôi:19 của:5
+bố tôi	66	đã:10 là:5
+bộ phim	55	này:13 đó:5
+bộ đến	16	trường:12
+bởi vì	32	tôi:6
+bức thư	32	này:7
+bức tranh	43	này:18 đó:7
+bức ảnh	25	này:7
+cao hơn	22	tôi:7
+cha của	16	tôi:5
+cha mẹ	33	tôi:7
+cha tôi	22	đã:5
+chiếc máy	27	ảnh:9 bay:6
+chiếc xe	135	máy:35 hơi:22 đạp:14 tải:12 này:6
+chiều nay	21	trời:5
+cho anh	60	ấy:41 ta:6
+cho bạn	92	biết:9 mượn:7 nghe:5
+cho bữa	21	sáng:7 tối:5
+cho chó	22	ăn:12
+cho chúng	46	tôi:26 ta:16
+cho con	36	gái:10 chó:5
+cho cô	58	ấy:43
+cho dù	38	có:6 bạn:5
+cho là	19	có:8
+cho một	27	người:6 công:5
+cho người	34	khác:10
+cho nên	40	tôi:21
+cho phép	28	tôi:6
+cho rằng	43	anh:8
+cho sức	21	khỏe:17
+cho tôi	311	một:45 biết:44 xem:26 mượn:22 cái:11
+cho đến	50	khi:26 bây:7
+chuyến tàu	19	đầu:5
+chuyến đi	24	dài:5
+chuyện của	26	bạn:6
+chuyện gì	60	đã:16 đang:13 sẽ:7 xảy:7 vậy:6
+chuyện với	126	bạn:11 anh:10 tôi:10 cô:8 một:8
+chuẩn bị	57	cho:17 đi:8 bữa:7 xong:7
+chìa khóa	25	của:7
+chính trị	18	gia:8
+chính xác	20	là:5
+chó của	40	tôi:10 bạn:7 chúng:5
+chúng ta	722	sẽ:74 có:69 không:66 hãy:57 nên:44
+chúng tôi	1011	đã:177 không:82 có:52 sẽ:48 đang:44
+chăm chỉ	33	hơn:13 để:6
+chăm sóc	30	con:7
+chơi bóng	24	đá:11 chày:7
+chơi cờ	18	vua:17
+chơi quần	16	vợt:16
+chưa bao	83	giờ:82
+chưa từng	52	có:7 gặp:5
+chương trình	22	này:6
+chạy nhanh	24	nhất:6
+chắc chắn	77	là:18 sẽ:15 rằng:10
+chắc hẳn	19	là:7
+chắc là	53	không:9 anh:8 bạn:6 tôi:5
+chẳng bao	23	giờ:17 lâu:6
+chẳng biết	18	gì:5
+chẳng có	40	ai:8 gì:6
+chỉ có	69	một:17 thể:15
+chỉ là	36	một:17
+chị ấy	104	có:13 không:8 là:7 đã:5
+chịu đựng	23	được:7
+chỗ nào	21	không:5
+chữ cái	26	tiếng:13
+con chó	121	của:30 này:8 đang:6 nhà:5 đã:5
+con có	18	thể:7
+con của	19	mình:6
+con gái	63	tôi:18 của:9 mình:7
+con mèo	61	của:5
+con người	80	là:11 có:6
+con trai	50	tôi:12 của:8
+con đường	33	này:5
+cuối cùng	99	cũng:19 tôi:18 của:10 thì:9 đã:7
+cuốn sách	139	này:47 đó:20 của:6 mà:6 nào:6
+cuốn tiểu	23	thuyết:23
+cuộc họp	27	sẽ:6
+cuộc sống	100	của:15 thứ:6 yên:5
+cuộc đời	44	của:7 mình:5
+cà phê	70	của:6 không:6 nhé:6 hay:5 này:5
+các bạn	71	có:10 đã:8 phải:5
+các nhà	22	khoa:7
+cách nào	18	để:7
+cách đây	21	ba:5 bao:5
+cái bàn	22	này:10
+cái bút	17	chì:16
+cái gì	131	đó:23 vậy:9 cũng:8 không:8 thế:7
+cái hộp	18	này:5
+cái máy	30	ảnh:8 này:5 tính:5
+cái này	134	đi:12 không:11 có:8 là:8 cho:6
+cái xe	19	đạp:6
+cái áo	16	len:8
+cái đó	85	không:15 là:9 cho:6 có:5
+cám ơn	21	bạn:7
+câu chuyện	54	của:10 đó:6
+câu cá	16	với:5
+câu hỏi	79	của:12 đó:8 này:7
+câu lạc	23	bộ:23
+câu trả	32	lời:31
+còn có	16	thể:6
+còn không	20	biết:6
+còn là	33	một:15
+còn lại	23	thì:5
+còn trẻ	21	và:7
+có ai	95	đó:10 có:8
+có ba	35	người:7
+có bao	41	nhiêu:37
+có biết	112	là:8 cách:7
+có bạn	22	trai:6 gái:5
+có chuyện	27	gì:17
+có chắc	19	là:15
+có cái	17	gì:5
+có cảm	18	giác:15
+có giá	24	trị:8 bao:6
+có gì	88	để:15
+có hai	45	con:9 người:8
+có hứng	25	thú:18
+có khả	23	năng:21
+có lý	18	do:11
+có lẽ	134	sẽ:16 tôi:13 bạn:11 là:11 đã:11
+có muốn	79	đi:13 thêm:7 uống:5
+có mà	25	nói:5
+có mặt	36	tại:9
+có một	348	chiếc:29 con:29 người:24 cái:20 số:14
+có nghe	17	thấy:7
+có nghĩ	29	là:7 rằng:6
+có nghĩa	18	là:14
+có người	41	nào:6
+có nhiều	168	người:26 bạn:10 tiền:9 điểm:8 sách:6
+có những	55	con:5 thứ:5
+có nói	21	tiếng:7
+có phải	147	là:61 không:24 bạn:7
+có quá	17	nhiều:15
+có rất	71	nhiều:65
+có thêm	18	một:7
+có thật	43	là:29 sự:8
+có thể	1079	làm:74 nói:58 đi:35 giúp:32 cho:20
+có thời	42	gian:40
+có thực	17	sự:16
+có việc	23	gì:8 phải:5
+có vẻ	138	như:35 không:11 ổn:6 mệt:5
+có xe	22	máy:8 đạp:7
+có đúng	51	không:44 là:6
+có được	52	không:32
+có đến	20	hay:7
+có đủ	37	tiền:16
+cô gái	64	đó:6 đang:5
+cô ta	150	đã:13 có:11 là:9 sẽ:9 không:6
+cô ấy	1373	đã:232 không:93 là:68 đang:67 có:63
+công ty	55	của:9
+công việc	149	của:31 đó:14 này:13 gì:6
+cùng cũng	19	đã:7
+cùng tôi	23	cũng:5
+cùng với	32	bạn:7
+căn nhà	28	đó:6
+căn phòng	32	đó:7 này:6
+cũ của	20	tôi:5
+cũng có	59	thể:23
+cũng không	44	phải:5
+cũng là	34	một:5 người:5
+cũng như	19	vậy:5
+cũng sẽ	26	không:5
+cơ sở	41	dữ:36
+cả chúng	21	tôi:10 ta:9
+cả các	38	bạn:6
+cả khi	17	trời:6
+cả mọi	55	người:42 thứ:11
+cả những	58	gì:25 điều:7 người:5
+cảm giác	30	là:6
+cảm thấy	145	bất:7 có:7 khó:6 không:6 như:6
+cảm xúc	18	của:10
+cảm ơn	56	bạn:24 vì:6
+cảnh sát	49	đã:11 đang:5
+cần làm	16	việc:5
+cần một	55	ít:14 cái:8
+cần phải	136	làm:23 đi:10 có:6 học:6
+cần thiết	27	cho:6 phải:6
+cẩn thận	42	hơn:6
+cậu bé	42	đó:7
+cậu có	46	biết:5 nghĩ:5
+cậu ấy	63	là:9 không:6 đã:5
+cố gắng	73	hết:6
+của anh	261	ấy:167 ta:68
+của bạn	228	là:37 không:20 có:13 đi:7 sẽ:6
+của chính	21	mình:13 phủ:5
+của chúng	201	tôi:133 ta:58
+của con	35	người:10
+của cuộc	18	sống:10
+của các	24	bạn:6
+của cô	116	ấy:95 ta:15
+của cậu	25	ta:6
+của họ	26	là:5
+của mình	130	cho:8 trong:7 đi:7 là:6 đâu:6
+của một	26	người:8
+của người	36	khác:14
+của tôi	348	là:48 đã:28 bị:26 không:19 đang:12
+của ông	53	ấy:20 ta:12
+cứ tưởng	17	là:7
+cứ điều	18	gì:18
+cửa hàng	72	đó:12 này:11 khác:7 đã:6
+cực kỳ	34	thích:6
+diễn viên	16	nổi:5
+do tại	20	sao:20
+du lịch	58	một:13 nước:9 vòng:5
+duy nhất	58	của:8 có:7 mà:5
+dành cho	29	bạn:5
+dường như	38	không:10 đã:5
+dạo này	27	tôi:11
+dạy tiếng	22	pháp:10 anh:6
+dạy tôi	18	cách:8
+dậy sớm	21	vào:5
+dễ dàng	21	hơn:6
+dừng lại	21	đi:5
+dữ liệu	37	của:11
+dự án	18	này:5
+dự định	19	sẽ:6
+em có	20	thể:6
+em gái	31	tôi:13 của:8
+em trai	51	tôi:31 của:7
+gia đình	68	tôi:10 mình:9
+gian để	39	làm:9
+giao thông	60	này:7 bị:5 chuyển:5
+giá bao	16	nhiêu:16
+giá trị	21	của:7
+giáo viên	78	của:13 dạy:7 tiếng:5 đã:5
+giúp chúng	17	ta:8 tôi:8
+giúp tôi	46	làm:7
+giúp đỡ	58	của:15 tôi:6
+giả vờ	18	ngủ:6
+giải quyết	39	vấn:18
+giải thích	53	cho:9
+giấc mơ	29	của:8
+giờ bạn	17	có:7
+giờ có	24	thể:8
+giờ là	46	mấy:7 quá:6
+giờ thì	28	tôi:5
+giờ tôi	49	đang:10 không:8 sẽ:8 đã:6
+gái của	26	bạn:7
+gì anh	22	ấy:14
+gì có	16	thể:12
+gì mà	31	cô:5
+gì sẽ	16	xảy:15
+gì tôi	39	có:11 đã:5
+gì về	47	anh:6 điều:5
+gì với	41	tôi:8
+gì đang	20	xảy:15
+gì đã	32	xảy:25
+gì để	44	nói:8 làm:7 ăn:6
+gần như	22	không:9
+gần đây	39	có:6 không:5 tôi:5
+gặp anh	34	ấy:25 ta:5
+gặp cô	25	ấy:22
+gặp khó	19	khăn:19
+gặp nhau	31	vào:7
+gọi cho	42	tôi:20
+gọi là	30	kakaku:6
+gọi tôi	25	là:10
+gọi điện	38	thoại:19 cho:12
+hai người	43	họ:8 chúng:6
+hay là	32	chúng:5
+hoàn thành	61	công:16 bài:9 nó:6 xong:5
+hoàn toàn	94	không:35
+hy vọng	62	rằng:11 bạn:10
+hài lòng	24	với:13
+hàng xóm	24	của:5
+hành động	30	của:6
+hãy cho	42	tôi:32
+hãy gọi	20	tôi:8 cho:5
+hãy nói	49	cho:11 với:9 chậm:8
+hãy để	29	tôi:10
+hình như	35	nó:5
+hôm nay	231	tôi:51 là:42 trời:20 bạn:9 chúng:8
+hôm qua	166	tôi:44 bạn:17 là:14 trời:8 anh:5
+hôn với	26	một:10
+hút thuốc	37	lá:13 không:5
+hơn một	31	chút:18
+hạnh phúc	35	không:6
+hầu hết	22	các:5
+hầu như	34	không:19
+hẹn hò	26	với:20
+hệ điều	20	hành:20
+họ có	40	thể:10
+họ không	74	có:7 thể:6
+họ là	35	người:6
+họ nói	36	rằng:11 họ:6 là:6 với:5
+họ sẽ	42	không:13
+họ đang	58	ăn:5
+họ đã	127	đi:11 làm:6
+học một	20	ngoại:5 ngôn:5
+học sinh	79	cấp:9 của:9 nào:6
+học tiếng	144	pháp:40 anh:39 việt:12 trung:10 đức:10
+hỏi anh	16	ấy:10 ta:5
+hỏi tôi	23	có:5
+hợp với	27	bạn:6
+hứa với	16	tôi:6
+hứng thú	24	với:13
+khi anh	26	ấy:20
+khi chúng	22	tôi:11 ta:9
+khi cô	18	ấy:8
+khi nghe	29	tin:12
+khi nào	87	bạn:19 thì:13 tôi:7 thế:5
+khi trời	21	mưa:9
+khi tôi	109	còn:7 gặp:6 đến:5
+khi đi	28	ngủ:8
+khiến bạn	17	nghĩ:5
+khiến tôi	23	cảm:7
+khu vực	26	này:8
+khách sạn	26	này:6
+khó khăn	45	với:6
+không ai	115	biết:14 có:7 tin:5 trong:5
+không bao	142	giờ:142
+không biết	365	là:34 gì:18 nói:16 phải:13 liệu:12
+không cho	31	phép:8 tôi:6
+không chắc	28	là:10 chắn:5
+không chịu	21	được:6 nổi:5
+không còn	89	làm:6 lựa:6 bên:5 gì:5
+không có	543	gì:54 ai:26 đủ:22 thời:21 nhiều:18
+không cần	96	phải:28 thiết:11
+không hiểu	57	vì:6
+không hút	17	thuốc:17
+không hề	26	biết:6
+không khí	23	trong:5
+không làm	89	điều:22 việc:13 gì:11
+không muốn	234	làm:29 đi:24 nói:13 nghe:11 sống:8
+không một	19	ai:14
+không nghĩ	91	là:35 rằng:14
+không nhìn	25	thấy:19
+không nên	63	làm:15 nói:7
+không nói	79	với:12 tiếng:11 gì:9 được:8 chuyện:7
+không phải	347	là:169 lúc:13 một:8 người:8 việc:8
+không quan	44	tâm:26 trọng:18
+không thích	172	những:13 nó:6 tôi:6 cái:5 làm:5
+không thể	544	làm:40 tin:29 nói:24 hiểu:18 sống:16
+không tin	44	vào:5
+không xảy	17	ra:17
+không ăn	41	thịt:7 gì:6
+không đi	47	đến:6
+không được	112	phép:18
+không đến	35	được:5
+không để	24	tâm:6
+không đủ	24	tiền:6
+kia là	26	ai:6 một:6
+kiến của	22	bạn:5 tôi:5
+kiểm tra	65	các:6
+kế hoạch	49	của:9 đó:5
+kết hôn	55	với:23
+kể cho	31	tôi:10 bạn:5
+kể từ	41	khi:14 đó:7
+liên lạc	23	với:20
+liên quan	26	đến:10 gì:9
+lo lắng	35	về:13 cho:5
+loài động	18	vật:18
+là ai	31	vậy:10 đã:5
+là anh	99	ấy:52 ta:21 em:5
+là bao	22	nhiêu:13
+là bác	23	sĩ:18
+là bạn	169	của:21 sẽ:16 đã:16 đang:10 không:9
+là chúng	32	ta:22 tôi:10
+là con	41	trai:8 gái:7 người:5
+là cái	62	gì:17
+là có	45	thể:13 một:5
+là cô	64	ấy:52
+là của	76	tôi:21 ai:12 bạn:11 chúng:6
+là em	16	trai:7
+là giáo	29	viên:27
+là gì	24	vậy:8 không:5
+là họ	50	không:9 hàng:7 sẽ:7 đang:5
+là học	23	sinh:19
+là không	51	muốn:9 có:7 cần:5 thể:5
+là lý	23	do:21
+là lần	28	đầu:24
+là một	932	người:150 con:38 trong:32 nhà:25 loại:21
+là ngày	44	cuối:6 mai:5
+là người	312	duy:20 có:18 đã:17 canada:11 mỹ:9
+là nhà	24	của:5
+là những	53	người:13
+là quá	16	muộn:6 nhiều:5
+là sinh	27	viên:17 nhật:8
+là sẽ	31	không:10
+là sự	28	thật:10
+là thành	26	phố:15 viên:9
+là thứ	28	hai:6 năm:6
+là tôi	149	không:30 sẽ:24 đã:21 có:13 muốn:9
+là tất	18	cả:18
+là điều	34	mà:5
+làm bài	77	tập:72
+làm chuyện	23	đó:17
+làm cái	26	gì:14
+làm gì	126	với:18 không:8 cả:7 thì:6 khi:5
+làm mọi	16	thứ:11
+làm những	22	gì:10 việc:5
+làm phiền	17	bạn:5
+làm sao	34	để:8 có:5
+làm thế	36	nào:28
+làm tôi	39	ngạc:7
+làm việc	294	đó:83 cho:19 trong:14 này:13 chăm:11
+làm xong	46	bài:24 việc:5
+làm điều	243	đó:207 này:19 mà:6 gì:5
+làm được	32	điều:12 việc:7
+làm ơn	60	cho:12 hãy:7 nói:6 đừng:6
+lái xe	62	máy:18 không:5
+lúc nào	94	cũng:53 bạn:11
+lúc đó	65	tôi:14 đang:8 chúng:5
+lý do	67	tại:18 gì:8 vì:8 tôi:5
+lạc bộ	20	của:6
+lạc với	20	tôi:6
+lại có	27	thể:10
+lại nói	16	dối:7
+lần cuối	16	cùng:9
+lần một	16	ngày:7 tuần:7
+lần nào	17	nữa:11
+lần đầu	46	tiên:32 tôi:5
+lẽ ra	60	tôi:17 bạn:11 anh:6 phải:5
+lẽ sẽ	17	không:5
+lỗi cho	17	tôi:11
+lỗi tôi	21	không:10
+lỗi vì	36	đã:23
+lớn nhất	22	của:6
+lời khuyên	21	của:11
+lời nói	20	của:9
+lựa chọn	39	nào:10
+mai trời	19	sẽ:9 mưa:5
+mai tôi	34	sẽ:26
+mang theo	34	một:8
+mua cho	33	tôi:12 cô:7
+mua cái	24	này:7
+mua một	117	chiếc:38 cái:26 con:8 ngôi:7 ít:7
+muốn có	27	một:7
+muốn gặp	29	bạn:12
+muốn làm	72	điều:18 việc:10 gì:9
+muốn mua	22	một:9
+muốn một	37	chiếc:9 cái:5
+muốn nghe	19	thêm:5
+muốn nói	50	chuyện:19 gì:6 về:5
+muốn sống	33	một:8
+muốn trở	28	thành:25
+muốn tôi	21	làm:8
+muốn ăn	37	gì:5 kem:5
+muốn đi	85	chơi:6 ra:5
+mà anh	21	ấy:13
+mà bạn	65	không:9 đã:8 thích:6 có:5 muốn:5
+mà chúng	21	ta:10 tôi:10
+mà cô	16	ấy:10
+mà không	66	có:20 cần:7 nói:5
+mà tôi	111	đã:19 không:13 có:11 từng:10 biết:8
+màu xanh	27	dương:7 lá:6
+mày nghĩ	17	mày:9
+máy bay	51	đã:9
+máy của	33	mình:9 tôi:7 bạn:5
+máy tính	53	của:26
+máy vi	16	tính:14
+mình có	16	thể:6
+mình không	27	thể:6
+mình là	29	một:7
+mình trong	29	gương:6 một:5
+mùa hè	24	này:5 năm:5
+mùa đông	31	năm:5
+mơ của	26	tôi:10 mình:5
+mặc dù	60	anh:7
+mặc một	18	chiếc:14
+mẹ của	41	anh:7 tôi:6 bạn:5
+mẹ tôi	96	đang:15 là:12 đã:9 không:6
+mẹ đẻ	18	của:14
+mệt mỏi	18	sau:5
+mọi người	233	đều:62 đã:15 đang:12 không:10 lại:8
+mọi thứ	80	đều:16 đã:6
+mỗi ngày	37	tôi:7
+một ai	25	có:9
+một bài	21	hát:5 học:5
+một bộ	26	phim:12
+một bức	32	thư:16 tranh:7 ảnh:5
+một chiếc	156	xe:62 máy:12 váy:9 áo:6 ghế:5
+một chút	73	đi:8 được:6 không:5 nào:5 tiếng:5
+một con	151	chó:29 mèo:20 dao:8 người:7 chim:6
+một cuốn	44	sách:31 tiểu:6 từ:5
+một cuộc	50	sống:20 họp:10
+một cái	180	gì:12 máy:10 tên:8 mũ:7 bút:5
+một câu	53	chuyện:18 hỏi:16
+một cô	29	gái:22
+một công	44	việc:21 ty:13
+một căn	33	nhà:14 hộ:9 phòng:7
+một cơ	17	hội:6 sở:6
+một cốc	19	cà:10
+một giáo	28	viên:28
+một lần	40	nữa:18 nào:7
+một mình	49	trong:9
+một món	22	quà:17
+một ngày	67	nào:14 nọ:8
+một ngôi	33	nhà:22 làng:5
+một ngôn	21	ngữ:21
+một người	307	bạn:28 đàn:28 phụ:17 rất:12 có:10
+một nhà	59	hàng:13 máy:6
+một quyển	17	sách:14
+một quả	28	táo:13
+một quốc	16	gia:15
+một số	57	người:13
+một thành	20	phố:13 viên:6
+một tiếng	25	đồng:11
+một trong	56	những:31 số:15
+một việc	26	khó:8
+một vài	42	bức:5 người:5
+một vụ	16	tai:11
+một ít	53	không:8 tiếng:7 tiền:5
+một điều	19	gì:6
+một đứa	30	trẻ:11 con:9
+mới có	21	thể:11
+mới của	28	chúng:6 mình:5
+mở cửa	34	sổ:16
+mục đích	20	của:9
+nay bạn	16	có:7
+nay chúng	16	ta:14
+nay là	45	ngày:16 thứ:12
+nay trời	31	sẽ:10
+nay tôi	90	sẽ:14 không:13 đã:11
+ngay cả	22	khi:9
+ngay lập	28	tức:28
+ngay sau	16	khi:8
+nghe nói	36	anh:7 là:7 mẹ:5 rằng:5
+nghe thấy	67	tiếng:13 tôi:6 ai:5 gì:5
+nghe được	18	tin:5
+nghĩ là	155	tôi:33 bạn:20 anh:7 cô:5 họ:5
+nghĩ như	16	vậy:10
+nghĩ rằng	84	tôi:12 anh:5 bạn:5
+nghĩ tôi	27	có:5
+nghĩ về	26	điều:5
+nghĩ đến	18	việc:6
+nghĩa là	22	gì:6
+ngày hôm	59	qua:34 nay:14
+ngày mai	137	tôi:26 trời:15 chúng:13 là:12 bạn:8
+ngày nào	26	đó:16 tôi:5
+ngày tôi	16	đều:5
+ngôi nhà	79	này:10 mới:7 nơi:6 của:5 đã:5
+ngôn ngữ	128	của:8 khác:8 nào:8 lập:7 thứ:5
+người anh	26	em:7
+người bạn	64	của:10 thân:10
+người có	60	thể:13 trí:7 trạng:7
+người duy	22	nhất:22
+người khác	43	là:5
+người mà	18	bạn:5
+người nước	23	ngoài:22
+người phụ	55	nữ:52
+người ta	94	nói:9 không:5 đã:5
+người đàn	84	ông:77 bà:7
+người đó	38	là:8 có:5
+người đều	68	có:9 đang:7 đã:6 thích:5
+ngạc nhiên	27	khi:8
+nhiều người	86	nói:8 đã:6 trẻ:5
+nhiều thời	35	gian:35
+nhiều tiền	24	hơn:8
+nhiều việc	17	phải:7
+nhà anh	17	ấy:7 ta:6
+nhà bạn	18	có:6
+nhà của	77	mình:20 chúng:12 tôi:9 bạn:5 họ:5
+nhà hàng	43	đó:8 này:6 xóm:5
+nhà này	21	có:6
+nhà vào	18	lúc:7
+nhìn chằm	16	chằm:16
+nhìn thấy	116	một:10 anh:8 gì:8 bạn:7 nó:7
+như không	47	có:12 bao:7 thể:7
+như là	27	một:5
+như thế	121	nào:71 này:31
+như tôi	21	đã:6
+nhưng anh	22	ấy:11 ta:7
+nhưng cô	17	ấy:13
+nhưng không	30	có:6
+nhưng tôi	95	không:39 đã:11 nghĩ:7
+nhất có	24	thể:22
+nhất của	29	tôi:9
+nhất mà	28	tôi:19
+nhất thế	17	giới:15
+nhất trong	43	cuộc:5
+nhận ra	45	rằng:8 là:7
+nhận thức	23	nội:15
+nhận được	34	một:7
+nhật bản	74	đã:10 là:6
+nhật của	25	tôi:6
+những con	43	chó:10 mèo:5 người:5
+những cái	22	này:5
+những câu	38	hỏi:11
+những gì	111	bạn:28 tôi:17 anh:16 mà:10 họ:6
+những người	174	khác:11 bạn:10 này:7 đó:7 có:6
+những thứ	45	mà:9 này:6 không:5
+những điều	59	mà:10 kiện:9 anh:5
+những đứa	23	trẻ:11 con:7
+nào bạn	43	cũng:8 có:5 thích:5
+nào mà	20	bạn:12
+nào tôi	24	cũng:11
+nào đó	29	tôi:5
+này bao	27	nhiêu:17
+này bạn	17	có:8
+này cho	22	tôi:5
+này có	110	thể:19 giá:8
+này không	80	thể:11 có:9 phải:5
+này là	102	của:28 cái:8 gì:7 một:6
+này rất	53	quan:6 đẹp:6 ngon:5
+này sẽ	34	không:6
+này tôi	32	không:7
+này được	33	không:6
+nên chúng	16	tôi:12
+nên làm	52	gì:18 điều:11 vậy:6
+nên nói	24	chuyện:6 với:5
+nên tôi	77	đã:25 không:15
+nên đi	27	ngủ:7
+nó cho	17	tôi:7
+nó có	61	thể:11
+nó không	60	phải:5
+nó là	48	một:15
+nó sẽ	28	không:8
+nó đã	53	đi:6
+nói anh	27	ấy:14 ta:11
+nói cho	71	tôi:28 bạn:6 anh:5
+nói chuyện	182	với:116 về:5
+nói chậm	16	hơn:8 lại:5
+nói gì	71	với:12 cả:11 không:7 về:6 thế:5
+nói họ	16	không:5
+nói là	112	anh:25 họ:19 cô:11 bạn:10 tôi:8
+nói rằng	99	anh:26 họ:11 cô:10 tôi:7
+nói tiếng	175	pháp:67 anh:46 nhật:16 đức:7
+nói về	73	chuyện:8 điều:8 những:5
+nói với	183	tôi:63 bạn:18 anh:14 ai:7 họ:5
+nói điều	17	đó:9
+nói được	31	tiếng:14 một:6 nhiều:5
+năm học	16	mới:5
+năm sau	22	tôi:11
+năm trước	21	đây:6
+nước ngoài	39	không:5
+nếu anh	20	ấy:7
+nếu bạn	123	không:22 muốn:19 có:11 biết:5
+nếu có	23	thể:8
+nếu không	37	có:18
+nếu tôi	59	là:13 biết:10 có:9 không:6
+nội tâm	17	số:5
+phàn nàn	21	về:9
+phát hiện	24	ra:17
+phát minh	16	ra:9
+phát triển	42	của:7
+phòng của	24	anh:6
+phải học	31	tiếng:10 thuộc:6 tập:5
+phải là	238	một:44 người:26 bạn:8 bác:5 cái:5
+phải làm	116	gì:21 việc:20 điều:19 bài:7 là:7
+phải trả	19	tiền:6
+phải đi	58	đến:7 ngủ:5
+phải đến	18	trường:5
+phản đối	26	việc:5
+phụ nữ	94	có:6 xinh:6 đó:6 không:5
+qua bạn	24	đã:6
+qua tôi	55	đã:28 không:7
+qua đời	19	vào:6
+quan trọng	96	nhất:12 của:11 trong:11 hơn:7 với:7
+quan tâm	67	đến:40
+quay trở	26	lại:23
+quen với	25	cuộc:5 nó:5
+quyết vấn	18	đề:18
+quyết định	116	là:14 của:11 đi:9 không:6 được:6
+quyển sách	85	này:28 đó:12 về:5
+quá nhiều	55	thời:9
+quần áo	52	của:6
+quốc gia	58	có:5
+quốc tế	23	ngữ:14
+ra khỏi	67	nhà:15 phòng:9 đây:9
+ra ngoài	60	đi:8 ăn:5 để:5
+ra tôi	30	nên:7 đã:7 không:5
+rõ ràng	32	là:20
+rất khó	23	để:5
+rất nhiều	166	người:16 tiền:11 thứ:7 về:6 thời:5
+rất vui	43	vì:16 khi:12 sướng:5
+rằng anh	93	ấy:59 ta:22
+rằng bạn	26	sẽ:7
+rằng chúng	16	ta:9 tôi:6
+rằng cô	40	ấy:28
+rằng họ	22	không:10
+rằng tôi	59	sẽ:10 là:8 không:5 yêu:5
+rời khỏi	30	đây:6 nhà:5
+sai lầm	30	của:12
+sang tiếng	24	anh:8
+sao anh	32	ấy:10 ta:7 lại:6
+sao bạn	109	lại:41 không:25 biết:6
+sao chúng	20	ta:18
+sao cô	16	ấy:11
+sao không	17	ai:5
+sao tôi	26	phải:7 lại:5
+sau khi	95	ăn:10 tan:7 đi:6
+sau tôi	16	sẽ:12
+sau đó	20	tôi:8
+sinh nhật	50	của:23 bạn:5
+sinh ra	54	một:5
+sinh viên	53	đã:5 đại:5
+so với	34	những:5
+suy nghĩ	58	của:14 quá:5
+sách của	37	bạn:8
+sách này	63	không:7 là:6 rất:6
+sáng nay	21	tôi:12
+sản phẩm	18	điện:6
+sẵn sàng	38	cho:9 để:6
+sẽ bắt	17	đầu:13
+sẽ cho	25	bạn:9
+sẽ có	51	thể:12 một:9
+sẽ giúp	23	tôi:6
+sẽ gặp	25	nhau:7
+sẽ gọi	22	lại:7
+sẽ không	315	bao:56 làm:27 đến:20 đi:15 nói:11
+sẽ là	33	một:8
+sẽ làm	81	gì:20 điều:15 việc:5
+sẽ mua	20	một:16
+sẽ nói	25	với:9
+sẽ phải	26	làm:5
+sẽ quay	19	lại:11 trở:6
+sẽ trở	25	lại:8 thành:8 về:5
+sẽ xảy	31	ra:27
+sẽ đi	89	đến:8 du:5 ra:5
+sẽ đến	62	muộn:9 đó:8 sớm:6
+số tiền	25	này:7 đó:5
+số điện	18	thoại:18
+sống một	28	mình:18 cuộc:6
+sống trong	40	một:12
+sở dữ	36	liệu:36
+sở hữu	39	một:13
+sở thích	25	của:18
+sức khỏe	38	của:11
+sử dụng	63	nó:5
+sự giúp	18	đỡ:18
+sự không	19	muốn:7
+sự là	23	một:11
+sự thật	32	là:7 không:6
+ta chỉ	17	có:6
+ta có	131	thể:46 một:11 nhiều:7 rất:6
+ta cần	44	phải:10
+ta hãy	58	đi:5
+ta không	131	thể:23 có:11 còn:10 phải:6 biết:5
+ta là	83	một:28 người:20
+ta làm	21	việc:5
+ta nên	51	làm:7
+ta nói	42	chuyện:6 tiếng:6 rằng:5
+ta phải	47	làm:5
+ta sẽ	108	không:16 làm:8 gặp:7 có:5 đi:5
+ta đang	47	nói:9
+ta đã	167	không:7 bị:6 đi:6 làm:5 từng:5
+tai nạn	45	xe:7 giao:5 đã:5 đó:5
+tham dự	20	buổi:5
+tham gia	37	cuộc:6
+thay đổi	92	suy:5
+thoại cho	17	tôi:7
+thoại của	29	bạn:11 mình:7
+thành công	45	việc:16 của:5
+thành một	53	giáo:6
+thành phố	90	lớn:18 này:15 của:8 hồ:6
+thành viên	23	của:12
+thêm một	36	lần:6 người:5
+thì anh	20	ấy:10
+thì bạn	37	sẽ:10 có:6 nên:6
+thì tôi	53	sẽ:10 đã:7 cũng:5
+thích cái	21	này:5
+thích của	42	tôi:21 bạn:10
+thích xem	18	phim:7
+thích đi	32	du:9
+thói quen	20	xấu:5
+thông báo	21	cho:6
+thông minh	26	hơn:7
+thông tin	37	này:9
+thư cho	25	mẹ:6
+thảo luận	16	về:5
+thất bại	23	của:9
+thất vọng	18	khi:5 về:5
+thấy anh	28	ấy:17 ta:10
+thấy cô	26	ấy:18 đơn:5
+thấy gì	20	cả:10
+thấy một	56	con:11 cái:8
+thầy giáo	21	của:7
+thậm chí	29	còn:12 không:5
+thật là	71	một:9 bạn:8
+thật sự	61	là:8 muốn:8 rất:7 không:5
+thế giới	77	không:6 có:5 này:5
+thế nào	85	để:14 mà:9 đi:6 bạn:5 không:5
+thế này	41	thì:6 đâu:5
+thể cho	23	tôi:15
+thể chịu	17	đựng:11 được:5
+thể dục	30	có:8
+thể giúp	39	tôi:11 bạn:5 gì:5
+thể giải	24	thích:10 quyết:9
+thể hiểu	37	được:16 nổi:5
+thể làm	106	điều:25 được:19 việc:12 gì:6 xong:5
+thể mua	25	được:10
+thể nhìn	20	thấy:12
+thể nói	82	tiếng:28 chuyện:9 được:9 cho:6
+thể sống	20	thiếu:7
+thể tin	39	được:9 tưởng:5
+thể trả	17	lời:15
+thể tìm	24	thấy:12 được:8
+thể đi	46	bộ:8
+thời gian	185	để:39 rảnh:16 của:11 không:9 cho:7
+thời tiết	63	này:5 nóng:5 xấu:5 đẹp:5 ấm:5
+thứ gì	45	đó:18 mà:5
+thức dậy	22	lúc:9 sớm:5
+thức ăn	32	thừa:6
+thừa nhận	24	là:7 rằng:7
+thực sự	148	là:15 thích:14 không:13 muốn:10 rất:10
+tiếng anh	126	không:14 của:6 là:5 thì:5
+tiếng mẹ	18	đẻ:18
+tiếng pháp	115	không:14 sang:6 tốt:6 và:6 của:5
+tiếng việt	33	không:6 là:6
+tiếng đồng	24	hồ:24
+tiếp tục	50	làm:9 công:5
+tiết kiệm	28	tiền:15
+tiền cho	23	bạn:6
+tiền để	35	mua:23
+tiểu thuyết	48	này:9 gia:6
+toàn bộ	37	câu:5
+toàn không	35	biết:10
+trai của	33	tôi:10 anh:7
+trai tôi	54	có:6 đang:5
+trong cuộc	37	sống:12 đời:12
+trong công	30	viên:16 ty:7 việc:7
+trong lúc	27	tôi:6
+trong lớp	18	của:5
+trong một	104	căn:10 tuần:8 cái:7 ngôi:7 ngày:6
+trong những	59	năm:6 giác:5
+trong phòng	32	mình:5
+trong số	39	những:12 các:11 họ:8
+trong thành	16	phố:16
+trong thời	17	kỳ:7 tiết:5
+trong tiếng	20	việt:5
+trong vòng	16	một:5
+trách nhiệm	21	cho:8
+trái tim	20	tôi:6
+trên thế	24	giới:24
+trên xe	17	buýt:8
+trên đường	26	đến:5
+trí tuệ	30	nhân:12 tầng:6
+trông có	37	vẻ:37
+trông rất	24	giống:5
+trông thấy	41	một:9 anh:6
+trước khi	94	đi:13 tôi:6
+trước tôi	17	đã:9
+trước đây	23	tôi:5
+trả lời	101	của:14 câu:10 tôi:6 được:6 không:5
+trả tiền	30	cho:14
+trận động	16	đất:16
+trời mưa	45	to:7 cả:6
+trời sẽ	36	mưa:23
+trời đang	25	mưa:17
+trời đã	19	mưa:7
+trở lại	39	đây:5
+trở thành	120	một:43 hiện:10 bác:6 nhà:5 đại:5
+trở về	34	nhà:15
+tuyệt vời	20	nhất:5
+tuần sau	16	tôi:5
+tuần trước	22	tôi:8
+tây ban	26	nha:25
+tên của	39	bạn:8
+tên là	26	gì:8
+tên tôi	48	là:44
+tìm thấy	69	một:14 cái:8
+tìm được	28	một:7
+tình cờ	19	gặp:8
+tình yêu	48	của:12 là:6
+tính của	30	tôi:11 bạn:5 mình:5
+tòa nhà	26	này:12
+tô của	19	tôi:7
+tôi biết	198	là:21 rằng:13 bạn:11 anh:9 tên:8
+tôi bắt	25	đầu:20
+tôi bị	173	đau:29 mất:9 trộm:9 gãy:5 lạc:5
+tôi cho	47	rằng:23 chó:5
+tôi chơi	17	bóng:5
+tôi chưa	118	bao:37 từng:27 ăn:7 biết:5 làm:5
+tôi chắc	31	chắn:21 rằng:6
+tôi chẳng	38	có:8 biết:7
+tôi chỉ	100	muốn:20 có:16 biết:8 cần:5
+tôi còn	47	là:5 nhỏ:5
+tôi có	553	thể:216 một:75 nhiều:21 hai:13 rất:9
+tôi cũng	103	không:14 vậy:11 đã:9 có:6 là:5
+tôi cảm	56	thấy:55
+tôi cần	144	phải:26 một:25 thêm:6 bạn:5 nói:5
+tôi cứ	19	tưởng:13
+tôi ghét	78	anh:6 những:5
+tôi giúp	21	đỡ:5
+tôi gặp	44	anh:5 nhau:5
+tôi hay	26	đi:5
+tôi hoàn	27	toàn:24
+tôi hy	27	vọng:27
+tôi học	26	tiếng:6
+tôi không	1377	thể:205 biết:179 có:148 muốn:122 thích:96
+tôi luôn	29	luôn:7
+tôi là	377	một:60 người:52 bạn:19 ai:12 anh:11
+tôi làm	76	việc:29 gì:6 điều:6 bài:5
+tôi mong	17	là:5
+tôi muốn	395	đi:22 bạn:21 một:20 ăn:19 biết:18
+tôi mượn	27	cái:12
+tôi một	84	cái:13
+tôi mới	34	chỉ:6 biết:5
+tôi nghe	66	nói:22 thấy:18
+tôi nghĩ	225	là:63 rằng:27 tôi:12 bạn:11 anh:8
+tôi như	17	thế:5
+tôi nhận	17	được:8 ra:7
+tôi nên	41	làm:10
+tôi nói	81	tiếng:18 chuyện:11 với:8 gì:6
+tôi phải	149	làm:22 đi:19 học:7 mua:5 xin:5
+tôi rất	144	thích:26 vui:20 nhiều:8 muốn:6 bận:5
+tôi rằng	28	cô:6
+tôi sẽ	668	không:95 đi:55 làm:31 gọi:22 đến:20
+tôi sống	42	trong:5
+tôi thì	21	không:5
+tôi thích	291	ăn:15 đi:14 xem:10 chiếc:6 chơi:6
+tôi thường	50	hay:6 ăn:6 xuyên:5
+tôi thấy	74	một:6
+tôi thật	21	sự:14
+tôi thực	41	sự:39
+tôi tin	26	chắc:5 rằng:5 vào:5
+tôi tìm	16	thấy:9
+tôi tưởng	38	bạn:10 là:10
+tôi tự	46	hỏi:29
+tôi và	23	tôi:5
+tôi vẫn	72	chưa:15 còn:10 đang:7
+tôi vừa	65	mới:14 nói:7 ăn:6
+tôi xem	35	cái:5
+tôi xin	68	lỗi:44
+tôi yêu	47	cô:10 cầu:6
+tôi ăn	44	trưa:5
+tôi đang	348	học:24 làm:22 ăn:17 xem:14 đọc:14
+tôi đi	109	làm:9 ngủ:8 bộ:7 mua:6 xe:6
+tôi đã	1398	không:111 làm:47 mua:47 đi:47 nói:45
+tôi được	50	không:15 sinh:7
+tôi đến	74	từ:19 đây:7 nhà:5 để:5
+tôi đều	64	biết:8 là:8 có:6 rất:6
+tôi định	31	đi:7 sẽ:6
+tôi đọc	24	báo:5
+tôi ước	22	gì:9
+tương lai	19	của:7
+tưởng là	23	bạn:8
+tại sao	221	bạn:54 anh:19 chúng:15 tôi:15 mọi:9
+tạo ra	37	một:6
+tất cả	261	mọi:54 những:54 các:38 chúng:21 bạn:5
+tầng bậc	18	nhận:6
+tập thể	36	dục:30
+tập về	109	nhà:109
+tối nay	56	tôi:13 chúng:7
+tối qua	24	bạn:6 tôi:6
+tốt cho	19	sức:10
+tốt hơn	53	là:9 tôi:7
+tốt nhất	23	là:8
+tổ chức	37	một:8
+từ chối	32	lời:6
+từ khi	39	nào:11 tôi:11
+từ điển	29	này:7 của:5
+từng có	17	một:5
+tự do	25	và:8
+tự hào	17	về:11
+tự hỏi	40	liệu:7 anh:5 là:5
+tự làm	31	điều:11 mình:5 việc:5
+tự mình	16	làm:6
+viên của	33	chúng:13
+viết một	34	bức:9 lá:9 cuốn:6
+viết thư	20	cho:16
+việc cho	20	một:6
+việc của	48	tôi:10 mình:9 anh:7
+việc này	35	không:5
+việc phải	16	làm:14
+việc đó	65	trong:6 một:5
+việt nam	29	là:6
+vui lòng	60	cho:7
+vui vì	19	bạn:5
+và một	30	con:5
+và tôi	79	đã:15 đều:13 không:7 sẽ:7 cũng:5
+vào buổi	33	sáng:18 tối:11
+vào cuối	25	tuần:15
+vào khoảng	22	độ:6
+vào lúc	52	nửa:6
+vào mùa	46	đông:18 hè:15 xuân:7 thu:5
+vào một	22	ngày:8
+vào ngày	86	mai:41 hôm:14 thứ:7 chủ:6
+vào năm	55	ngoái:10
+vào tháng	29	sau:6 trước:5
+vào thời	19	điểm:11
+vào thứ	30	hai:14 bảy:5
+vào tuần	20	sau:6 trước:6 tới:5
+vì anh	20	ấy:15
+vì bạn	17	đã:6 là:5
+vì không	21	có:5
+vì sao	46	tôi:6 cô:5
+vì trời	19	mưa:11
+vì tôi	51	bị:13 không:13
+vì đã	49	làm:5
+văn phòng	26	của:11
+vấn đề	123	này:20 đó:17 của:10 gì:8 là:7
+vẫn chưa	47	biết:5 tìm:5
+vẫn còn	72	là:14 đang:6
+về anh	16	ấy:11
+về chuyện	31	này:8 đó:7 đã:6
+về nhà	117	của:32 đi:10 rồi:8 chưa:5 không:5
+về phía	17	trước:5
+về vấn	17	đề:16
+về điều	56	đó:39 này:10 gì:7
+với anh	72	ấy:39 ta:16
+với bạn	56	bè:6
+với chúng	38	tôi:28 ta:9
+với cô	42	ấy:28 ta:7
+với một	45	người:13
+với những	40	người:10
+với tôi	126	là:30 rằng:15 không:9 anh:5
+vụ tai	39	nạn:39
+vừa mới	30	đến:5
+vừa nói	17	chuyện:7
+xe của	33	tôi:8 anh:5 bạn:5
+xe hơi	50	của:8 mới:5
+xe máy	83	của:29
+xe đạp	34	của:13
+xem cái	17	này:6
+xem ti	27	vi:27
+xin chào	33	bạn:5
+xin hãy	54	nói:6
+xin lỗi	115	vì:34 tôi:22 cho:7 nhưng:6
+xong bài	31	tập:28
+xuất phát	17	đến:6
+xảy ra	133	với:16 trong:8 nếu:5 vào:5
+yêu cô	22	ấy:22
+yêu cầu	44	tôi:5
+yêu thích	23	của:14
+ít nhất	21	một:6
+ông có	21	thể:7
+ông già	17	noel:9
+ông ta	110	đã:16 là:10 không:8
+ông ấy	195	đã:37 không:17 là:17 có:14 đang:8
+ăn cơm	24	với:5
+ăn gì	23	cũng:5
+ăn một	26	quả:12
+ăn trưa	23	với:7
+ăn tối	27	với:6
+ăn đồ	22	ăn:7
+đang chờ	21	đợi:6
+đang cố	23	gắng:13
+đang học	53	tiếng:18 cách:5
+đang làm	79	việc:21 gì:19 bài:7
+đang nói	74	chuyện:14 dối:13 về:13 gì:10 sự:7
+đang nấu	16	gì:5
+đang tìm	34	kiếm:8
+đang xem	21	ti:11
+đang xảy	20	ra:20
+đang ăn	31	một:7
+đang đi	43	du:6
+đang đọc	26	một:7 sách:6
+đang đợi	22	bạn:11
+đi bộ	60	đến:16 tới:5 được:5
+đi chơi	18	với:6
+đi câu	21	cá:20
+đi cùng	24	với:5
+đi du	55	lịch:47 học:8
+đi làm	25	bằng:7
+đi mua	30	sắm:19
+đi một	21	mình:10
+đi ngủ	35	sớm:10 đi:5
+đi ra	56	ngoài:29 khỏi:7
+đi tới	23	đó:7
+đi vào	24	ngày:8 trong:5
+đi với	19	chúng:6
+đi xe	27	đạp:12 buýt:7
+đi xem	21	phim:16
+đi đến	82	đó:8 trường:5
+điều gì	103	đó:17 khiến:10 đã:10 sẽ:8 mà:5
+điều mà	28	bạn:7 tôi:6
+điều này	76	không:10 sẽ:6 có:5
+điều đó	204	không:23 sẽ:14 một:10 có:9 là:8
+điện thoại	98	của:29 cho:17 di:11 thông:9 reo:7
+đàn ông	101	đó:17 đã:6
+đáng lẽ	45	ra:28 nên:7
+đây có	40	phải:20
+đây không	47	phải:30
+đây là	247	một:55 cái:11 lần:10 cuốn:8 những:8
+đã bao	30	giờ:27
+đã biết	34	là:6
+đã bắt	61	đầu:40
+đã bị	127	bắt:8
+đã bỏ	31	thuốc:6
+đã cho	37	tôi:9 anh:5
+đã chết	22	vì:5
+đã chờ	16	đợi:8
+đã có	94	một:19 thể:18 thêm:6
+đã cố	45	gắng:19
+đã giúp	25	đỡ:9 tôi:5
+đã gặp	53	anh:11 cô:8 nhau:6
+đã gọi	28	điện:12
+đã hoàn	27	thành:20 toàn:5
+đã học	43	tiếng:14 được:8 cách:5
+đã không	235	thể:47 biết:15 làm:14 nói:9 còn:8
+đã kết	34	hôn:22 thúc:12
+đã làm	184	điều:28 việc:24 gì:18 xong:16 bài:12
+đã mua	111	một:37 cho:13 xe:5
+đã nghe	24	thấy:7
+đã nghĩ	21	là:9
+đã nhìn	36	thấy:22
+đã nhận	16	được:5
+đã nói	142	với:30 chuyện:20 dối:12 rằng:12 cho:10
+đã qua	17	đời:11
+đã quyết	44	định:43
+đã ra	16	biển:5
+đã rời	17	đi:11
+đã sẵn	21	sàng:21
+đã thay	35	đổi:31
+đã trông	16	thấy:13
+đã trả	27	lời:13 tiền:5
+đã trở	55	thành:31 nên:17 về:7
+đã tìm	39	thấy:20 ra:7
+đã từng	87	đi:9 làm:8 sống:7 là:6 đến:5
+đã tự	30	tử:8 sát:6
+đã viết	40	một:12
+đã về	19	nhà:14
+đã xem	17	một:5
+đã xảy	59	ra:57
+đã ăn	63	hết:6 trưa:6 một:5
+đã đi	136	đến:13 đâu:11 bơi:6 du:6
+đã đóng	18	cửa:7
+đã đưa	28	cho:8 ra:6 nó:5
+đã đến	114	lúc:12 thăm:11 muộn:6 bệnh:5 đó:5
+đã đọc	37	hết:7 xong:6
+đèn giao	58	thông:58
+đó cho	25	bạn:5
+đó có	87	phải:17 thể:14 đúng:5
+đó không	99	phải:53 thể:5
+đó là	357	một:104 lý:17 của:14 tất:9 người:8
+đó một	32	mình:14 lần:7
+đó sẽ	30	không:8
+đó trong	27	một:10
+đó tôi	40	không:10 sẽ:5 đang:5
+đơn giản	23	là:6
+đưa cho	33	tôi:12
+đưa ra	30	những:6
+đưa tôi	23	cái:5
+được cho	25	là:11
+được dùng	16	để:5
+được gì	17	cả:5
+được sinh	35	ra:32
+được tiếng	21	pháp:9 anh:5
+được điều	30	đó:16
+đại sứ	19	quán:13
+đạt được	19	những:5
+đất nước	38	chúng:5 của:5
+đầu bếp	16	giỏi:6
+đầu tiên	72	tôi:15 của:14
+đến một	22	mình:6
+đến mức	31	nào:9
+đến nhà	37	ga:8 thờ:6 tôi:6
+đến thăm	32	chúng:5
+đến thế	16	nhưng:5
+đến trường	29	muộn:5 trong:5
+đến từ	68	đâu:7 nước:5
+đề nghị	29	của:10
+đề xuất	25	của:7
+đều biết	17	là:5
+đều có	37	thể:6
+đều là	34	những:6
+để cho	19	bạn:5
+để có	28	thể:19
+để học	18	tiếng:7
+để làm	73	điều:13 gì:12 việc:11
+để mua	34	một:11
+để nói	21	chuyện:5 về:5
+địa chỉ	34	của:14
+định của	16	tôi:5
+định là	18	sẽ:8
+định làm	20	việc:5
+đọc một	21	cuốn:11
+đối với	77	tôi:26 chúng:5
+đồng hồ	55	đeo:9 này:8 của:7
+động vật	40	có:8
+động đất	33	đã:5
+đủ tiền	20	để:16
+đứa con	24	gái:7 của:6 trai:6
+đứa trẻ	56	đang:8 đó:7
+đừng có	51	mà:22
+đừng nói	43	chuyện:9 gì:6 với:6 dối:5
+ơn bạn	29	vì:10 đã:9
+ước gì	19	tôi:10
+ước mơ	21	của:16
+ảnh hưởng	21	đến:9
+ấn tượng	17	về:5
+ấy bị	56	ốm:9
+ấy cho	29	tôi:5
+ấy còn	18	trẻ:7
+ấy có	203	thể:33 vẻ:15 một:13 nhiều:12 đến:7
+ấy cần	32	phải:9
+ấy không	266	có:25 thể:21 phải:20 biết:19 thích:14
+ấy là	211	một:87 người:28 học:6 ai:5 bạn:5
+ấy làm	45	việc:17
+ấy lại	27	không:6
+ấy muốn	42	đi:7
+ấy một	29	món:6 chiếc:5
+ấy nói	87	tiếng:19 với:17 là:8 anh:5
+ấy rất	65	thích:8
+ấy sẽ	108	không:25 đến:9
+ấy thích	61	đi:5
+ấy đang	170	nói:9 làm:8 đi:6 cảm:5 học:5
+ấy đi	48	ngủ:5 ra:5
+ấy đã	622	không:31 đi:24 làm:18 đến:18 nói:16
+ấy được	20	sinh:9
+ấy đến	32	nhường:5 từ:5

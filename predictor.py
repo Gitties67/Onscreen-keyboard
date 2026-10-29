@@ -48,6 +48,11 @@ DICTIONARIES = {
     "it":    ("words_it.txt",    None),
     "pt":    ("words_pt.txt",    None),
     "nl":    ("words_nl.txt",    None),
+    "id":    ("words_id.txt",    None),
+    "ms":    ("words_ms.txt",    None),
+    "tl":    ("words_tl.txt",    None),
+    "vi":    ("words_vi.txt",    None),
+    "ko":    ("words_ko.txt",    None),
 }
 
 # Languages that write elided words with an apostrophe (l'homme, dell'anno):
@@ -68,7 +73,7 @@ def ngrams_path_for(language: str) -> str | None:
     return _data_path("ngrams.txt" if is_english(language) else f"ngrams_{language}.txt")
 
 
-_FOLD_EXTRA = str.maketrans({"ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "ł": "l"})
+_FOLD_EXTRA = str.maketrans({"ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "ł": "l", "đ": "d"})
 
 
 def fold(text: str) -> str:
@@ -76,7 +81,9 @@ def fold(text: str) -> str:
     text = text.lower().translate(_FOLD_EXTRA)
     if text.isascii():
         return text
-    return "".join(c for c in unicodedata.normalize("NFD", text)
+    # NFKD, not NFD: it also maps a lone Korean letter (ㅎ) to the form it
+    # takes inside a syllable, so typing ㅎ already suggests 하지만, 한국...
+    return "".join(c for c in unicodedata.normalize("NFKD", text)
                    if not unicodedata.combining(c))
 
 

@@ -1,0 +1,371 @@
+# Word phrase model (bigrams + trigrams) for the on-screen keyboard.
+# Derived from Tatoeba zsm sentences, https://tatoeba.org,
+# CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
+# Regenerate with tools/build_ngrams.py / tools/build_lang.py.
+#
+# Format: a '[2]' or '[3]' section header, then one line per context:
+#   <context words, space-separated>TAB<context total>TAB<w:count w:count ...>
+# '<s>' is the sentence-start token. Context totals are counted before
+# pruning; continuations are pruned (min count, top-K) and sorted by count.
+[2]
+<s>	8042	saya:1470 dia:581 awak:244 adakah:180 kami:156 apa:109 kita:101 jangan:87 ini:72 mereka:71 anda:69 bolehkah:61 ساي:60 ia:56
+ada	255	di:19 banyak:13 sesuatu:13 yang:8 sesiapa:7 apa:6 dua:6 masalah:6 orang:6 masa:5 awak:4 juga:4 saya:4
+adakah	190	anda:46 awak:45 kamu:14 ini:10 terdapat:6 kita:5 dia:4
+adalah	221	seorang:12 salah:8 untuk:7 satu:6 yang:6 lebih:4 orang:4 seperti:4
+adik	22	beradik:6 saya:6
+akan	594	pergi:23 menjadi:22 datang:17 berada:10 kembali:10 tiba:10 melakukannya:9 memberitahu:9 berbuat:8 berjumpa:7 makan:7 membelikan:7 pulang:7 bertemu:6
+aku	89	tak:12 takkan:4
+anak	73	anak:12 saya:10 perempuannya:5 dan:4 kecil:4
+anda	337	tidak:16 mahu:13 akan:10 boleh:10 mempunyai:10 telah:7 lakukan:6 mesti:6 tahu:6 membaca:5 pasti:5 pergi:5 belajar:4 harus:4
+anjing	23	itu:6 saya:5
+antara	27	satu:5
+apa	409	yang:219 apa:59 khabar:14 pun:11 sahaja:9 kata:6 lagi:6 itu:5 maksud:5 pendapat:5 saja:5 di:4
+apabila	57	saya:10 dia:6 anda:4
+apakah	75	yang:20 jenis:4
+atas	58	meja:11
+atau	46	tidak:7
+awak	845	tidak:87 akan:26 ada:19 telah:19 perlu:18 boleh:17 pergi:14 tak:14 kena:13 nak:13 tahu:13 ingin:12 cari:10 kelihatan:10
+ayah	34	saya:16
+ayat	28	ini:6 yang:6
+bagaimana	66	untuk:13 anda:6 awak:6 dengan:4
+bahasa	184	inggeris:38 perancis:32 kadazan:24 jepun:9 indonesia:6 melayu:6 esperanto:5 kadazandusun:5 kantonis:5 arab:4 cina:4
+bahawa	152	dia:46 saya:9 mereka:5
+baik	72	untuk:8 daripada:5 saya:5 awak:4
+baju	26	berwarna:9
+banyak	104	wang:9 buku:6 masa:5 perkara:5 kerja:4
+bapa	29	saya:11
+baru	52	sahaja:13 saja:5
+beberapa	43	kali:4
+begitu	45	gembira:4
+bekerja	44	di:11 dengan:4 keras:4
+belajar	81	bahasa:33 di:8
+beliau	89	tidak:15 akan:6
+benar	55	benar:24 mahu:4
+benda	32	itu:12 ini:6 yang:6
+berada	79	di:68 dalam:7
+berapa	70	banyak:8 lamakah:7 harga:6 lama:6
+berbuat	68	sedemikian:41 demikian:14 apa:7
+bercakap	83	dengan:24 bahasa:9 dengannya:6 tentang:6 dalam:4
+berhenti	28	merokok:5
+beritahu	35	saya:14 dia:4
+berjalan	42	dengan:7 jalan:5 kaki:5 ke:4
+berjumpa	37	dengan:13 dengannya:5 doktor:5
+berkata	102	dia:20 beliau:16 bahawa:14 mereka:13 yang:6
+berlaku	27	di:4
+bermain	43	tenis:7 piano:6 bola:5 di:4 golf:4
+bersama	61	sama:11 awak:5 kita:4
+bertanya	36	kepada:16 soalan:4
+besar	30	daripada:5
+betul	37	betul:12
+bila	48	awak:6 bila:5 dia:4 kita:4 saya:4
+bilakah	27	awak:9 anda:5
+bilik	37	ini:7 saya:6
+boleh	292	saya:22 melakukan:9 buat:8 berbuat:7 pergi:7 tak:7 melakukannya:6 awak:5 bercakap:5 makan:5 memandu:5 belajar:4 menang:4
+bolehkah	64	awak:20 saya:18 anda:12 kamu:5
+buat	64	apa:17
+budak	35	lelaki:14 budak:6 itu:6 perempuan:4
+bukan	86	sahaja:4 seorang:4
+buku	87	ini:19 itu:14 buku:6 yang:6 saya:5 untuk:4
+bulan	25	hadapan:4
+cuba	48	untuk:6
+dalam	271	bahasa:30 perjalanan:11 keadaan:8 kemalangan:6 bilik:5 hidup:5 masa:5 rumah:5 dunia:4 kelas:4 kereta:4 peperiksaan:4 peti:4 tempoh:4
+dan	446	saya:13 tidak:8 dia:7 awak:5 hanya:4 juga:4 kami:4 kemudian:4 mendengar:4 pergi:4
+dapat	116	melihat:7 mendengar:6 memahami:5 menyelesaikan:4 pergi:4
+dari	171	sini:7 rumah:5 dalam:4 pandangan:4 tiga:4
+daripada	130	saya:7 orang:4
+datang	67	ke:18
+dengan	441	saya:28 awak:18 baik:12 tangan:6 cepat:5 dia:5 kamu:5 menggunakan:5 wang:5 apa:4 kad:4 lebih:4 masalah:4 perkara:4
+di	818	sini:82 mana:53 dalam:51 rumah:47 sana:30 atas:27 luar:20 australia:17 manakah:15 sekolah:13 hadapan:12 bawah:11 taman:11 tempat:11
+dia	988	tidak:106 akan:37 telah:34 pergi:23 sedang:21 berkata:13 seorang:12 adalah:11 datang:11 mempunyai:11 sudah:11 boleh:9 bukan:9 mahu:9
+diri	44	sendiri:12 saya:7
+doktor	22	gigi:6
+dua	78	puluh:6 hari:5 jam:5 kali:5 ekor:4
+duduk	34	di:17
+dunia	30	ini:7
+esok	23	hari:5
+faham	25	apa:6
+fikir	30	saya:6
+gadis	26	itu:8
+gambar	23	ini:5
+hanya	65	seorang:4
+harap	22	kamu:4 saya:4
+harga	24	ini:4
+hari	181	ini:80 isnin:9 jadi:7 lahir:6 ahad:5 nanti:5 yang:5 esok:4 krismas:4 sabtu:4
+harus	31	saya:4
+hati	45	dengan:5
+hendak	30	pergi:11
+hidup	36	di:4
+hujan	30	akan:4
+ia	115	tidak:13 akan:8 sangat:7 adalah:5 merupakan:4
+ialah	94	seorang:10 orang:4
+ibu	57	bapa:18 saya:13 bapanya:6 negara:4
+ikan	28	itu:5
+ingat	21	apa:4
+ingin	88	tahu:18 menjadi:6
+ini	424	tidak:28 adalah:23 saya:17 sangat:15 akan:13 ialah:13 bukan:11 kepada:9 dan:7 yang:7 boleh:6 pada:6 untuk:6 di:5
+itu	491	tidak:20 telah:18 adalah:14 dengan:13 sedang:13 akan:12 sangat:11 yang:9 bukan:8 dia:7 sendiri:7 berlaku:6 di:6 hanya:6
+jadi	46	saya:8 dia:4
+jalan	34	raya:6
+jam	45	tangan:11
+jangan	110	lupa:12 sekali:5
+jatuh	22	cinta:8 sakit:5
+jika	95	awak:23 anda:10 saya:10 dia:9 ada:6
+kadang	25	kadang:13 saya:4
+kalau	45	ada:7 awak:7 kita:4 tidak:4
+kali	43	ini:6 pertama:6 saya:4 terakhir:4
+kami	250	tidak:28 telah:19 akan:16 sedang:7 sangat:5 mahu:4 pergi:4 semua:4
+kamu	198	tidak:10 akan:8 telah:7 semua:6 tak:6 boleh:5 mahu:5 pergi:5 tahu:5 untuk:4
+kanak	62	kanak:34 itu:8
+kapal	20	terbang:11
+kau	55	tidak:5
+kawan	34	saya:10 baik:4 di:4
+ke	382	dalam:30 sekolah:29 rumah:26 sana:17 sini:13 australia:10 mana:7 atas:6 jepun:6 luar:6 stesen:6 tandas:6 tempat:6 arah:5
+kedua	30	dua:17 duanya:5
+kelihatan	49	seperti:10 sangat:6
+keluar	30	dari:11
+keluarga	24	saya:6 awak:5
+kembali	23	ke:6
+kenapa	54	awak:28 saya:5 kamu:4
+kepada	196	saya:43 orang:12 awak:8 mereka:6 anda:5 kami:5 kamu:5 tuhan:5 dia:4 semua:4
+kerana	146	dia:16 saya:15 awak:6 ia:5 tidak:4
+kereta	54	api:12 saya:6 itu:4
+kerja	45	rumah:7 ini:4 saya:4
+ketika	34	saya:5
+kira	23	kira:8
+kita	301	tidak:35 akan:24 boleh:14 perlu:14 telah:13 mesti:9 pergi:6 semua:6 buat:5 makan:5 ada:4 harus:4 mahu:4 mungkin:4
+lagi	65	yang:4
+lagu	21	ini:4
+lama	41	lagi:7
+lebih	174	baik:32 banyak:12 suka:10 daripada:9 awal:6 mudah:5 penting:5 teruk:5 besar:4 dari:4 kuat:4 kurang:4 lama:4
+lelaki	60	itu:13 yang:7 ini:4
+luar	31	negara:11 biasa:4
+macam	28	mana:11
+mahu	203	pergi:19 saya:13 awak:8 melakukannya:6 belajar:4 beli:4 melihat:4 membuat:4 menjadi:4
+makan	137	malam:19 di:12 apa:9 epal:8 sebiji:6 tengah:6 ikan:4 roti:4 tengahari:4
+makanan	29	yang:5 itu:4
+malam	52	ini:18 tadi:7
+mampu	34	melakukannya:7
+mana	98	mana:12 saya:9 dia:7 awak:6 nak:4 satu:4 yang:4
+manakah	24	yang:5
+mari	26	kita:19
+masa	96	untuk:14 yang:11 ini:6 depan:4 di:4
+masalah	50	ini:9 itu:7
+masih	81	belum:12 lagi:6 kecil:5 tidak:5 muda:4
+masuk	28	ke:15
+melakukan	71	perkara:15 itu:14 apa:9 ini:5 yang:5
+melakukannya	44	sekarang:6 dengan:5 lagi:4
+melihat	65	apa:4
+membaca	39	buku:9
+membantu	35	awak:4
+membawa	24	saya:6
+membeli	50	sebuah:8 kereta:5
+memberi	28	saya:4
+memberitahu	85	saya:35 awak:6
+membuat	73	perkara:8 keputusan:4 kerja:4 satu:4 saya:4
+memerlukan	27	bantuan:5
+meminta	41	maaf:4
+mempunyai	137	banyak:13 wang:6 sebarang:5 hak:4
+mendengar	43	tentang:4
+mengapa	69	awak:25 saya:6
+mengatakan	23	bahawa:12
+menjadi	114	seorang:19 lebih:4 orang:4
+merasakan	36	bahawa:4 yang:4
+mereka	188	tidak:21 akan:8 telah:7 yang:7 berdua:6 mahu:4 sedang:4
+mesti	51	pergi:5
+minggu	32	ini:8 lepas:8 depan:5 hadapan:4
+mudah	22	untuk:6
+mungkin	84	tidak:8 akan:7 saya:7 untuk:7 kita:5
+musim	23	panas:12 bunga:4
+nak	84	pergi:12 buat:5 belajar:4
+nama	36	saya:10 awak:4
+nampaknya	25	awak:5
+nanti	21	kita:5 saya:5
+negara	29	ini:4
+orang	227	yang:55 lain:25 di:9 orang:9 itu:8 tua:5 asing:4
+pada	208	pukul:24 hari:23 masa:17 waktu:17 tahun:11 bulan:6 musim:5 waktunya:5 jam:4 saya:4
+pagi	23	ini:5
+pasti	60	akan:7 sama:5 apa:4 saya:4
+percaya	21	apa:4 kepada:4
+perempuan	24	itu:11
+pergi	253	ke:131 memancing:16 bekerja:4 dari:4 mendaki:4 tidur:4
+perkara	111	itu:42 yang:25 ini:17 perkara:6
+perlu	160	berbuat:9 dilakukan:6 pergi:6 lakukan:5 melakukannya:5 untuk:5 membeli:4
+pernah	128	berlaku:5 pergi:5 melihat:4
+pertama	32	kali:9 yang:5 saya:4
+pintu	25	itu:4
+pukul	47	berapa:10 tujuh:5 enam:4 lapan:4
+pulang	32	ke:13 dari:5
+puluh	20	tahun:6
+pun	48	yang:10
+ramai	34	orang:15 kawan:5
+rasa	104	saya:13 awak:8 kita:8 ia:4
+rumah	119	saya:15 ini:11 itu:11 dan:5 awak:4 ayah:4 pada:4
+sahaja	51	yang:13
+sakit	23	perut:5 di:4
+salah	24	satu:12 seorang:5
+sama	73	ada:32 sekali:7 seperti:7 lain:6
+sampai	40	di:11 ke:9
+sangat	134	baik:7 gembira:7 menarik:5 suka:5 bising:4 sejuk:4 tidak:4
+satu	93	satunya:8 sama:6 yang:5 lagi:4 perkara:4
+saya	2528	tidak:335 akan:150 rasa:70 telah:57 tahu:56 mahu:55 ingin:38 boleh:37 sedang:35 suka:33 pergi:31 perlu:31 ada:29 nak:29
+sebelum	72	ini:11 itu:5 saya:5
+sebuah	73	buku:8 kereta:4
+sedang	190	makan:10 belajar:9 mencari:8 bermain:7 bercakap:5 berada:4 berdiri:4 duduk:4 marah:4
+sedikit	34	garam:4
+seekor	24	anjing:5 kucing:5
+sekali	37	lagi:14 kali:7
+sekarang	46	bukan:5 saya:4
+sekiranya	30	awak:11 saya:4
+sekolah	35	ini:4 rendah:4
+selama	37	tiga:5 bertahun:4 lamanya:4
+selepas	46	makan:5
+semasa	46	saya:7
+semua	135	orang:36 yang:9 benda:6 ini:4
+seorang	164	yang:19 lelaki:15 doktor:10 diri:9 guru:8 gadis:5 ahli:4 artis:4 budak:4
+sepanjang	20	hari:8 malam:4
+sepatutnya	45	melakukan:4
+seperti	102	ini:10 itu:10 yang:7 tidak:6 dia:4 saya:4
+seseorang	25	yang:4
+sesiapa	40	yang:17 pun:12
+sesuatu	44	yang:28
+setiap	71	hari:32 orang:7 pagi:7
+siapa	71	yang:40 pun:6 punya:4
+sila	38	tunjukkan:5
+sini	47	lagi:4
+soalan	22	yang:8
+sudah	140	tiba:9 tidak:5 berapa:4 berkahwin:4 bersedia:4 lama:4 makan:4
+suka	120	makan:17 bermain:5 untuk:4
+supaya	24	tidak:6
+surat	29	ini:5
+tahu	231	apa:35 bahawa:14 yang:14 bagaimana:13 sama:12 saya:9 di:8 siapa:8 mengapa:6 tentang:6 apakah:5 awak:4 dimana:4 tak:4
+tahun	62	lalu:10 ini:7 baru:4 depan:4 hadapan:4 lepas:4
+tak	121	boleh:13 dapat:7 perlu:6 ada:5 nak:5 tahu:5
+tangan	32	saya:5 awak:4
+tapi	36	saya:7 dia:5
+telah	324	pergi:15 hilang:5 jatuh:5 lakukan:5 membuat:5 berkahwin:4 melakukannya:4 membeli:4 memberitahu:4 menerima:4 meninggal:4
+telefon	25	bimbit:8
+tempat	56	yang:11 duduk:6 ini:5 itu:4 tinggal:4
+tengah	21	hari:6 malam:4
+tentang	91	perkara:13 apa:4 itu:4
+terlalu	51	banyak:7
+terus	29	bercakap:4
+tetapi	98	saya:18 dia:7 bukan:6 tidak:5 ia:4 kita:4
+tiada	92	siapa:18 sesiapa:13 apa:9 masa:5 tempat:4
+tiba	35	di:9 masanya:7
+tidak	1189	akan:97 tahu:85 boleh:77 pernah:71 mahu:49 dapat:40 perlu:38 ada:30 mempunyai:28 suka:27 pasti:19 merasakan:14 sepatutnya:12 faham:11
+tiga	48	hari:8 puluh:7 tahun:7 ekor:4 orang:4
+tinggal	67	di:45 bersama:4
+tolong	48	jangan:6 berikan:4 letakkan:4
+untuk	599	melakukannya:21 pergi:20 awak:16 menjadi:16 saya:15 makan:12 membantu:11 melihat:10 membuat:9 melakukan:8 mencari:8 belajar:7 membeli:7 tidak:7
+waktu	25	malam:8
+walaupun	28	dia:4
+wang	39	yang:5 saya:4
+wanita	23	yang:6
+yang	1219	saya:87 awak:75 dia:45 anda:28 lebih:25 tidak:24 baik:23 sama:23 kamu:21 telah:21 paling:20 akan:18 berlaku:18 mereka:18
+اڤ	20	يڠ:10
+توم	34	دان:8
+تيدق	41	تاهو:4
+ساي	81	تيدق:14 ماهو:4
+يڠ	41	كامو:5 توم:4 ساي:4
+[3]
+<s> ada	49	sesuatu:5
+<s> adakah	180	anda:44 awak:44 kamu:13 ini:8 terdapat:6
+<s> aku	51	tak:8
+<s> anda	69	tidak:9 mahu:8 mesti:5
+<s> apa	109	yang:59 khabar:7 kata:5
+<s> apakah	48	yang:8
+<s> awak	244	tidak:28 perlu:11 mesti:10 kelihatan:9 kena:9
+<s> bagaimana	34	anda:6 awak:5
+<s> beliau	32	tidak:6
+<s> berapa	42	lama:5 lamakah:5
+<s> bila	21	awak:5
+<s> bilakah	25	awak:9 anda:5
+<s> boleh	31	saya:16
+<s> bolehkah	61	awak:19 saya:17 anda:12 kamu:5
+<s> di	41	manakah:14 mana:13
+<s> dia	581	tidak:49 telah:25 sedang:17 akan:15 pergi:13
+<s> hari	19	ini:10
+<s> ia	56	tidak:6
+<s> ibu	22	saya:8 bapa:7
+<s> ini	72	adalah:10 ialah:8 tidak:6
+<s> itu	37	bukan:5
+<s> jangan	87	lupa:11
+<s> jika	44	awak:13 anda:5
+<s> kalau	18	awak:5
+<s> kami	156	tidak:22 telah:14 akan:13 sedang:6
+<s> kenapa	47	awak:27
+<s> kita	101	akan:13 tidak:13 telah:10 mesti:8 boleh:7
+<s> mari	23	kita:17
+<s> mengapa	51	awak:24
+<s> mereka	71	tidak:9
+<s> mungkin	30	kita:5 saya:5
+<s> nampaknya	21	awak:5
+<s> orang	27	orang:5 yang:5
+<s> saya	1470	tidak:257 akan:101 rasa:62 tahu:46 mahu:45
+<s> semua	46	orang:17
+<s> siapa	30	yang:15
+<s> sila	34	tunjukkan:5
+<s> sudah	26	tiba:6
+<s> tiada	42	siapa:13 sesiapa:10 apa:5
+<s> tidak	42	ada:9
+<s> tolong	35	jangan:5
+<s> ساي	60	تيدق:11
+adakah awak	45	ingin:5
+akan pergi	19	ke:9
+apa apa	34	yang:8
+apa yang	219	saya:35 awak:28 berlaku:14 dia:13 anda:11
+awak tidak	87	perlu:8 boleh:6
+bahawa dia	46	tidak:14
+belajar bahasa	33	inggeris:11 perancis:5
+berada di	68	sini:20 rumah:5
+berkata beliau	16	tidak:7
+berkata dia	20	tidak:8
+bertanya kepada	16	saya:5
+dalam bahasa	30	perancis:8
+datang ke	18	sini:7
+di atas	27	meja:11
+di luar	18	negara:6
+di mana	47	saya:7 dia:5
+dia pergi	21	ke:12
+dia tidak	106	boleh:12 akan:10 dapat:8 tahu:6 mempunyai:5
+ibu bapa	17	saya:8
+ingin tahu	17	sama:5
+ini saya	17	tidak:8
+jika awak	23	tidak:7
+kanak kanak	27	itu:8
+kenapa awak	28	tidak:7
+kita tidak	35	akan:7 perlu:6 boleh:5
+lebih baik	27	daripada:5
+mahu pergi	16	ke:10
+memberitahu saya	34	yang:12 bahawa:10
+mengapa awak	25	tidak:5
+mereka tidak	21	pernah:5
+pada hari	23	isnin:7
+pada masa	17	ini:5
+pada pukul	24	tujuh:5
+pada waktu	17	malam:8
+pergi ke	131	sekolah:17 sana:12 australia:6 rumah:5 tandas:5
+pergi memancing	16	sebelum:5
+saya akan	150	membelikan:7 pergi:6 belikan:5 buat:5
+saya ingin	38	tahu:8
+saya mahu	54	pergi:9 awak:5
+saya pergi	30	ke:12
+saya rasa	69	saya:13 awak:8 kita:6
+saya tahu	55	apa:6
+saya tidak	335	tahu:35 boleh:34 pernah:26 akan:23 mahu:18
+sesuatu yang	28	saya:6
+tahu apa	35	yang:29
+tetapi saya	18	tidak:9
+tiada siapa	18	yang:12
+tidak akan	97	pernah:5
+tidak boleh	77	melakukan:6
+tidak pasti	19	sama:5
+tidak tahu	78	apa:15 bagaimana:9 yang:8 sama:6
+tinggal di	45	rumah:7
+untuk menjadi	16	seorang:8
+untuk pergi	17	ke:14
+yang awak	75	cari:10 tidak:6
+yang dia	45	katakan:6
+yang lebih	25	baik:7
+yang perlu	18	dilakukan:6
+yang saya	87	katakan:6 tidak:6 mahu:5

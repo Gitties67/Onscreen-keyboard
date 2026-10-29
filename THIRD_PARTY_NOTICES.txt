@@ -14,12 +14,14 @@ word_freq.txt is derived from FrequencyWords by Hermit Dave, CC BY-SA 4.0
 ngrams.txt is derived from Tatoeba English sentences, CC BY 2.0 FR
 (https://tatoeba.org).
 
-words_de/fr/es/it/pt/nl.txt and ngrams_de/fr/es/it/pt/nl.txt (German,
-French, Spanish, Italian, Portuguese, Dutch) are built by tools/build_lang.py
-from FrequencyWords by Hermit Dave (OpenSubtitles 2018), CC BY-SA 4.0
-(https://github.com/hermitdave/FrequencyWords), and Tatoeba sentences in
-each language, CC BY 2.0 FR (https://tatoeba.org). The word lists are
-therefore also CC BY-SA 4.0.
+words_<lang>.txt and ngrams_<lang>.txt for German (de), French (fr),
+Spanish (es), Italian (it), Portuguese (pt), Dutch (nl), Indonesian (id),
+Malay (ms), Filipino (tl), Vietnamese (vi) and Korean (ko) are built by
+tools/build_lang.py from FrequencyWords by Hermit Dave (OpenSubtitles 2018),
+CC BY-SA 4.0 (https://github.com/hermitdave/FrequencyWords) -- not used for
+Filipino, which has no list there -- and Tatoeba sentences in each language,
+CC BY 2.0 FR (https://tatoeba.org). The word lists are therefore also
+CC BY-SA 4.0.
 
 
 --- wamerican / wbritish (SCOWL) ---------------------------------------

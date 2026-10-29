@@ -13,6 +13,8 @@ Sources (both treated purely as data, never executed):
 
 Usage (from a directory that does not contain the downloads):
     python3 -I tools/build_lang.py de /path/de_50k.txt /path/deu_sentences.tsv.bz2
+Pass "-" instead of the subtitle list for a language FrequencyWords lacks
+(Filipino): the word list then comes from Tatoeba alone, by count.
 
 Word list = the 50k subtitle words (frequency order), then words that occur
 at least MIN_TATOEBA times in Tatoeba but not in the subtitles.  A word's
@@ -31,7 +33,21 @@ from build_ngrams import START, UNK, NAMES, write_model  # noqa: E402
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # code → Tatoeba language tag (column 2 of the sentences file)
-TATOEBA_TAG = {"de": "deu", "fr": "fra", "es": "spa", "it": "ita", "pt": "por", "nl": "nld"}
+TATOEBA_TAG = {"de": "deu", "fr": "fra", "es": "spa", "it": "ita", "pt": "por", "nl": "nld",
+               "id": "ind", "ms": "zsm", "tl": "tgl", "vi": "vie", "ko": "kor"}
+# Vietnamese tone marks make different words (ma, má, mà, mả...), so only
+# accent-free spellings of an accented word count as slips there.
+TONAL = {"vi"}
+# Longest real word per language, when it's far below MAX_LEN: Vietnamese is
+# written in syllables ("nghiêng" = 7), so longer tokens are subtitle credits.
+MAX_LEN_FOR = {"vi": 7}
+# Tatoeba's stock example names (Tom, Mary) in scripts where a particle joins
+# the name ("톰은", "톰이"): those words are names, not sentence starters.
+NAME_PREFIXES = {"ko": ("톰", "메리", "존")}
+
+
+def _is_name(w: str, code: str) -> bool:
+    return w in NAMES or w.startswith(NAME_PREFIXES.get(code, ("\0",)))
 MIN_TATOEBA = 3
 MAX_LEN = 15
 
@@ -47,12 +63,12 @@ _HTML_JUNK = re.compile(r"(acute|grave|circ|uml|tilde|cedil|amp|quot)")
 
 
 def _fold(w: str) -> str:
-    return "".join(c for c in unicodedata.normalize("NFD", w.replace("ß", "ss"))
+    return "".join(c for c in unicodedata.normalize("NFD", w.replace("ß", "ss").replace("đ", "d"))
                    if not unicodedata.combining(c))
 
 
-def _ok(w: str) -> bool:
-    return w.isalpha() and 2 <= len(w) <= MAX_LEN
+def _ok(w: str, code: str = "") -> bool:
+    return w.isalpha() and 2 <= len(w) <= MAX_LEN_FOR.get(code, MAX_LEN)
 
 
 def sentences(path: str, tag: str):
@@ -81,7 +97,7 @@ def main(code: str, fw_path: str, tat_path: str) -> None:
     for toks in sents:
         for i, t in enumerate(toks):
             w = t.lower()
-            if not _ok(w):
+            if not _ok(w, code):
                 continue
             tat_count[w] += 1
             if i == 0:
@@ -92,12 +108,13 @@ def main(code: str, fw_path: str, tat_path: str) -> None:
                 cap[w] += 1
 
     fw_count: dict[str, int] = {}
-    with open(fw_path, encoding="utf-8") as f:
-        for line in f:
-            parts = line.split()
-            w = parts[0].lower() if parts else ""
-            if _ok(w) and w not in fw_count:
-                fw_count[w] = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+    if fw_path != "-":
+        with open(fw_path, encoding="utf-8") as f:
+            for line in f:
+                parts = line.split()
+                w = parts[0].lower() if parts else ""
+                if _ok(w, code) and w not in fw_count:
+                    fw_count[w] = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
 
     # Subtitles are full of accent slips ("tres" for "très", "nao" for "não").
     # Among spellings that differ only in accents, keep the most common one;
@@ -107,11 +124,19 @@ def main(code: str, fw_path: str, tat_path: str) -> None:
     for w, c in fw_count.items():
         by_fold[_fold(w)].append((c, w))
     dropped = {w for w in fw_count if _HTML_JUNK.search(w) and not tat_count[w]}
+    if code in TONAL:
+        # Unaccented Vietnamese-looking tokens that real text never uses are
+        # English/credits ("vietsub"); genuine ones (trong, nhanh) are in Tatoeba.
+        dropped |= {w for w in fw_count if w.isascii() and len(w) >= 5 and not tat_count[w]}
     # The main spelling is the one Tatoeba uses most (it's curated); with no
     # Tatoeba evidence, the most common subtitle spelling.  It takes the
     # group's best (earliest) rank: "perche" was ranked above "perché".
     winner_at: dict[str, str] = {}          # first-seen group member → winner
     for group in by_fold.values():
+        if len(group) > 1 and code in TONAL:
+            if any(not w.isascii() for _, w in group):
+                dropped.update(w for _, w in group if w.isascii() and tat_count[w] < 2)
+            continue
         if len(group) > 1:
             main_tat = max(tat_count[w] for _, w in group)
             win = (max(group, key=lambda cw: (tat_count[cw[1]], cw[0]))[1] if main_tat >= 2
@@ -136,7 +161,8 @@ def main(code: str, fw_path: str, tat_path: str) -> None:
             break
         # Tatoeba-only words are added unless they're an accent variant of a
         # word we already have (its typos: "perche" next to "perché").
-        if w not in seen and w not in NAMES and _fold(w) not in folded_seen:
+        if (w not in seen and not _is_name(w, code)
+                and (code in TONAL or _fold(w) not in folded_seen)):
             seen.add(w)
             folded_seen.add(_fold(w))
             words.append(w)
@@ -154,7 +180,7 @@ def main(code: str, fw_path: str, tat_path: str) -> None:
           f"{len(words) - n_fw:,} Tatoeba; {len(dropped):,} accent slips dropped), "
           f"{sum(1 for w in words if natural(w) != w):,} capitalised")
 
-    vocab = set(words) - NAMES
+    vocab = {w for w in words if not _is_name(w, code)}
     bi, tri = Counter(), Counter()
     for toks in sents:
         seq = [START]

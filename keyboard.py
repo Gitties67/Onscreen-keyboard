@@ -433,18 +433,26 @@ if not IS_WINDOWS:
 
 from predictor import (WordPredictor, UserModel, DICTIONARIES, ELISION_LANGUAGES,
                        is_english)
+from hangul import HangulComposer, jamo_for
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
 
 
 LANGUAGE_LABELS = {"en_AU": "English (Australia)", "en_GB": "English (UK)",
                    "en_US": "English (US)",
                    "de": "Deutsch", "fr": "Français", "es": "Español",
-                   "it": "Italiano", "pt": "Português", "nl": "Nederlands"}
+                   "it": "Italiano", "pt": "Português", "nl": "Nederlands",
+                   "id": "Indonesia", "ms": "Melayu", "tl": "Filipino",
+                   "vi": "Tiếng Việt", "ko": "한국어"}
 ENGLISH_CODES = ("en_AU", "en_GB", "en_US")
-OTHER_LANGUAGE_CODES = ("de", "fr", "es", "it", "pt", "nl")
+EUROPEAN_CODES = ("de", "fr", "es", "it", "pt", "nl")
+ASIAN_CODES = ("id", "ms", "tl", "vi", "ko")
+OTHER_LANGUAGE_CODES = EUROPEAN_CODES + ASIAN_CODES
+# Locale language tags that mean one of ours ("fil-PH" is Filipino)
+LOCALE_ALIASES = {"fil": "tl", "in": "id", "zsm": "ms"}
 
-# The keyboard layout people of each language normally use
-LANGUAGE_LAYOUT = {"de": "qwertz", "fr": "azerty"}
+# The keyboard layout people of each language normally use.  Korean 2-set
+# keys are defined by QWERTY positions, so Korean always uses QWERTY.
+LANGUAGE_LAYOUT = {"de": "qwertz", "fr": "azerty", "ko": "qwerty"}
 
 # Hold a letter key to get these (the plain letter stays the tap).  English
 # gets a general set, for café, naïve, señor and friends.
@@ -458,12 +466,17 @@ ACCENTS = {
     "it": {"a": "à", "e": "è é", "i": "ì", "o": "ò ó", "u": "ù"},
     "pt": {"a": "á â ã à", "e": "é ê", "i": "í", "o": "ó ô õ", "u": "ú", "c": "ç"},
     "nl": {"e": "é ë è", "i": "ï", "o": "ö ó", "u": "ü", "a": "á"},
+    "tl": {"n": "ñ"},
+    # Vietnamese: the hat/horn letters plus each vowel's five tones.  Letters
+    # with both (ầ, ướ) come from suggestions: type "nguoi" → người.
+    "vi": {"a": "ă â à á ả ã ạ", "e": "ê è é ẻ ẽ ẹ", "o": "ô ơ ò ó ỏ õ ọ",
+           "u": "ư ù ú ủ ũ ụ", "i": "ì í ỉ ĩ ị", "y": "ỳ ý ỷ ỹ ỵ", "d": "đ"},
 }
 LONG_PRESS_MS = 450
 
 
 def accents_for(language: str) -> dict[str, list[str]]:
-    table = ACCENTS["en" if is_english(language) else language]
+    table = ACCENTS.get("en" if is_english(language) else language, {})
     return {k: v.split() for k, v in table.items()}
 
 
@@ -494,7 +507,7 @@ def _detect_language(region: str = None) -> str:
     if region is None:
         region = _system_locale()
     parts = region.replace("-", "_").split(".")[0].split("_")
-    lang = parts[0].lower()
+    lang = LOCALE_ALIASES.get(parts[0].lower(), parts[0].lower())
     if lang in OTHER_LANGUAGE_CODES:
         return lang
     country = parts[1].upper() if len(parts) > 1 else ""
@@ -634,7 +647,9 @@ SETTINGS_HELP = {
     "Language": "The language word suggestions use. It starts on your PC's language. "
                 "English comes in Australian/UK ('colour') and US ('color') spelling. "
                 "You don't need to type accents: 'uber' suggests 'über'. To type one "
-                "yourself, hold a letter key down (e → é è ê ë).",
+                "yourself, hold a letter key down (e → é è ê ë). Korean keys type "
+                "Hangul (the syllable being built shows in the bar); 한/A switches to "
+                "English letters and back.",
     "Auto space": "When you pick a suggested word, a space is typed after it so you can go "
                   "straight on to the next word. Turn it off if you'd rather add punctuation "
                   "or the space yourself.",
@@ -1186,7 +1201,7 @@ TOUR_DWELL_MOVE_PX = 24   # pointer must move this far after a step appears befo
 REPEAT_DELAY_MS    = 400   # delay before repeat starts (ms)
 REPEAT_INTERVAL_MS = 50    # interval between repeated keypresses (ms)
 # Actions that should never repeat (they're toggles, not typeable keys)
-NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win"}
+NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win", "hanyeong"}
 
 # ── Key layout ────────────────────────────────────────────────────────────���───
 # Each entry: (display_label, action, base_width, extra_css_classes)
@@ -1703,6 +1718,11 @@ class OnScreenKeyboard(Gtk.Window):
         self._longpress_timer: int | None    = None
         self._longpress_fired: str | None    = None
         self._accent_pop: Gtk.Popover | None = None
+        # Korean: the syllable being built (not yet typed into the app), and
+        # whether 한/A has switched the letter keys back to English
+        self._ko = HangulComposer()
+        self._ko_latin = False
+        self._ko_btn: Gtk.Button | None = None
 
         # Fuzzy spell-check debounce timer
         self._fuzzy_timer: int | None = None
@@ -2456,8 +2476,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._all_key_btns = []
         layout = self.settings.get("layout", "qwerty")
-        rows = LAYOUT_ROWS.get(layout, KEY_ROWS)
-        keys_box = self._build_keys_box(rows)
+        keys_box = self._build_keys_box(self._layout_rows(layout))
 
         self._key_stack.add_named(keys_box,                   "keys")
         self._key_stack.add_named(self._build_settings_panel(), "settings")
@@ -2469,6 +2488,18 @@ class OnScreenKeyboard(Gtk.Window):
         self._bottom_strip = self._make_resize_strip("bottom")
         root.pack_start(self._bottom_strip, False, False, 0)
 
+    def _layout_rows(self, layout: str) -> list:
+        """The key rows for a layout; Korean swaps the right Alt for 한/A."""
+        rows = LAYOUT_ROWS.get(layout, KEY_ROWS)
+        if self.predictor.language != "ko":
+            return rows
+        bottom = list(rows[-1])
+        alts = [i for i, k in enumerate(bottom) if k[1] == "alt"]
+        if alts:
+            _lbl, _act, width, classes = bottom[alts[-1]]
+            bottom[alts[-1]] = ("한/A", "hanyeong", width, classes)
+        return rows[:-1] + [bottom]
+
     def _build_keys_box(self, rows) -> Gtk.Box:
         """Build a vertical box of key rows from a layout definition."""
         keys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
@@ -2478,6 +2509,8 @@ class OnScreenKeyboard(Gtk.Window):
                 btn = self._make_key(label, action, width, extra_classes)
                 row_box.pack_start(btn, True, True, 0)
             keys_box.pack_start(row_box, True, True, 0)
+        if self._korean_active():
+            self._update_modifier_visuals()   # Hangul labels on the letter keys
         return keys_box
 
     def _make_resize_strip(self, position: str) -> Gtk.EventBox:
@@ -2879,6 +2912,8 @@ class OnScreenKeyboard(Gtk.Window):
             self._letter_btns[action.lower()] = btn
             if self._accent_variants(action):
                 ctx.add_class("has-accents")
+        elif action == "hanyeong":
+            self._ko_btn = btn
         if action == "shift":
             self._shift_btns.append(btn)
         elif action == "caps":
@@ -3155,6 +3190,58 @@ class OnScreenKeyboard(Gtk.Window):
             self._longpress_cancel()
         return False
 
+    # -- Korean (Hangul) ---------------------------------------------------------
+
+    def _korean_active(self) -> bool:
+        return self.predictor.language == "ko" and not self._ko_latin
+
+    def _korean_key(self, action: str) -> bool:
+        """Korean typing: letter keys build the syllable in the bar; finished
+        syllables are typed.  Returns True if the key was handled here.
+        current_word stays = (this word as typed in the app) + the syllable
+        being built, so suggestions see the whole word."""
+        mods = self._active_sticky_modifiers()
+        pre = self._ko.preedit()
+        typed = self.current_word[:len(self.current_word) - len(pre)]
+        if not mods and len(action) == 1 and action.isalpha():
+            done = self._ko.feed(jamo_for(action, self.shift_active))
+            for ch in done:
+                self.typer.type_char(ch)
+            self.current_word = typed + done + self._ko.preedit()
+            self._word_title = self._word_upper = False
+            if self.shift_active and not self.settings.get("shift_sticky", False):
+                self.shift_active = False
+                self._update_modifier_visuals()
+        elif action == "backspace" and pre and not mods:
+            self._ko.backspace()                  # undo one jamo, not a syllable
+            self.current_word = typed + self._ko.preedit()
+        else:
+            self._ko_flush()                      # any other key: finish it first
+            return False
+        self._show_preedit()
+        self._refresh_suggestions()
+        return True
+
+    def _ko_flush(self):
+        """Type the syllable being built (it's already part of current_word)."""
+        for ch in self._ko.flush():
+            self.typer.type_char(ch)
+        self._show_preedit()
+
+    def _show_preedit(self):
+        lbl = self._search_label
+        if lbl is None or self._app_mode or self._custom_input_mode:
+            return
+        pre = self._ko.preedit()
+        if pre:
+            lbl.set_markup(f"<span size='x-large' weight='bold'>"
+                           f"{GLib.markup_escape_text(pre)}</span>▏")
+            lbl.set_tooltip_text("Being typed: finishes when you type the next "
+                                 "syllable, a space, or pick a suggestion")
+            lbl.show()
+        else:
+            lbl.hide()
+
     # -- Hold a letter for its accents ----------------------------------------
 
     def _accent_variants(self, action: str) -> list[str]:
@@ -3281,6 +3368,13 @@ class OnScreenKeyboard(Gtk.Window):
             self._update_modifier_visuals()
             return
 
+        if action == "hanyeong":
+            self._ko_flush()
+            self._ko_latin = not self._ko_latin
+            self._update_modifier_visuals()
+            self._refresh_suggestions()
+            return
+
         # ── Clipboard mode — Escape closes it ───────────────────────────────
         if self._clipboard_mode:
             if action == "escape":
@@ -3359,6 +3453,8 @@ class OnScreenKeyboard(Gtk.Window):
             return
 
         # ── Normal typing ────────────────────────────────────────────────────
+        if self._korean_active() and self._korean_key(action):
+            return
         mods = self._active_sticky_modifiers()
 
         if action == "backspace":
@@ -3428,6 +3524,8 @@ class OnScreenKeyboard(Gtk.Window):
     def _close_other_panels(self, keep: str):
         """Close every open panel/mode except `keep` using its own close routine,
         and cancel any pending fuzzy update (it must not repaint over a panel)."""
+        if self._ko.preedit():
+            self._ko_flush()                # don't lose a half-typed syllable
         self._ctx_reset()
         self.current_word = ""
         if keep != "settings" and self._settings_mode:
@@ -3901,6 +3999,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._save_settings()
         # Clear tracked widget collections
         self._letter_btns   = {}
+        self._ko_btn        = None
         self._shift_btns    = []
         self._caps_btn      = None
         self._modifier_btns = {"ctrl": [], "alt": [], "win": []}
@@ -3912,8 +4011,7 @@ class OnScreenKeyboard(Gtk.Window):
             if old_child:
                 self._key_stack.remove(old_child)
 
-        rows = LAYOUT_ROWS.get(layout, KEY_ROWS)
-        keys_box = self._build_keys_box(rows)
+        keys_box = self._build_keys_box(self._layout_rows(layout))
         self._key_stack.add_named(keys_box, "keys")
         keys_box.show_all()
 
@@ -3945,9 +4043,18 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_language_clicked(self, code: str):
         if code == self.settings.get("language"):
             return
+        was_korean = self.predictor.language == "ko"
+        if self._ko.preedit():
+            self._ko_flush()
         self.settings["language"] = code
         self._save_settings()
         self.predictor.set_language(code)
+        self._ko_latin = False
+        if code == "ko" or was_korean:
+            # Korean keys are QWERTY positions + the 한/A key: rebuild the keys
+            layout = LANGUAGE_LAYOUT.get(code, self.settings.get("layout", "qwerty"))
+            self._switch_layout(layout if code == "ko" else self.settings.get("layout", "qwerty"))
+            self._update_modifier_visuals()
         # Learned words belong to a language: save these, load that one's
         self._user_model.save()
         self._user_model = UserModel(learned_words_file(code), self.predictor.is_known)
@@ -4821,7 +4928,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── Language (word suggestions); English variants on the first line ─
         self._language_btns = {}
-        for i, codes in enumerate((ENGLISH_CODES, OTHER_LANGUAGE_CODES)):
+        for i, codes in enumerate((ENGLISH_CODES, EUROPEAN_CODES, ASIAN_CODES)):
             lang_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             if i == 0:
                 lang_row.pack_start(self._settings_row_label("Language"), False, False, 0)
@@ -5287,7 +5394,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._forget_armed = False
             self._user_model.forget()
             # ...and what was learned in the other languages
-            for code in OTHER_LANGUAGE_CODES + ("en_US",):
+            for code in OTHER_LANGUAGE_CODES + ("en_US",):  # every language's file
                 path = learned_words_file(code)
                 if path != self._user_model.path:
                     try:
@@ -6674,6 +6781,17 @@ class OnScreenKeyboard(Gtk.Window):
             self._close_app_mode()
             return
 
+        # Korean: the syllable in the bar isn't in the app yet.  A word
+        # replaces it (only the typed part needs erasing); an emoji keeps it.
+        pre = self._ko.preedit()
+        if pre:
+            if idx < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[idx]:
+                self._ko_flush()
+            else:
+                self._ko.reset()
+                self.current_word = self.current_word[:len(self.current_word) - len(pre)]
+                self._show_preedit()
+
         # Macro suggestion — backspace trigger, type expanded text + space
         if idx < len(self._suggestion_is_macro) and self._suggestion_is_macro[idx]:
             expansion = ""
@@ -6765,8 +6883,16 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _update_modifier_visuals(self):
         upper = self.shift_active ^ self.caps_lock
+        korean = self._korean_active()
         for letter, btn in self._letter_btns.items():
-            btn.set_label(letter.upper() if upper else letter.lower())
+            if korean:
+                btn.set_label(jamo_for(letter, self.shift_active))
+            else:
+                btn.set_label(letter.upper() if upper else letter.lower())
+        if self._ko_btn is not None:
+            self._ko_btn.set_label("한" if korean else "A")
+            self._ko_btn.set_tooltip_text("Switch to English letters" if korean
+                                          else "Switch to Korean (Hangul)")
 
         # Symbol keys: show shifted label as main when shift is active,
         # otherwise show base char and restore the dim shift-hint sub-label.
