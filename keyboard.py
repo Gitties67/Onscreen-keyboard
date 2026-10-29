@@ -513,6 +513,7 @@ DEFAULT_SETTINGS: dict = {
     "font_family":          DEFAULT_FONT, # key label font family
     "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
     "update_check_enabled": True,
+    "tutorial_done":        False,    # first-run tour shown (also False for pre-tour settings files)
 }
 
 DEFAULT_MACROS = [
@@ -631,6 +632,11 @@ THEME_COLORS: dict[str, dict] = {
         "active_bg": "#ffff00", "active_fg": "#000000",
         "active_border": "#ffff00", "active_bot": "#cccc00",
         "active_hover": "#ffff66",
+        # Caption buttons: outlined, with an inverted (yellow) hover so the
+        # hover state is unmistakable — a 10% grey overlay vanishes on black.
+        "caption_border": "#ffffff",
+        "caption_hover_bg": "#ffff00", "caption_hover_fg": "#000000",
+        "caption_active_bg": "#cccc00",
     },
 }
 
@@ -656,6 +662,21 @@ def _make_theme_css(c: dict, font_size: int = 14, font_family: str = DEFAULT_FON
         font_family = DEFAULT_FONT
     special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
+    tour_size     = max(14, font_size)       # tour text never smaller than 14px
+
+    def _safe_mix(a: str, b: str, t: float, fallback: str) -> str:
+        try:
+            return _mix(a, b, t)
+        except (ValueError, TypeError):
+            return fallback
+
+    # Windows-style caption buttons: ~10% / ~18% overlay of the title-bar text
+    # colour on the title-bar background (themes may override explicitly).
+    tb_bg, tb_fg = c['titlebar_bg'], c['titlebar_fg']
+    cap_border    = c.get('caption_border', 'transparent')
+    cap_hover_bg  = c.get('caption_hover_bg',  _safe_mix(tb_bg, tb_fg, 0.10, c['key_hover']))
+    cap_hover_fg  = c.get('caption_hover_fg',  tb_fg)
+    cap_active_bg = c.get('caption_active_bg', _safe_mix(tb_bg, tb_fg, 0.18, c['key_hover']))
     # Fallback stack so a missing family never leaves keys without labels.
     return f"""* {{ font-family: "{font_family}", "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif; }}
 
@@ -681,15 +702,30 @@ window {{ background-color: {c['bg']}; }}
 .special:hover {{ background-color: {c['special_hover']}; }}
 .special:active {{ background-color: {c['special_bg']}; }}
 .space {{ background-color: {c['key_bg']}; border-color: {c['key_border']}; }}
-#close-btn {{ background-color: {c['close_bg']}; color: {c['close_fg']};
-              border: 1px solid {c['close_border']}; border-bottom: 2px solid {c['close_bot']}; }}
-#close-btn:hover {{ background-color: {c['close_hover_bg']}; color: {c['close_hover_fg']}; }}
+.caption-btn {{ background-color: transparent; background-image: none; color: {tb_fg};
+                border: 1px solid {cap_border}; border-radius: 0; box-shadow: none;
+                text-shadow: none; }}
+.caption-btn:hover {{ background-color: {cap_hover_bg}; color: {cap_hover_fg}; }}
+.caption-btn:active {{ background-color: {cap_active_bg}; color: {cap_hover_fg}; }}
+.caption-btn.mdl2 label {{ font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 10px; }}
+#caption-close:hover {{ background-color: #c42b1c; color: #ffffff; }}
+#caption-close:active {{ background-color: #a52314; color: #ffffff; }}
+popover.tour-popover {{ background-color: {c['key_bg']}; color: {c['key_fg']};
+                        border: 2px solid {c['active_bg']}; }}
+popover.tour-popover .tour-title {{ font-size: {tour_size + 2}px; }}
+popover.tour-popover .tour-body {{ font-size: {tour_size}px; }}
+popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
+.tour-next {{ background-color: {c['active_bg']}; color: {c['active_fg']};
+              border: 1px solid {c['active_border']}; }}
+.tour-next:hover {{ background-color: {c['active_hover']}; }}
+.tour-skip {{ background-color: {c['choice_bg']}; color: {c['choice_fg']};
+              border: 1px solid {c['choice_border']}; }}
+.tour-skip:hover {{ background-color: {c['key_hover']}; }}
+.tour-btn.dwell-pending {{ background-color: {c['active_hover']}; color: {c['active_fg']};
+                           border: 2px solid {c['key_fg']}; }}
 #settings-btn {{ background-color: {c['settings_bg']}; color: {c['settings_fg']};
                  border: 1px solid {c['settings_border']}; border-bottom: 2px solid {c['settings_bot']}; }}
 #settings-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
-#minimize-btn {{ background-color: {c['settings_bg']}; color: {c['settings_fg']};
-                 border: 1px solid {c['settings_border']}; border-bottom: 2px solid {c['settings_bot']}; }}
-#minimize-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
 #settings-panel {{ background-color: {c['bg']}; }}
 #settings-label {{ color: {c['key_fg']}; }}
 .settings-choice {{ background-color: {c['choice_bg']}; color: {c['choice_fg']};
@@ -860,10 +896,43 @@ SHIFT_MAP = {
 BASE_KEY_W  = 52
 BASE_KEY_H  = 52
 SUGGESTION_H = 44   # height of the suggestion bar row
-TITLEBAR_H   = 26   # height of the custom title-bar strip
+TITLEBAR_H   = 32   # height of the custom title-bar strip (Windows 10/11 caption height)
+CAPTION_W    = 46   # width of a Windows-style caption button (minimize / close)
 STRIP_H      = 11   # height of the top/bottom resize strips
 MIN_W        = 400  # minimum window width during resize
-EDGE_ZONE    = 14   # px from window edge that triggers resize
+SIDE_ZONE    = 10   # width of the left/right margins that act as e/w resize zones
+EDGE_ZONE    = 16   # corner size: px from a window corner that resizes diagonally
+
+# Resize-zone cursors: (CSS cursor name, Gdk.CursorType fallback).  GDK maps the
+# CSS names to IDC_SIZEWE / IDC_SIZENS / IDC_SIZENWSE / IDC_SIZENESW on Windows.
+RESIZE_CURSORS = {
+    "e":  ("ew-resize",   "SB_H_DOUBLE_ARROW"),
+    "w":  ("ew-resize",   "SB_H_DOUBLE_ARROW"),
+    "n":  ("ns-resize",   "SB_V_DOUBLE_ARROW"),
+    "s":  ("ns-resize",   "SB_V_DOUBLE_ARROW"),
+    "nw": ("nwse-resize", "TOP_LEFT_CORNER"),
+    "se": ("nwse-resize", "BOTTOM_RIGHT_CORNER"),
+    "ne": ("nesw-resize", "TOP_RIGHT_CORNER"),
+    "sw": ("nesw-resize", "BOTTOM_LEFT_CORNER"),
+}
+
+# Windows caption glyphs: (Segoe MDL2 / Fluent Icons code point, Unicode fallback)
+CAPTION_GLYPHS = {
+    "minimize": ("\uE921", "\u2014"),   # ChromeMinimize  / em dash
+    "close":    ("\uE8BB", "\u2715"),   # ChromeClose     / multiplication x
+    "expand":   ("\uE70E", "\u25B2"),   # ChevronUp       / up triangle
+}
+CAPTION_ICON_FONTS = ("Segoe Fluent Icons", "Segoe MDL2 Assets")
+
+# First-run tour: (target, title, body).  Body text kept to <= ~15 words.
+TOUR_STEPS = [
+    ("suggestions", "Word suggestions",  "Tap a word to finish typing it."),
+    ("settings",    "Settings",          "Change theme, key size, sound, dwell-click and more."),
+    ("emoji_clip",  "Emoji and clipboard", "Add an emoji, or paste something you copied earlier."),
+    ("titlebar",    "Move and resize",
+     "Drag to move, drag edges to resize, double-click to shrink to just suggestions."),
+]
+TOUR_DWELL_MOVE_PX = 24   # pointer must move this far after a step appears before dwell arms
 
 # ── Key repeat ────────────────────────────────────────────────────────────────
 REPEAT_DELAY_MS    = 400   # delay before repeat starts (ms)
@@ -1372,6 +1441,20 @@ class OnScreenKeyboard(Gtk.Window):
         self._dwell_timers:  dict[int, int] = {}  # id(widget) → GLib source ID
         self._settings_mode: bool = False
 
+        # Resize-zone cursors: edge → Gdk.Cursor, and what each GdkWindow shows
+        self._resize_cursor_cache: dict = {}
+        self._zone_cursor_shown:   dict = {}
+
+        # First-run tour (Gtk.Popover, built lazily in _start_tour)
+        self._tour_popover:   Gtk.Popover | None = None
+        self._tour_step:      int   = -1          # -1 = tour not running
+        self._tour_anchor_xy: tuple | None = None  # pointer pos when step appeared
+        self._tour_count_lbl: Gtk.Label | None  = None
+        self._tour_title_lbl: Gtk.Label | None  = None
+        self._tour_body_lbl:  Gtk.Label | None  = None
+        self._tour_next_btn:  Gtk.Button | None = None
+        self._tour_skip_btn:  Gtk.Button | None = None
+
         self._custom_words = self._load_custom_words()
         self.predictor.set_custom_words(self._custom_words)
 
@@ -1396,6 +1479,9 @@ class OnScreenKeyboard(Gtk.Window):
         # Connect clipboard monitoring after show_all
         cb = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         cb.connect("owner-change", self._on_clipboard_change)
+
+        # First-run tour — deferred so every target widget is allocated.
+        GLib.timeout_add(800, self._maybe_start_tour)
 
     def _set_window_icon(self):
         """Use the bundled osk.png as the GTK window icon (Windows only)."""
@@ -1456,8 +1542,10 @@ class OnScreenKeyboard(Gtk.Window):
         self.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK   |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
-            Gdk.EventMask.POINTER_MOTION_MASK
+            Gdk.EventMask.POINTER_MOTION_MASK |
+            Gdk.EventMask.LEAVE_NOTIFY_MASK
         )
+        self.connect("leave-notify-event",   self._on_resize_zone_leave)
         self.connect("button-press-event",   self._on_window_button_press)
         self.connect("motion-notify-event",  self._on_resize_motion)
         self.connect("button-release-event", self._on_resize_release)
@@ -1991,8 +2079,8 @@ class OnScreenKeyboard(Gtk.Window):
     def _build_ui(self):
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         root.set_name("main-box")
-        root.set_margin_start(8)   # left/right margins act as resize zones
-        root.set_margin_end(8)
+        root.set_margin_start(SIDE_ZONE)   # left/right margins act as resize zones
+        root.set_margin_end(SIDE_ZONE)
         root.set_margin_top(0)     # resize strips cover top/bottom instead
         root.set_margin_bottom(0)
 
@@ -2057,25 +2145,112 @@ class OnScreenKeyboard(Gtk.Window):
         strip.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK   |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
-            Gdk.EventMask.POINTER_MOTION_MASK
+            Gdk.EventMask.POINTER_MOTION_MASK |
+            Gdk.EventMask.LEAVE_NOTIFY_MASK
         )
         strip.connect("button-press-event",   self._on_strip_press,   position)
         strip.connect("motion-notify-event",  self._on_resize_motion)
         strip.connect("button-release-event", self._on_resize_release)
+        strip.connect("leave-notify-event",   self._on_resize_zone_leave)
         return strip
+
+    def _event_window_xy(self, event) -> tuple[float, float, int, int]:
+        """Pointer position in toplevel-window coordinates, plus window size.
+
+        Derived from root coordinates so it is correct whichever widget the
+        event arrived on.  (event.x is relative to event.window — for the
+        resize strips that is the strip, which is inset by the SIDE_ZONE
+        margins, so comparing it against the *window* width meant the
+        right-hand ne/se corners could never trigger.)
+        """
+        gw = self.get_window()
+        _, ox, oy = gw.get_origin()
+        return (event.x_root - ox, event.y_root - oy,
+                gw.get_width(), gw.get_height())
+
+    def _strip_edge(self, position: str, event) -> str:
+        """Edge for a point on the top/bottom strip: n/s, or a corner."""
+        x, _y, w, _h = self._event_window_xy(event)
+        v = "n" if position == "top" else "s"
+        if x < EDGE_ZONE:
+            return v + "w"
+        if x >= w - EDGE_ZONE:
+            return v + "e"
+        return v
+
+    def _side_edge(self, event) -> str:
+        """Edge for a point in the left/right margins (toplevel window only):
+        e/w, a corner near the top/bottom, or "" if outside the side zones."""
+        x, y, w, h = self._event_window_xy(event)
+        if x < SIDE_ZONE:
+            hz = "w"
+        elif x >= w - SIDE_ZONE:
+            hz = "e"
+        else:
+            return ""
+        if y < EDGE_ZONE:
+            return "n" + hz
+        if y >= h - EDGE_ZONE:
+            return "s" + hz
+        return hz
 
     def _on_strip_press(self, widget, event, position: str):
         if event.button != 1:
             return False
-        w, _ = self.get_size()
-        left_corner  = event.x < EDGE_ZONE
-        right_corner = event.x > w - EDGE_ZONE
-        if position == "top":
-            edge = "nw" if left_corner else ("ne" if right_corner else "n")
-        else:
-            edge = "sw" if left_corner else ("se" if right_corner else "s")
-        self._start_resize(event, edge)
+        self._start_resize(event, self._strip_edge(position, event))
         return True
+
+    def _resize_cursor(self, edge: str):
+        """Cached bidirectional resize cursor for an edge (None if unavailable)."""
+        cache = self._resize_cursor_cache
+        if edge not in cache:
+            name, fallback = RESIZE_CURSORS[edge]
+            display = self.get_display()
+            cursor = None
+            try:
+                cursor = Gdk.Cursor.new_from_name(display, name)
+            except Exception:
+                cursor = None
+            if cursor is None:
+                try:
+                    cursor = Gdk.Cursor.new_for_display(
+                        display, getattr(Gdk.CursorType, fallback))
+                except Exception:
+                    cursor = None
+            cache[edge] = cursor
+        return cache[edge]
+
+    def _set_zone_cursor(self, gdk_win, edge: str):
+        """Show the resize cursor for `edge` on gdk_win ("" → default cursor)."""
+        if gdk_win is None:
+            return
+        shown = self._zone_cursor_shown
+        if shown.get(gdk_win, "") == edge:
+            return
+        shown[gdk_win] = edge
+        gdk_win.set_cursor(self._resize_cursor(edge) if edge else None)
+
+    def _update_resize_hover(self, widget, event):
+        """Pointer moved (not resizing): show the matching resize cursor."""
+        if widget is self._top_strip or widget is self._bottom_strip:
+            position = "top" if widget is self._top_strip else "bottom"
+            self._set_zone_cursor(widget.get_window(), self._strip_edge(position, event))
+        elif widget is self:
+            top = self.get_window()
+            # Motion bubbled up from a child (title bar, keys…) is not over a
+            # side margin — make sure the toplevel cursor isn't inherited there.
+            edge = self._side_edge(event) if event.window == top else ""
+            self._set_zone_cursor(top, edge)
+
+    def _on_resize_zone_leave(self, widget, event):
+        if not self._resizing:
+            self._set_zone_cursor(widget.get_window(), "")
+        return False
+
+    def _reset_resize_cursors(self):
+        for w in (self, self._top_strip, self._bottom_strip):
+            if w is not None:
+                self._set_zone_cursor(w.get_window(), "")
 
     def _make_resize_grip(self) -> Gtk.EventBox:
         """Always-visible bottom-right grip — click-drag to south-east resize.
@@ -2132,7 +2307,7 @@ class OnScreenKeyboard(Gtk.Window):
         return False
 
     def _build_title_bar(self) -> Gtk.EventBox:
-        """Custom 26px title bar: draggable title label + window controls.
+        """Custom title bar (TITLEBAR_H px): draggable title label + window controls.
 
         The EventBox itself is the drag surface — left-click-drag moves the
         window via manual move tracking (Muffin ignores begin_move_drag for DOCK
@@ -2166,39 +2341,63 @@ class OnScreenKeyboard(Gtk.Window):
         title.set_xalign(0.0)
         hbox.pack_start(title, True, True, 0)
 
-        # ── Window controls (Windows 11 style: [─] [✕] at the top-right) ──────
+        # ── Window controls (Windows 10/11 caption buttons at the top-right) ──
         # pack_end packs right-to-left, so the FIRST pack_end ends up rightmost.
         # Close is packed first (far right); minimize second (to its left).
+        icon_font = self._caption_icon_font()
 
         # Close button — far top-right corner
-        self._close_btn = Gtk.Button(label="✕")
-        self._close_btn.set_name("close-btn")
-        self._close_btn.set_size_request(40, TITLEBAR_H)
+        self._close_btn = self._make_caption_button("close", "Close", icon_font)
         self._close_btn.connect("clicked", lambda _: self._quit())
         self._close_btn.get_accessible().set_name("Close keyboard")
-        hbox.pack_end(self._close_btn, False, False, 4)
+        hbox.pack_end(self._close_btn, False, False, 0)
 
         # Minimize button (real minimize to taskbar) — left of the close button.
-        self._minimize_btn = Gtk.Button(label="▼")
-        self._minimize_btn.set_name("minimize-btn")
-        self._minimize_btn.set_tooltip_text("Minimize")
-        self._minimize_btn.set_size_request(40, TITLEBAR_H)
+        self._minimize_btn = self._make_caption_button("minimize", "Minimize", icon_font)
         self._minimize_btn.connect("clicked", lambda _: self._minimize_window())
         self._minimize_btn.get_accessible().set_name("Minimize keyboard")
-        hbox.pack_end(self._minimize_btn, False, False, 2)
+        hbox.pack_end(self._minimize_btn, False, False, 0)
 
         # Expand button — only visible while the key grid is collapsed
         # (double-click the title bar to collapse).
-        self._expand_btn = Gtk.Button(label="▲")
-        self._expand_btn.set_name("minimize-btn")
-        self._expand_btn.set_tooltip_text("Expand keys")
-        self._expand_btn.set_size_request(40, TITLEBAR_H)
+        self._expand_btn = self._make_caption_button("expand", "Expand keys", icon_font)
         self._expand_btn.set_no_show_all(True)
         self._expand_btn.connect("clicked", lambda _: self._expand())
         self._expand_btn.get_accessible().set_name("Expand keyboard keys")
-        hbox.pack_end(self._expand_btn, False, False, 2)
+        hbox.pack_end(self._expand_btn, False, False, 0)
 
         return bar
+
+    def _caption_icon_font(self) -> str | None:
+        """Return the installed Windows caption icon font, or None (→ Unicode)."""
+        try:
+            families = {f.get_name() for f in self.get_pango_context().list_families()}
+        except Exception:
+            return None
+        for name in CAPTION_ICON_FONTS:
+            if name in families:
+                return name
+        return None
+
+    def _make_caption_button(self, kind: str, tooltip: str,
+                             icon_font: str | None) -> Gtk.Button:
+        """Flat Windows-style caption button (46 px x title-bar height).
+
+        Uses the Segoe MDL2 / Fluent Icons glyph when that font is installed
+        (Windows), otherwise a Unicode fallback (— ✕ ▲).  Styling lives in
+        style.css (.caption-btn) and _make_theme_css (colours / hover).
+        """
+        mdl2, fallback = CAPTION_GLYPHS[kind]
+        btn = Gtk.Button(label=mdl2 if icon_font else fallback)
+        btn.set_name(f"caption-{kind}")
+        btn.set_relief(Gtk.ReliefStyle.NONE)
+        ctx = btn.get_style_context()
+        ctx.add_class("caption-btn")
+        ctx.add_class("mdl2" if icon_font else "unicode")
+        btn.set_size_request(CAPTION_W, TITLEBAR_H)
+        btn.set_valign(Gtk.Align.FILL)
+        btn.set_tooltip_text(tooltip)
+        return btn
 
     def _on_titlebar_press(self, widget, event):
         if event.button != 1:
@@ -2348,28 +2547,19 @@ class OnScreenKeyboard(Gtk.Window):
 
 
     def _on_window_button_press(self, window, event):
-        """Handle left/right edge resize from the side margins.
+        """Handle left/right edge resize from the SIDE_ZONE margins.
 
-        Only fires for the left/right edge zones — the top/bottom edges (and
-        their corners) are owned by the 7px resize strips, whose own EventBox
-        handlers run before this window-level handler.  The corner zones here
-        use STRIP_H (not EDGE_ZONE) so a press in the title-bar rows (y >= 7)
-        is treated as a side EDGE, never a top/bottom CORNER — otherwise the
-        title bar's top rows would be misclassified as nw/ne resize.
+        Only presses delivered to the toplevel GdkWindow itself count: a press
+        that bubbled up from a child (a key, the title bar…) carries coordinates
+        relative to that child's window and must never start a resize.  The
+        margins contain no child widgets, so a press there always arrives on
+        the toplevel.  Within EDGE_ZONE of the top/bottom it is a corner.
         """
-        if event.button != 1:
+        if event.button != 1 or event.window != self.get_window():
             return False
-        w, h = self.get_size()
-        left  = event.x < EDGE_ZONE
-        right = event.x > w - EDGE_ZONE
-        if not (left or right):
+        edge = self._side_edge(event)
+        if not edge:
             return False
-        top    = event.y < STRIP_H
-        bottom = event.y > h - STRIP_H
-        if left:
-            edge = "nw" if top else ("sw" if bottom else "w")
-        else:
-            edge = "ne" if top else ("se" if bottom else "e")
         self._start_resize(event, edge)
         return True
 
@@ -2390,7 +2580,8 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _on_resize_motion(self, widget, event):
         if not self._resizing:
-            return
+            self._update_resize_hover(widget, event)
+            return False
         dx = int(event.x_root - self._resize_start_x)
         dy = int(event.y_root - self._resize_start_y)
         if abs(dx) <= 2 and abs(dy) <= 2:
@@ -2493,6 +2684,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._resizing        = False
         self._resize_did_move = False
         self._resize_edge     = ""
+        self._reset_resize_cursors()   # next motion re-shows it if still in a zone
 
     # ── Drag to move ──────────────────────────────────────────────────────────
 
@@ -3995,6 +4187,26 @@ class OnScreenKeyboard(Gtk.Window):
 
             inner.pack_start(shortcut_row, False, False, 0)
 
+        inner.pack_start(self._settings_section_header("Help"), False, False, 0)
+
+        # ── 10b. Tour row ──────────────────────────────────────────────────
+        tour_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        lbl_tour = Gtk.Label(label="Quick tour")
+        lbl_tour.set_name("settings-label")
+        lbl_tour.set_xalign(0.0)
+        lbl_tour.set_size_request(90, -1)
+        tour_row.pack_start(lbl_tour, False, False, 0)
+
+        tour_btn = Gtk.Button(label="Show tour again")
+        tour_btn.get_style_context().add_class("settings-choice")
+        tour_btn.set_size_request(140, 44)
+        tour_btn.connect("clicked", lambda _b: self._start_tour())
+        tour_btn.get_accessible().set_description(
+            "Replay the four-step introduction to the keyboard")
+        tour_row.pack_start(tour_btn, False, False, 0)
+
+        inner.pack_start(tour_row, False, False, 0)
+
         inner.pack_start(self._settings_section_header("Data"), False, False, 0)
 
         # ── 11. Custom dictionary section ──────────────────────────────────
@@ -4751,6 +4963,17 @@ class OnScreenKeyboard(Gtk.Window):
         # Ignore inferior crossings (pointer moving to/from a child widget)
         if event.detail == Gdk.NotifyType.INFERIOR:
             return
+        self._dwell_start(widget, lambda: self._on_key_clicked(widget, action))
+
+    def _dwell_start(self, widget, fire_cb) -> None:
+        """Arm a dwell timer on `widget`; after dwell_delay call fire_cb().
+
+        Shared by the key buttons and the tour buttons.  Shows the
+        .dwell-pending class while armed; _on_dwell_leave / _dwell_cancel
+        disarm it.
+        """
+        if not self.settings.get("dwell_enabled"):
+            return
         # Cancel any existing timer for this widget
         self._dwell_cancel(widget)
         delay_ms = int(self.settings.get("dwell_delay", 0.8) * 1000)
@@ -4760,7 +4983,7 @@ class OnScreenKeyboard(Gtk.Window):
         def _fire():
             widget.get_style_context().remove_class("dwell-pending")
             self._dwell_timers.pop(wid, None)
-            self._on_key_clicked(widget, action)
+            fire_cb()
             return False
 
         self._dwell_timers[wid] = GLib.timeout_add(delay_ms, _fire)
@@ -4776,6 +4999,200 @@ class OnScreenKeyboard(Gtk.Window):
         tid = self._dwell_timers.pop(id(widget), None)
         if tid is not None:
             GLib.source_remove(tid)
+
+    # ── First-run tour ───────────────────────────────────────────────────────
+
+    def _maybe_start_tour(self) -> bool:
+        """GLib timeout: start the tour once, on first run (never in --selftest).
+
+        Retries while the window is not yet mapped (e.g. started minimised).
+        """
+        if "--selftest" in sys.argv[1:] or self.settings.get("tutorial_done", False):
+            return False
+        if not self.get_mapped() or self._minimized:
+            return True   # try again on the next tick
+        self._start_tour()
+        return False
+
+    def _start_tour(self):
+        """Show step 1 of the tour (also used by Settings → Show tour again)."""
+        self._close_other_panels("tour")
+        if self._collapsed:
+            self._expand()
+        if self._tour_popover is None:
+            self._build_tour_popover()
+        self._tour_step = 0
+        self._tour_show_step()
+
+    def _build_tour_popover(self):
+        pop = Gtk.Popover()
+        # Non-modal: a modal popover grabs input and tries to take focus, which
+        # our non-focusable DOCK / WS_EX_NOACTIVATE window must never do.  In
+        # GTK3 a popover is a child GdkWindow of our toplevel, so its buttons
+        # take clicks without the window being focusable.
+        pop.set_modal(False)
+        pop.set_position(Gtk.PositionType.BOTTOM)
+        pop.get_style_context().add_class("tour-popover")
+        pop.get_accessible().set_name("Keyboard tour")
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+        box.set_margin_top(12)
+        box.set_margin_bottom(12)
+
+        self._tour_count_lbl = Gtk.Label()
+        self._tour_count_lbl.get_style_context().add_class("tour-count")
+        self._tour_count_lbl.set_xalign(0.0)
+        box.pack_start(self._tour_count_lbl, False, False, 0)
+
+        self._tour_title_lbl = Gtk.Label()
+        self._tour_title_lbl.get_style_context().add_class("tour-title")
+        self._tour_title_lbl.set_xalign(0.0)
+        box.pack_start(self._tour_title_lbl, False, False, 0)
+
+        self._tour_body_lbl = Gtk.Label()
+        self._tour_body_lbl.get_style_context().add_class("tour-body")
+        self._tour_body_lbl.set_xalign(0.0)
+        self._tour_body_lbl.set_line_wrap(True)
+        self._tour_body_lbl.set_max_width_chars(34)
+        self._tour_body_lbl.set_width_chars(28)
+        box.pack_start(self._tour_body_lbl, False, False, 0)
+
+        btn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_row.set_margin_top(6)
+        self._tour_skip_btn = Gtk.Button(label="Skip tour")
+        self._tour_next_btn = Gtk.Button(label="Next")
+        for btn, cls in ((self._tour_skip_btn, "tour-skip"),
+                         (self._tour_next_btn, "tour-next")):
+            ctx = btn.get_style_context()
+            ctx.add_class("tour-btn")
+            ctx.add_class(cls)
+            btn.set_size_request(96, 44)
+            btn.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK |
+                           Gdk.EventMask.LEAVE_NOTIFY_MASK |
+                           Gdk.EventMask.POINTER_MOTION_MASK)
+            btn.connect("enter-notify-event",  self._on_tour_btn_hover)
+            btn.connect("motion-notify-event", self._on_tour_btn_hover)
+            # Reuse the key dwell disarm (its action arg is unused).
+            btn.connect("leave-notify-event",  self._on_dwell_leave, "")
+        self._tour_skip_btn.connect("clicked", lambda _b: self._end_tour())
+        self._tour_next_btn.connect("clicked", lambda _b: self._tour_next())
+        btn_row.pack_start(self._tour_skip_btn, False, False, 0)
+        btn_row.pack_end(self._tour_next_btn, False, False, 0)
+        box.pack_start(btn_row, False, False, 0)
+
+        box.show_all()
+        pop.add(box)
+        self._tour_popover = pop
+
+    def _tour_target(self, key: str):
+        """(relative_to widget, pointing rect or None) for a tour step."""
+        if key == "suggestions" and self._suggestion_btns:
+            return self._suggestion_btns[min(2, len(self._suggestion_btns) - 1)], None
+        if key == "settings" and self._settings_btn:
+            return self._settings_btn, None
+        if key == "emoji_clip" and self._suggestion_bar:
+            # One arrow pointing between the emoji and clipboard buttons.
+            bar, rect = self._suggestion_bar, None
+            pts = []
+            for btn in (self._emoji_btn, self._clipboard_btn):
+                if btn is None or not btn.get_mapped():
+                    continue
+                # PyGObject's Gtk override returns (x, y) or None here.
+                res = btn.translate_coordinates(bar, 0, 0)
+                if res:
+                    x, y = res[-2], res[-1]
+                    a = btn.get_allocation()
+                    pts.append((x, y, x + a.width, y + a.height))
+            if pts:
+                rect = Gdk.Rectangle()
+                rect.x = min(p[0] for p in pts)
+                rect.y = min(p[1] for p in pts)
+                rect.width = max(p[2] for p in pts) - rect.x
+                rect.height = max(p[3] for p in pts) - rect.y
+            return bar, rect
+        if key == "titlebar" and self._titlebar:
+            return self._titlebar, None
+        return self._suggestion_bar or self, None
+
+    def _tour_show_step(self):
+        if self._tour_popover is None or not (0 <= self._tour_step < len(TOUR_STEPS)):
+            return
+        key, title, body = TOUR_STEPS[self._tour_step]
+        last = self._tour_step == len(TOUR_STEPS) - 1
+        self._tour_count_lbl.set_label(f"Tip {self._tour_step + 1} of {len(TOUR_STEPS)}")
+        self._tour_title_lbl.set_label(title)
+        self._tour_body_lbl.set_label(body)
+        self._tour_next_btn.set_label("Done" if last else "Next")
+        self._tour_next_btn.get_accessible().set_description(
+            "Finish the tour" if last else "Show the next tip")
+        self._tour_skip_btn.set_visible(not last)
+
+        # Disarm any dwell on the buttons before they move.
+        for btn in (self._tour_next_btn, self._tour_skip_btn):
+            self._dwell_cancel(btn)
+            btn.get_style_context().remove_class("dwell-pending")
+        # Dwell only re-arms once the pointer has moved away from where it was
+        # when this step appeared, so a resting pointer that happens to land on
+        # the new Next/Skip cannot auto-advance (or auto-skip) the tour.
+        self._tour_anchor_xy = self._pointer_root_xy()
+
+        widget, rect = self._tour_target(key)
+        pop = self._tour_popover
+        pop.hide()                 # re-anchor without animating from the old spot
+        pop.set_relative_to(widget)
+        if rect is None:
+            a = widget.get_allocation()
+            rect = Gdk.Rectangle()
+            rect.x, rect.y, rect.width, rect.height = 0, 0, a.width, a.height
+        pop.set_pointing_to(rect)
+        pop.popup()
+
+    def _tour_next(self):
+        if self._tour_step >= len(TOUR_STEPS) - 1:
+            self._end_tour()
+            return
+        self._tour_step += 1
+        self._tour_show_step()
+
+    def _end_tour(self):
+        """Finish or skip: hide the bubble and never auto-show it again."""
+        self._tour_step = -1
+        for btn in (self._tour_next_btn, self._tour_skip_btn):
+            if btn is not None:
+                self._dwell_cancel(btn)
+                btn.get_style_context().remove_class("dwell-pending")
+        if self._tour_popover is not None:
+            self._tour_popover.popdown()
+        if not self.settings.get("tutorial_done"):
+            self.settings["tutorial_done"] = True
+            self._save_settings()
+
+    def _pointer_root_xy(self):
+        try:
+            seat = self.get_display().get_default_seat()
+            _screen, x, y = seat.get_pointer().get_position()
+            return (x, y)
+        except Exception:
+            return None
+
+    def _on_tour_btn_hover(self, btn, event):
+        """Enter/motion on Next/Skip: start a dwell click (when dwell is on)."""
+        if not self.settings.get("dwell_enabled") or self._tour_step < 0:
+            return False
+        if (event.type == Gdk.EventType.ENTER_NOTIFY
+                and event.detail == Gdk.NotifyType.INFERIOR):
+            return False
+        if id(btn) in self._dwell_timers:
+            return False   # already armed
+        if self._tour_anchor_xy is not None:
+            ax, ay = self._tour_anchor_xy
+            if math.hypot(event.x_root - ax, event.y_root - ay) < TOUR_DWELL_MOVE_PX:
+                return False
+            self._tour_anchor_xy = None
+        self._dwell_start(btn, btn.clicked)
+        return False
 
     # ── Click sound ───────────────────────────────────────────────────────────
 
