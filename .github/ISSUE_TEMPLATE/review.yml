@@ -1,0 +1,36 @@
+name: "★ Leave a review"
+description: Tell everyone (and me) what you think of the keyboard.
+title: "Review: "
+labels: ["review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying it! Honest is good. Brutal is fine. "Hell" has already been taken.
+  - type: dropdown
+    id: rating
+    attributes:
+      label: Rating
+      options:
+        - "★★★★★ Love it"
+        - "★★★★☆ Pretty good"
+        - "★★★☆☆ It's fine"
+        - "★★☆☆☆ Needs work"
+        - "★☆☆☆☆ Hell (again)"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: What are you using it on?
+      options:
+        - Windows
+        - Linux
+        - Both
+  - type: textarea
+    id: review
+    attributes:
+      label: Your review
+      description: What worked, what didn't, what you'd change.
+    validations:
+      required: true

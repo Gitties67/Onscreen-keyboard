@@ -1,0 +1,24 @@
+name: "✎ Leave a note"
+description: An idea, a question, a bug, or just a hello.
+title: "Note: "
+labels: ["note"]
+body:
+  - type: textarea
+    id: note
+    attributes:
+      label: Your note
+      description: Anything goes. If it's a bug, what you did and what happened helps a lot.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version (optional)
+      description: Shown in Settings → Updates, e.g. 0.1.9
+  - type: dropdown
+    id: os
+    attributes:
+      label: Windows or Linux? (optional)
+      options:
+        - Windows
+        - Linux

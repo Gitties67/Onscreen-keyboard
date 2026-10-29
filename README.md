@@ -2,6 +2,26 @@
 
 > **Heads up — this is a one-person hobby project.** I'm a single person, not a professional developer. This keyboard might be shit. It also might not be shit. Either way, it's free, it's built in my spare time, and bug reports and suggestions are genuinely welcome via [GitHub Issues](https://github.com/Gitties67/Onscreen-keyboard/issues).
 
+### Previously, on On-Screen Keyboard...
+
+A while back, someone tried this keyboard on Windows and summed it up in one word: **"hell"**.
+
+Honestly? Fair. Back then the Windows version was a lone `.exe` with no installer, minimising it froze the whole thing, the suggestions were a little unhinged, and every key press went *BOOP* like a microwave that had just finished your soup.
+
+Since then it has been **heavily edited, fixed, re-fixed, and tested on an actual Windows PC** by its one-person dev team (me) and a small army of very patient robots. As of **v0.1.9**:
+
+| Then ("hell") | Now (hopefully just "heck") |
+|---|---|
+| A bare `.exe`, good luck | A proper installer: Start menu entry, optional start-at-sign-in, clean uninstall, no admin needed |
+| Minimise → frozen keyboard | Minimise and restore actually work, and it shows up in the taskbar like a normal app |
+| *BOOP* | A soft click (or a beep, or nothing; your call) |
+| Suggestions picked by vibes | Suggestions that read the words before ("how are" → *you*) and learn the words you use, locally |
+| Font from the bargain bin | Segoe UI, same as the Windows on-screen keyboard, big and clear |
+| "What does this button do?" | A short first-run tour (skippable, replayable from Settings) |
+| No resize cursors | Resize arrows on every edge and corner |
+
+If it's still hell for you, please tell me. There's now a **Leave a review** and **Leave a note** button in *⚙ Settings → Feedback*, or go straight to [reviews](https://github.com/Gitties67/Onscreen-keyboard/issues/new?template=review.yml) / [notes](https://github.com/Gitties67/Onscreen-keyboard/issues/new?template=note.yml). Even a one-word review is fine. I know. I've had one.
+
 A full-featured on-screen keyboard for Linux and Windows, built with Python 3 and GTK3. Designed for Linux Mint Cinnamon but compatible with any X11 desktop (XFCE, MATE, etc.) and Windows 10/11.
 
 > **Wayland is not supported.** On Linux the keyboard needs an X11 session (on Ubuntu/Fedora, pick "Xorg" at the login screen).
@@ -31,7 +51,7 @@ No Python, GTK or other dependencies are needed.
 
 **Updates:** *Settings → Check for updates* downloads the new installer, verifies its SHA-256 against the release's `SHA256SUMS.txt`, installs silently and restarts the keyboard.
 
-**Debug log:** to troubleshoot typing problems, set the environment variable `OSK_DEBUG=1` before launching (e.g. `set OSK_DEBUG=1` then run the exe from Command Prompt). The log is written to `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`; typed characters are never recorded. Alternatively use the Start-menu shortcut "On-Screen Keyboard (debug mode)" (passes `--debug`). The app is single-instance: quit the running keyboard first, otherwise launching again just re-shows it.
+**Debug log:** to troubleshoot, quit the keyboard and start it from the Start-menu shortcut **On-Screen Keyboard (debug)**. The log is written to `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`; typed characters are never recorded. To read it in PowerShell: `Get-Content "$env:LOCALAPPDATA\OnScreenKeyboard\osk_debug.log" -Tail 60`. The app is single-instance: launching it again while it runs just brings the running keyboard back.
 
 ---
 
@@ -72,7 +92,9 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 
 ## Features
 
-- **Reliable typing** — XTEST on Linux (works in browsers, terminals, all apps without stealing focus); pynput on Windows
+- **Reliable typing** — XTEST on Linux, direct input injection on Windows; never steals focus from the app you're typing into
+- **Behaves like a normal Windows app** — taskbar button, real minimise and restore, Windows-style title-bar buttons, resize cursors on every edge
+- **First-run tour** — four quick tips on first launch; skip it, or replay it any time from Settings → Help
 - **Full key layout** — F1–F12, Esc, Del, Home, End, PrtScn, arrows, QWERTY/AZERTY/QWERTZ
 - **Word prediction** — 5 suggestions from system dictionary, custom words, and a phrase model
 - **Context-aware suggestions** — predictions take the words before into account ("thank" → *you*, "how are" → *you*); the context resets at . ! ? and Enter
@@ -102,8 +124,8 @@ Click **⚙** in the suggestion bar to open settings.
 |---|---|
 | **Theme** | Dark / Light / Midnight / High Contrast + custom themes |
 | **Layout** | QWERTY / AZERTY / QWERTZ |
-| **Font** | Segoe UI (Windows) / Ubuntu / Noto Sans / DejaVu Sans / Roboto / Arial / Courier New |
-| **Font size** | 10–22 px, live |
+| **Font** | Windows: Segoe UI (default) / Arial / Verdana / Tahoma / Calibri / Consolas. Linux: Ubuntu (default) / Noto Sans / DejaVu Sans / Roboto / Arial / Courier New |
+| **Font size** | 10–22 px (default 18), live |
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
 | **Dwell click** | Hover-to-click with adjustable delay |
@@ -111,10 +133,12 @@ Click **⚙** in the suggestion bar to open settings.
 | **Modifier keys** | Auto-release or sticky |
 | **Shift key** | One-shot or sticky |
 | **Taskbar** | Pin to Cinnamon panel + autostart (Linux) |
+| **Tutorial** | Show the first-run tour again |
 | **Custom dictionary** | Add/remove personal words and phrases |
 | **Learn my words** | On (default) / Off — learn word usage from your typing to improve suggestions |
 | **Forget learned words** | Erase everything learned (click twice to confirm) |
 | **Macros** | Trigger → expansion pairs |
+| **Feedback** | Leave a review (1–5 stars) or a note on GitHub; opens your browser |
 | **Updates** | Check for updates; install or download latest version |
 
 Settings saved to `~/.config/onscreen_keyboard/settings.json` (Linux) or `%APPDATA%\OnScreenKeyboard\settings.json` (Windows).
@@ -168,7 +192,7 @@ With **⚙ Settings → Data → Learn my words** on (the default), the keyboard
 - **Turn it off** — switch **Learn my words** to *Off*: learning stops and the learned data no longer affects suggestions (the file is kept until you erase it).
 - **Erase it** — click **Forget learned words** twice (the second click within 3 s confirms), or delete `learned_words.json`.
 
-Note: the keyboard cannot tell when you are typing into a password field, so words typed there are counted like any others (still words only, never full text).
+Note: the keyboard cannot tell when you are typing into a password field. Words next to digits or symbols (`@ / _ - #` and so on, as in emails, usernames and most passwords) are never learned, but a password made of plain dictionary words separated by spaces would be counted like any other words (still words only, never full text).
 
 ---
 
@@ -197,6 +221,7 @@ onscreen_keyboard/
 ├── installer/
 │   └── OnScreenKeyboard.iss # Inno Setup 6 script for the Windows installer
 └── .github/
+    ├── ISSUE_TEMPLATE/      # "Leave a review" / "Leave a note" forms
     └── workflows/
         └── build-windows.yml   # GitHub Actions: build, smoke-test, package
 ```

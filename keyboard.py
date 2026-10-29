@@ -545,7 +545,11 @@ if IS_WINDOWS:
 else:
     FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
+
+GITHUB_REPO_URL     = "https://github.com/Gitties67/Onscreen-keyboard"
+FEEDBACK_REVIEW_URL = GITHUB_REPO_URL + "/issues/new?template=review.yml"
+FEEDBACK_NOTE_URL   = GITHUB_REPO_URL + "/issues/new?template=note.yml"
 
 THEMES = ["dark", "light", "midnight", "hc"]
 THEME_LABELS = {"dark": "Dark", "light": "Light",
@@ -753,8 +757,9 @@ popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
 #settings-panel {{ background-color: {c['bg']}; }}
 #settings-label {{ color: {c['key_fg']}; }}
 .settings-section {{ color: {c['key_fg']}; }}
-#settings-scroll, #settings-scroll viewport {{ background-color: {c['bg']}; }}
-#settings-scroll scrollbar {{ background-color: {c['bg']}; border: none; }}
+#settings-scroll, #settings-scroll viewport {{ background-color: transparent; }}
+#settings-inner {{ background-color: {c['bg']}; padding: 0 12px 16px 0; }}
+#settings-scroll scrollbar {{ background-color: transparent; border: none; }}
 #settings-scroll scrollbar slider {{ background-color: {c['key_border']}; border: none;
                                      border-radius: 4px; min-width: 8px; min-height: 40px; }}
 #settings-scroll scrollbar slider:hover {{ background-color: {c['sublabel_fg']}; }}
@@ -1909,7 +1914,7 @@ class OnScreenKeyboard(Gtk.Window):
             return None
 
     def _win_apply_styles(self, hwnd):
-        """Apply WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW and install the WNDPROC
+        """Apply WS_EX_NOACTIVATE|WS_EX_APPWINDOW and install the WNDPROC
         subclass on hwnd.  Idempotent: a second call (e.g. from the 'map'
         handler after realize failed to get the HWND) re-applies the style but
         re-subclasses only if we haven't already, so we never chain our own
@@ -1917,21 +1922,24 @@ class OnScreenKeyboard(Gtk.Window):
         import ctypes
         user32 = ctypes.windll.user32
 
-        # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────────
-        # TOOLWINDOW is what keeps the OSK off the taskbar / Alt+Tab (GDK3
-        # Win32's set_skip_taskbar_hint is a no-op).  Minimize uses a separate
-        # proxy window, so the OSK's own styles never change after this.
+        # ── 2. Set WS_EX_NOACTIVATE | WS_EX_APPWINDOW ──────────────────
+        # NOACTIVATE keeps focus in the app being typed into.  A NOACTIVATE
+        # window only gets a taskbar button with APPWINDOW (and no TOOLWINDOW).
+        # While minimized the OSK is hidden and the proxy window owns the
+        # button instead, so the OSK's own styles never change after this.
         GWL_EXSTYLE      = -20
         WS_EX_NOACTIVATE = 0x08000000
         WS_EX_TOOLWINDOW = 0x00000080
-        want = WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
+        WS_EX_APPWINDOW  = 0x00040000
+        want = WS_EX_NOACTIVATE | WS_EX_APPWINDOW
 
         cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        if cur_style & want == want:
-            _win_log(f"styles: NOACTIVATE|TOOLWINDOW already set ({cur_style:#x})")
+        new_style = (cur_style | want) & ~WS_EX_TOOLWINDOW
+        if new_style == cur_style:
+            _win_log(f"styles: NOACTIVATE|APPWINDOW already set ({cur_style:#x})")
         else:
-            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, cur_style | want)
-            _win_log(f"styles: WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW applied "
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, new_style)
+            _win_log(f"styles: WS_EX_NOACTIVATE|WS_EX_APPWINDOW applied "
                      f"(was {cur_style:#x})")
 
         if getattr(self, "_win_wndproc", None) is not None:
@@ -1956,6 +1964,8 @@ class OnScreenKeyboard(Gtk.Window):
         # WM_MOUSEACTIVATE returns MA_NOACTIVATE; intercepting WM_SETFOCUS
         # here and returning 0 prevents that steal from completing.
         WM_SETFOCUS      = 0x0007
+        WM_SYSCOMMAND    = 0x0112
+        SC_MINIMIZE      = 0xF020
         MA_NOACTIVATE    = 3
         GWLP_WNDPROC     = -4
 
@@ -1982,6 +1992,11 @@ class OnScreenKeyboard(Gtk.Window):
                 # Second launch / escape hatch.  ONLY queue work: no GDK or
                 # Win32 calls from inside the window procedure.
                 GLib.idle_add(self._force_restore)
+                return 0
+            if msg == WM_SYSCOMMAND and (wparam & 0xFFF0) == SC_MINIMIZE:
+                # Taskbar-button click while shown: use our proxy minimize,
+                # never a raw Win32 minimize of the OSK (GDK state desync).
+                GLib.idle_add(self._minimize_window)
                 return 0
             if msg == WM_MOUSEACTIVATE:
                 return MA_NOACTIVATE
@@ -4067,11 +4082,7 @@ class OnScreenKeyboard(Gtk.Window):
         scroll_outer.set_name("settings-scroll")
 
         inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        inner.set_name("settings-panel")
-        inner.set_margin_start(0)
-        inner.set_margin_end(12)                    # gap before the scrollbar
-        inner.set_margin_top(0)
-        inner.set_margin_bottom(0)
+        inner.set_name("settings-inner")   # CSS padding: gap before the scrollbar
 
         inner.pack_start(self._settings_section_header("Appearance", is_first=True), False, False, 0)
 
@@ -4473,6 +4484,27 @@ class OnScreenKeyboard(Gtk.Window):
         self._rebuild_custom_theme_buttons()
 
         # ── 14. Updates ────────────────────────────────────────────────────────
+        # ── 13b. Feedback (GitHub issue forms; no account data leaves the app)
+        inner.pack_start(self._settings_section_header("Feedback"), False, False, 0)
+        fb_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        fb_row.pack_start(self._settings_row_label("Rate or comment"), False, False, 0)
+        for text, url, desc in (
+            ("★ Leave a review", FEEDBACK_REVIEW_URL, "Rate the keyboard on GitHub"),
+            ("✎ Leave a note",   FEEDBACK_NOTE_URL,   "Send a note, idea or bug report on GitHub"),
+        ):
+            b = Gtk.Button(label=text)
+            b.get_style_context().add_class("settings-choice")
+            b.set_size_request(190, -1)
+            b.set_tooltip_text(desc + " (opens your browser)")
+            b.get_accessible().set_description(desc)
+            b.connect("clicked", lambda _b, u=url: self._open_url(u))
+            fb_row.pack_start(b, False, False, 0)
+        fb_hint = Gtk.Label(label="opens GitHub in your browser")
+        fb_hint.set_name("settings-hint")
+        fb_hint.set_xalign(0.0)
+        fb_row.pack_start(fb_hint, False, False, 4)
+        inner.pack_start(fb_row, False, False, 0)
+
         inner.pack_start(self._settings_section_header("Updates"), False, False, 0)
         update_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         update_row.pack_start(self._settings_row_label(f"Version {__version__}"), False, False, 0)
@@ -4490,7 +4522,6 @@ class OnScreenKeyboard(Gtk.Window):
         update_row.pack_start(self._update_status_label, True, True, 4)
         inner.pack_start(update_row, False, False, 0)
 
-        inner.set_margin_bottom(16)
         scroll_outer.add(inner)
         panel.pack_start(scroll_outer, True, True, 0)
 
@@ -4498,6 +4529,17 @@ class OnScreenKeyboard(Gtk.Window):
         self._refresh_layout_buttons()
         self._refresh_font_family_buttons()
         return panel
+
+    def _open_url(self, url: str):
+        """Open a web page in the user's default browser."""
+        try:
+            if IS_WINDOWS:
+                os.startfile(url)
+            else:
+                import webbrowser
+                webbrowser.open(url)
+        except Exception as exc:
+            print(f"[feedback] could not open {url}: {exc}")
 
     def _build_emoji_panel(self) -> Gtk.Box:
         """Browsable + searchable emoji grid (shown when emoji mode is active)."""
