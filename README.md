@@ -126,7 +126,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 |---|---|
 | **Theme** | Dark / Light / Midnight / High Contrast + custom themes |
 | **Layout** | QWERTY / AZERTY / QWERTZ |
-| **Font** | Windows: Segoe UI (default) / Arial / Verdana / Tahoma / Calibri / Consolas. Linux: Ubuntu (default) / Noto Sans / DejaVu Sans / Roboto / Arial / Courier New |
+| **Font** | Windows: Segoe UI (default) / Arial / Verdana / Tahoma / Calibri / Consolas / Comic Sans MS. Linux: Ubuntu (default) / Noto Sans / DejaVu Sans / Roboto / Arial / Courier New |
 | **Font size** | 10–22 px (default 18), live |
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |

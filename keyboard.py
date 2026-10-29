@@ -629,11 +629,12 @@ DEFAULT_MACROS = [
 
 # Only fonts that ship with the OS, so a choice never silently falls back.
 if IS_WINDOWS:
-    FONT_FAMILIES = ["Segoe UI", "Arial", "Verdana", "Tahoma", "Calibri", "Consolas"]
+    FONT_FAMILIES = ["Segoe UI", "Arial", "Verdana", "Tahoma", "Calibri", "Consolas",
+                     "Comic Sans MS"]
 else:
     FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 GITHUB_REPO_URL     = "https://github.com/Gitties67/Onscreen-keyboard"
 FEEDBACK_REVIEW_URL = GITHUB_REPO_URL + "/issues/new?template=review.yml"
