@@ -509,11 +509,15 @@ LEARNED_WORDS_FILE = os.path.join(CONFIG_DIR, "learned_words.json")
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
 BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 
+# Segoe UI is what the built-in Windows on-screen keyboard uses.
 DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
+DEFAULT_FONT_SIZE = 18     # big and clear by default
+FONT_SETTINGS_VERSION = 2  # bump to re-apply font defaults once on upgrade
+SETTINGS_LABEL_W = 140     # width of the label column on the settings page
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
-    "font_size":            14,       # key label font size in px (10–22)
+    "font_size":            DEFAULT_FONT_SIZE, # key label font size in px (10–22)
     "dwell_enabled":        False,
     "dwell_delay":          0.8,      # seconds (0.3 – 2.0)
     "click_sound":          True,
@@ -527,6 +531,7 @@ DEFAULT_SETTINGS: dict = {
     "update_check_enabled": True,
     "learn_words":          True,     # learn word usage from what you type (local only)
     "tutorial_done":        False,    # first-run tour shown (fresh installs only; see _load_settings)
+    "font_version":         FONT_SETTINGS_VERSION,
 }
 
 DEFAULT_MACROS = [
@@ -534,7 +539,11 @@ DEFAULT_MACROS = [
     {"trigger": "time", "expansion": "{time}"},
 ]
 
-FONT_FAMILIES = (["Segoe UI"] if IS_WINDOWS else []) + ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
+# Only fonts that ship with the OS, so a choice never silently falls back.
+if IS_WINDOWS:
+    FONT_FAMILIES = ["Segoe UI", "Arial", "Verdana", "Tahoma", "Calibri", "Consolas"]
+else:
+    FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
 __version__ = "0.1.8"
 
@@ -556,7 +565,7 @@ THEME_COLORS: dict[str, dict] = {
         "key_bg": "#2d2d2d", "key_fg": "#f0f0f0",
         "key_border": "#404040", "key_bot": "#111111",
         "key_hover": "#3a3a3a", "key_hover_border": "#555555",
-        "special_bg": "#242424", "special_fg": "#b0b0b0",
+        "special_bg": "#242424", "special_fg": "#e8e8e8",
         "special_border": "#383838", "special_bot": "#0d0d0d",
         "special_hover": "#303030",
         "sugg_fg": "#4fc3f7", "sugg_hover": "#2a2a2a", "sugg_divider": "#2e2e2e",
@@ -580,7 +589,7 @@ THEME_COLORS: dict[str, dict] = {
         "key_bg": "#ffffff", "key_fg": "#1a1a1a",
         "key_border": "#c0c0c0", "key_bot": "#999999",
         "key_hover": "#f0f0f0", "key_hover_border": "#aaaaaa",
-        "special_bg": "#dcdcdc", "special_fg": "#444444",
+        "special_bg": "#dcdcdc", "special_fg": "#1a1a1a",
         "special_border": "#bbbbbb", "special_bot": "#888888",
         "special_hover": "#ebebeb",
         "sugg_fg": "#005490", "sugg_hover": "#cccccc", "sugg_divider": "#bbbbbb",
@@ -604,7 +613,7 @@ THEME_COLORS: dict[str, dict] = {
         "key_bg": "#1a2332", "key_fg": "#c9d1d9",
         "key_border": "#30404d", "key_bot": "#060a0f",
         "key_hover": "#243040", "key_hover_border": "#4a6080",
-        "special_bg": "#111a26", "special_fg": "#7a9ab8",
+        "special_bg": "#111a26", "special_fg": "#b8cde0",
         "special_border": "#243040", "special_bot": "#040709",
         "special_hover": "#1a2a3a",
         "sugg_fg": "#58a6ff", "sugg_hover": "#1a2a3a", "sugg_divider": "#1f2937",
@@ -668,12 +677,12 @@ WIZARD_DEFAULTS = {
 }
 
 
-def _make_theme_css(c: dict, font_size: int = 14, font_family: str = DEFAULT_FONT) -> str:
+def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: str = DEFAULT_FONT) -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
     if font_family not in FONT_FAMILIES:
         print(f"[theme] Unknown font_family {font_family!r}, falling back to {DEFAULT_FONT}")
         font_family = DEFAULT_FONT
-    special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
+    special_size  = max(9,  font_size - 3)   # modifier/nav labels slightly smaller
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
     tour_size     = max(14, font_size)       # tour text never smaller than 14px
 
@@ -743,6 +752,18 @@ popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
 #settings-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
 #settings-panel {{ background-color: {c['bg']}; }}
 #settings-label {{ color: {c['key_fg']}; }}
+.settings-section {{ color: {c['key_fg']}; }}
+#settings-scroll, #settings-scroll viewport {{ background-color: {c['bg']}; }}
+#settings-scroll scrollbar {{ background-color: {c['bg']}; border: none; }}
+#settings-scroll scrollbar slider {{ background-color: {c['key_border']}; border: none;
+                                     border-radius: 4px; min-width: 8px; min-height: 40px; }}
+#settings-scroll scrollbar slider:hover {{ background-color: {c['sublabel_fg']}; }}
+#settings-scroll undershoot.bottom, #settings-scroll undershoot.top {{ background: none; }}
+.settings-divider {{ background-color: {c['key_border']}; min-height: 1px; }}
+#settings-hint {{ color: {c['sublabel_fg']}; }}
+.settings-list {{ background-color: {c['key_bg']}; border: 1px solid {c['key_border']};
+                  border-radius: 6px; }}
+.settings-list row + row {{ border-top: 1px solid {c['key_border']}; }}
 .settings-choice {{ background-color: {c['choice_bg']}; color: {c['choice_fg']};
                     border: 1px solid {c['choice_border']}; border-bottom: 2px solid {c['choice_bot']}; }}
 .settings-choice:hover {{ background-color: {c['key_hover']}; }}
@@ -3168,10 +3189,10 @@ class OnScreenKeyboard(Gtk.Window):
         row = Gtk.ListBoxRow()
         row.set_selectable(False)
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        box.set_margin_start(6)
-        box.set_margin_end(4)
-        box.set_margin_top(2)
-        box.set_margin_bottom(2)
+        box.set_margin_start(10)
+        box.set_margin_end(6)
+        box.set_margin_top(4)
+        box.set_margin_bottom(4)
 
         lbl = Gtk.Label(label=word)
         lbl.set_name("settings-label")
@@ -3181,7 +3202,10 @@ class OnScreenKeyboard(Gtk.Window):
 
         remove_btn = Gtk.Button(label="×")
         remove_btn.get_style_context().add_class("settings-choice")
-        remove_btn.set_size_request(30, -1)
+        remove_btn.get_style_context().add_class("list-remove")
+        remove_btn.set_size_request(36, -1)
+        remove_btn.set_valign(Gtk.Align.CENTER)
+        remove_btn.set_tooltip_text("Remove")
         remove_btn.connect("clicked", lambda _b, w=word: self._remove_custom_word(w))
         box.pack_end(remove_btn, False, False, 0)
 
@@ -3250,10 +3274,10 @@ class OnScreenKeyboard(Gtk.Window):
         row = Gtk.ListBoxRow()
         row.set_selectable(False)
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        box.set_margin_start(6)
-        box.set_margin_end(4)
-        box.set_margin_top(2)
-        box.set_margin_bottom(2)
+        box.set_margin_start(10)
+        box.set_margin_end(6)
+        box.set_margin_top(4)
+        box.set_margin_bottom(4)
 
         trigger = macro.get("trigger", "")
         expansion = macro.get("expansion", "")
@@ -3265,7 +3289,10 @@ class OnScreenKeyboard(Gtk.Window):
 
         remove_btn = Gtk.Button(label="×")
         remove_btn.get_style_context().add_class("settings-choice")
-        remove_btn.set_size_request(30, -1)
+        remove_btn.get_style_context().add_class("list-remove")
+        remove_btn.set_size_request(36, -1)
+        remove_btn.set_valign(Gtk.Align.CENTER)
+        remove_btn.set_tooltip_text("Remove")
         remove_btn.connect("clicked", lambda _b, t=trigger: self._remove_macro(t))
         box.pack_end(remove_btn, False, False, 0)
 
@@ -3634,7 +3661,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _wizard_preview_theme(self):
         """Apply current wizard colours to the keyboard CSS as a live preview."""
         c = _build_custom_theme(**self._wizard_colors)
-        font_size   = self.settings.get("font_size", 14)
+        font_size   = self.settings.get("font_size", DEFAULT_FONT_SIZE)
         font_family = self.settings.get("font_family", DEFAULT_FONT)
         self._theme_provider.load_from_data(_make_theme_css(c, font_size, font_family).encode())
 
@@ -3964,6 +3991,15 @@ class OnScreenKeyboard(Gtk.Window):
             # first-run tutorial; only fresh installs see it automatically.
             if isinstance(data, dict) and "tutorial_done" not in data:
                 data["tutorial_done"] = True
+            # Older versions saved "Ubuntu" (absent on Windows) and 14px:
+            # move everyone onto the clear defaults once.
+            if isinstance(data, dict) and data.get("font_version", 0) < FONT_SETTINGS_VERSION:
+                data["font_family"] = DEFAULT_FONT
+                try:
+                    data["font_size"] = max(int(data.get("font_size", 0)), DEFAULT_FONT_SIZE)
+                except (TypeError, ValueError):
+                    data["font_size"] = DEFAULT_FONT_SIZE
+                data["font_version"] = FONT_SETTINGS_VERSION
             # Fill in any missing keys with defaults
             merged = {**DEFAULT_SETTINGS, **data}
             if merged.get("click_style") not in ("click", "beep"):
@@ -3995,14 +4031,24 @@ class OnScreenKeyboard(Gtk.Window):
             if self._settings_btn:
                 self._settings_btn.get_style_context().remove_class("active")
 
-    def _settings_section_header(self, text: str, is_first: bool = False) -> Gtk.Label:
-        lbl = Gtk.Label()
-        lbl.set_markup(f"<small><b>{text}</b></small>")
+    def _settings_section_header(self, text: str, is_first: bool = False) -> Gtk.Box:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        box.set_margin_top(0 if is_first else 14)
+        lbl = Gtk.Label(label=text)
         lbl.set_xalign(0.0)
+        lbl.get_style_context().add_class("settings-section")
+        box.pack_start(lbl, False, False, 0)
+        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        sep.get_style_context().add_class("settings-divider")
+        box.pack_start(sep, False, False, 0)
+        return box
+
+    @staticmethod
+    def _settings_row_label(text: str) -> Gtk.Label:
+        lbl = Gtk.Label(label=text)
         lbl.set_name("settings-label")
-        lbl.set_margin_top(0 if is_first else 8)
-        lbl.set_margin_bottom(2)
-        lbl.set_margin_start(4)
+        lbl.set_xalign(0.0)
+        lbl.set_size_request(SETTINGS_LABEL_W, -1)
         return lbl
 
     def _build_settings_panel(self) -> Gtk.Box:
@@ -4017,11 +4063,13 @@ class OnScreenKeyboard(Gtk.Window):
         scroll_outer = Gtk.ScrolledWindow()
         scroll_outer.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll_outer.set_vexpand(True)
+        scroll_outer.set_overlay_scrolling(False)   # a real gutter, never on top of rows
+        scroll_outer.set_name("settings-scroll")
 
         inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         inner.set_name("settings-panel")
         inner.set_margin_start(0)
-        inner.set_margin_end(0)
+        inner.set_margin_end(12)                    # gap before the scrollbar
         inner.set_margin_top(0)
         inner.set_margin_bottom(0)
 
@@ -4032,7 +4080,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl = Gtk.Label(label="Theme")
         lbl.set_name("settings-label")
         lbl.set_xalign(0.0)
-        lbl.set_size_request(90, -1)
+        lbl.set_size_request(SETTINGS_LABEL_W, -1)
         theme_row.pack_start(lbl, False, False, 0)
 
         for key in THEMES:
@@ -4049,7 +4097,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_layout = Gtk.Label(label="Layout")
         lbl_layout.set_name("settings-label")
         lbl_layout.set_xalign(0.0)
-        lbl_layout.set_size_request(90, -1)
+        lbl_layout.set_size_request(SETTINGS_LABEL_W, -1)
         layout_row.pack_start(lbl_layout, False, False, 0)
 
         for key in ("qwerty", "azerty", "qwertz"):
@@ -4066,7 +4114,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_ff = Gtk.Label(label="Font")
         lbl_ff.set_name("settings-label")
         lbl_ff.set_xalign(0.0)
-        lbl_ff.set_size_request(90, -1)
+        lbl_ff.set_size_request(SETTINGS_LABEL_W, -1)
         font_fam_row.pack_start(lbl_ff, False, False, 0)
 
         for family in FONT_FAMILIES:
@@ -4086,7 +4134,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl6 = Gtk.Label(label="Font size")
         lbl6.set_name("settings-label")
         lbl6.set_xalign(0.0)
-        lbl6.set_size_request(90, -1)
+        lbl6.set_size_request(SETTINGS_LABEL_W, -1)
         font_row.pack_start(lbl6, False, False, 0)
 
         font_dec = Gtk.Button(label="−")
@@ -4095,7 +4143,7 @@ class OnScreenKeyboard(Gtk.Window):
         font_dec.connect("clicked", self._on_font_size_change, -1)
         font_row.pack_start(font_dec, False, False, 0)
 
-        cur_size = self.settings.get("font_size", 14)
+        cur_size = self.settings.get("font_size", DEFAULT_FONT_SIZE)
         self._font_size_label = Gtk.Label(label=f"{cur_size}px")
         self._font_size_label.set_name("settings-label")
         self._font_size_label.set_size_request(42, -1)
@@ -4114,7 +4162,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_ks = Gtk.Label(label="Key size")
         lbl_ks.set_name("settings-label")
         lbl_ks.set_xalign(0.0)
-        lbl_ks.set_size_request(90, -1)
+        lbl_ks.set_size_request(SETTINGS_LABEL_W, -1)
         key_scale_row.pack_start(lbl_ks, False, False, 0)
 
         ks_dec = Gtk.Button(label="−")
@@ -4142,7 +4190,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_op = Gtk.Label(label="Opacity")
         lbl_op.set_name("settings-label")
         lbl_op.set_xalign(0.0)
-        lbl_op.set_size_request(90, -1)
+        lbl_op.set_size_request(SETTINGS_LABEL_W, -1)
         opacity_row.pack_start(lbl_op, False, False, 0)
 
         cur_opacity = self.settings.get("opacity", 1.0)
@@ -4170,7 +4218,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl2 = Gtk.Label(label="Dwell click")
         lbl2.set_name("settings-label")
         lbl2.set_xalign(0.0)
-        lbl2.set_size_request(90, -1)
+        lbl2.set_size_request(SETTINGS_LABEL_W, -1)
         dwell_row.pack_start(lbl2, False, False, 0)
 
         dwell_toggle = Gtk.ToggleButton(label="Off")
@@ -4213,7 +4261,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl4 = Gtk.Label(label="Key sound")
         lbl4.set_name("settings-label")
         lbl4.set_xalign(0.0)
-        lbl4.set_size_request(90, -1)
+        lbl4.set_size_request(SETTINGS_LABEL_W, -1)
         sound_row.pack_start(lbl4, False, False, 0)
 
         self._sound_btns: dict[str, Gtk.Button] = {}
@@ -4235,7 +4283,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl5 = Gtk.Label(label="Modifier keys")
         lbl5.set_name("settings-label")
         lbl5.set_xalign(0.0)
-        lbl5.set_size_request(90, -1)
+        lbl5.set_size_request(SETTINGS_LABEL_W, -1)
         mod_row.pack_start(lbl5, False, False, 0)
 
         auto_release = self.settings.get("modifier_auto_release", True)
@@ -4249,7 +4297,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         mod_hint = Gtk.Label(
             label="releases after keypress" if auto_release else "stays until clicked again")
-        mod_hint.set_name("settings-label")
+        mod_hint.set_name("settings-hint")
         mod_hint.set_xalign(0.0)
         self._mod_hint_label = mod_hint
         mod_row.pack_start(mod_hint, False, False, 4)
@@ -4261,7 +4309,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_sh = Gtk.Label(label="Shift key")
         lbl_sh.set_name("settings-label")
         lbl_sh.set_xalign(0.0)
-        lbl_sh.set_size_request(90, -1)
+        lbl_sh.set_size_request(SETTINGS_LABEL_W, -1)
         shift_row.pack_start(lbl_sh, False, False, 0)
 
         shift_sticky = self.settings.get("shift_sticky", False)
@@ -4275,7 +4323,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._shift_hint_label = Gtk.Label(
             label="stays until clicked again" if shift_sticky else "releases after keypress")
-        self._shift_hint_label.set_name("settings-label")
+        self._shift_hint_label.set_name("settings-hint")
         self._shift_hint_label.set_xalign(0.0)
         shift_row.pack_start(self._shift_hint_label, False, False, 4)
 
@@ -4287,7 +4335,7 @@ class OnScreenKeyboard(Gtk.Window):
             lbl7 = Gtk.Label(label="Taskbar")
             lbl7.set_name("settings-label")
             lbl7.set_xalign(0.0)
-            lbl7.set_size_request(90, -1)
+            lbl7.set_size_request(SETTINGS_LABEL_W, -1)
             shortcut_row.pack_start(lbl7, False, False, 0)
 
             pin_btn = Gtk.Button(label="Pin to panel")
@@ -4310,7 +4358,7 @@ class OnScreenKeyboard(Gtk.Window):
         lbl_tour = Gtk.Label(label="Tutorial")
         lbl_tour.set_name("settings-label")
         lbl_tour.set_xalign(0.0)
-        lbl_tour.set_size_request(90, -1)
+        lbl_tour.set_size_request(SETTINGS_LABEL_W, -1)
         tour_row.pack_start(lbl_tour, False, False, 0)
 
         tour_btn = Gtk.Button(label="Show tutorial")
@@ -4327,112 +4375,94 @@ class OnScreenKeyboard(Gtk.Window):
 
         # -- Learned words ---------------------------------------------------
         learn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        learn_lbl = Gtk.Label(label="Learn my words")
-        learn_lbl.set_name("settings-label")
-        learn_lbl.set_xalign(0.0)
-        learn_lbl.set_hexpand(True)
-        learn_row.pack_start(learn_lbl, True, True, 0)
+        learn_row.pack_start(self._settings_row_label("Learn my words"), False, False, 0)
 
         learn_on = bool(self.settings.get("learn_words", True))
         learn_toggle = Gtk.ToggleButton(label="On" if learn_on else "Off")
         learn_toggle.set_name("settings-toggle")
-        learn_toggle.set_size_request(60, -1)
+        learn_toggle.set_size_request(100, -1)
         learn_toggle.set_active(learn_on)
         learn_toggle.connect("toggled", self._on_learn_toggled)
         learn_toggle.get_accessible().set_description(
             "Remember which words you use, locally, to improve suggestions")
-        learn_row.pack_end(learn_toggle, False, False, 0)
-        inner.pack_start(learn_row, False, False, 0)
+        learn_row.pack_start(learn_toggle, False, False, 0)
 
         self._forget_btn = Gtk.Button(label="Forget learned words")
         self._forget_btn.get_style_context().add_class("settings-choice")
         self._forget_btn.connect("clicked", self._on_forget_clicked)
         self._forget_btn.get_accessible().set_description(
             "Erase the words and phrases the keyboard has learned from your typing")
-        inner.pack_start(self._forget_btn, False, False, 0)
+        self._forget_btn.set_size_request(190, -1)
+        learn_row.pack_start(self._forget_btn, False, False, 0)
+        inner.pack_start(learn_row, False, False, 0)
 
         # ── 11. Custom dictionary section ──────────────────────────────────
+        inner.pack_start(self._settings_section_header("Your words and shortcuts"), False, False, 0)
         dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        dict_lbl = Gtk.Label(label="Custom dictionary")
-        dict_lbl.set_name("settings-label")
-        dict_lbl.set_xalign(0.0)
-        dict_lbl.set_hexpand(True)
-        dict_header.pack_start(dict_lbl, True, True, 0)
+        dict_header.pack_start(self._settings_row_label("Custom words"), False, False, 0)
 
         n = len(self._custom_words)
         self._custom_words_count = Gtk.Label(
             label=f"{n} word{'s' if n != 1 else ''}")
-        self._custom_words_count.set_name("settings-label")
-        dict_header.pack_end(self._custom_words_count, False, False, 0)
-        inner.pack_start(dict_header, False, False, 0)
+        self._custom_words_count.set_name("settings-hint")
+        self._custom_words_count.set_xalign(0.0)
+        dict_header.pack_start(self._custom_words_count, True, True, 0)
 
         add_btn = Gtk.Button(label="+ Add word or phrase")
         add_btn.get_style_context().add_class("settings-choice")
+        add_btn.set_size_request(190, -1)
         add_btn.connect("clicked", lambda _: self._open_custom_input_mode())
-        inner.pack_start(add_btn, False, False, 0)
-
-        scroll_words = Gtk.ScrolledWindow()
-        scroll_words.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll_words.set_propagate_natural_height(True)   # grow with rows…
-        scroll_words.set_max_content_height(240)          # …then scroll
+        dict_header.pack_end(add_btn, False, False, 0)
+        inner.pack_start(dict_header, False, False, 0)
 
         self._custom_words_listbox = Gtk.ListBox()
         self._custom_words_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self._custom_words_listbox.set_name("settings-panel")
+        self._custom_words_listbox.get_style_context().add_class("settings-list")
         self._custom_words_listbox.set_placeholder(self._empty_list_label("No custom words yet"))
 
         for word in self._custom_words:
             self._custom_words_listbox.add(self._make_custom_word_row(word))
 
-        scroll_words.add(self._custom_words_listbox)
-        inner.pack_start(scroll_words, False, False, 0)
+        # No inner scroller: the list grows and the settings page scrolls.
+        inner.pack_start(self._custom_words_listbox, False, False, 0)
 
         # ── 12. Macros section ─────────────────────────────────────────────
         macros_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        macros_lbl = Gtk.Label(label="Macros")
-        macros_lbl.set_name("settings-label")
-        macros_lbl.set_xalign(0.0)
-        macros_lbl.set_hexpand(True)
-        macros_header.pack_start(macros_lbl, True, True, 0)
+        macros_header.set_margin_top(8)
+        macros_header.pack_start(self._settings_row_label("Macros"), False, False, 0)
 
         nm = len(self._macros)
         self._macros_count = Gtk.Label(label=f"{nm} macro{'s' if nm != 1 else ''}")
-        self._macros_count.set_name("settings-label")
-        macros_header.pack_end(self._macros_count, False, False, 0)
-        inner.pack_start(macros_header, False, False, 0)
+        self._macros_count.set_name("settings-hint")
+        self._macros_count.set_xalign(0.0)
+        macros_header.pack_start(self._macros_count, True, True, 0)
 
         add_macro_btn = Gtk.Button(label="+ Add macro")
         add_macro_btn.get_style_context().add_class("settings-choice")
+        add_macro_btn.set_size_request(190, -1)
         add_macro_btn.connect("clicked",
                               lambda _: self._open_custom_input_mode(target="macro_trigger"))
-        inner.pack_start(add_macro_btn, False, False, 0)
-
-        scroll_macros = Gtk.ScrolledWindow()
-        scroll_macros.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll_macros.set_propagate_natural_height(True)   # grow with rows…
-        scroll_macros.set_max_content_height(240)          # …then scroll
+        macros_header.pack_end(add_macro_btn, False, False, 0)
+        inner.pack_start(macros_header, False, False, 0)
 
         self._macros_listbox = Gtk.ListBox()
         self._macros_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self._macros_listbox.set_name("settings-panel")
+        self._macros_listbox.get_style_context().add_class("settings-list")
         self._macros_listbox.set_placeholder(self._empty_list_label("No macros yet"))
 
         for macro in self._macros:
             self._macros_listbox.add(self._make_macro_row(macro))
 
-        scroll_macros.add(self._macros_listbox)
-        inner.pack_start(scroll_macros, False, False, 0)
+        inner.pack_start(self._macros_listbox, False, False, 0)
 
         # ── 13. Custom themes section ──────────────────────────────────────
         ctheme_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_ct = Gtk.Label(label="Custom themes")
-        lbl_ct.set_name("settings-label")
-        lbl_ct.set_xalign(0.0)
-        lbl_ct.set_hexpand(True)
-        ctheme_hdr.pack_start(lbl_ct, True, True, 0)
+        ctheme_hdr.set_margin_top(8)
+        ctheme_hdr.pack_start(self._settings_row_label("Custom themes"), False, False, 0)
 
         new_theme_btn = Gtk.Button(label="+ New theme")
         new_theme_btn.get_style_context().add_class("settings-choice")
+        new_theme_btn.set_size_request(190, -1)
         new_theme_btn.connect("clicked", lambda _: self._open_theme_wizard())
         ctheme_hdr.pack_end(new_theme_btn, False, False, 0)
         inner.pack_start(ctheme_hdr, False, False, 0)
@@ -4443,23 +4473,24 @@ class OnScreenKeyboard(Gtk.Window):
         self._rebuild_custom_theme_buttons()
 
         # ── 14. Updates ────────────────────────────────────────────────────────
-        update_hdr = Gtk.Label(label="Updates")
-        update_hdr.set_name("settings-label")
-        update_hdr.set_xalign(0.0)
-        update_hdr.set_margin_top(4)
-        inner.pack_start(update_hdr, False, False, 0)
+        inner.pack_start(self._settings_section_header("Updates"), False, False, 0)
+        update_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        update_row.pack_start(self._settings_row_label(f"Version {__version__}"), False, False, 0)
 
         self._update_status_label = Gtk.Label(label="")
         self._update_status_label.set_name("settings-label")
         self._update_status_label.set_xalign(0.0)
         self._update_status_label.set_line_wrap(True)
-        inner.pack_start(self._update_status_label, False, False, 0)
 
         self._update_btn = Gtk.Button(label="Check for updates")
         self._update_btn.get_style_context().add_class("settings-choice")
+        self._update_btn.set_size_request(190, -1)
         self._update_btn.connect("clicked", self._on_check_for_updates)
-        inner.pack_start(self._update_btn, False, False, 0)
+        update_row.pack_start(self._update_btn, False, False, 0)
+        update_row.pack_start(self._update_status_label, True, True, 4)
+        inner.pack_start(update_row, False, False, 0)
 
+        inner.set_margin_bottom(16)
         scroll_outer.add(inner)
         panel.pack_start(scroll_outer, True, True, 0)
 
@@ -4631,7 +4662,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._save_settings()
 
     def _on_font_size_change(self, _btn, delta: int):
-        size = max(10, min(22, self.settings.get("font_size", 14) + delta))
+        size = max(10, min(22, self.settings.get("font_size", DEFAULT_FONT_SIZE) + delta))
         self.settings["font_size"] = size
         if self._font_size_label:
             self._font_size_label.set_label(f"{size}px")
@@ -5119,7 +5150,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _reload_theme_css(self):
         """Regenerate and reload the theme CSS (colours + font size + font family)."""
         colors      = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
-        font_size   = self.settings.get("font_size", 14)
+        font_size   = self.settings.get("font_size", DEFAULT_FONT_SIZE)
         font_family = self.settings.get("font_family", DEFAULT_FONT)
         css = _make_theme_css(colors, font_size, font_family)
         self._theme_provider.load_from_data(css.encode())
