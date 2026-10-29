@@ -670,13 +670,16 @@ _CSS_PX_RE = re.compile(r"(?<![\w.#-])(\d+(?:\.\d+)?)px")
 
 def _scale_css_fonts(css: str) -> str:
     """Enlarge a stylesheet's sizes by TEXT_SCALE: text, button heights,
-    padding, corner radii.  1–2 px values (borders, hairlines) stay crisp."""
+    padding, corner radii.  Whole 1–2 px values (borders, hairlines) stay
+    crisp; write e.g. 2.0px for a small size that should scale anyway."""
     if TEXT_SCALE == 1.0:
         return css
 
     def _one(m):
         v = float(m.group(1))
-        return m.group(0) if v <= 2 else f"{_px(v)}px"
+        if v <= 2 and "." not in m.group(1):
+            return m.group(0)
+        return f"{_px(v)}px"
     return _CSS_PX_RE.sub(_one, css)
 
 
@@ -949,12 +952,20 @@ WIZARD_DEFAULTS = {
 }
 
 
-def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: str = DEFAULT_FONT) -> str:
-    """Theme stylesheet, with its text enlarged for the display scaling."""
-    return _scale_css_fonts(_theme_css_at_100(c, font_size, font_family))
+def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: str = DEFAULT_FONT,
+                    key_fit: float = 1.0) -> str:
+    """Theme stylesheet, with its text enlarged for the display scaling.
+    key_fit (≤ 1) shrinks the key labels along with keys made smaller than
+    full size, so a drag can make the keyboard small."""
+    return _scale_css_fonts(_theme_css_at_100(c, font_size, font_family, key_fit))
 
 
-def _theme_css_at_100(c: dict, font_size: int, font_family: str) -> str:
+def _key_text_fit(key_scale: float) -> float:
+    """How much key labels shrink at a given key scale: never grow, only shrink."""
+    return max(0.3, min(1.0, key_scale))
+
+
+def _theme_css_at_100(c: dict, font_size: int, font_family: str, key_fit: float = 1.0) -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
     if font_family not in FONT_FAMILIES:
         print(f"[theme] Unknown font_family {font_family!r}, falling back to {DEFAULT_FONT}")
@@ -963,6 +974,11 @@ def _theme_css_at_100(c: dict, font_size: int, font_family: str) -> str:
     char_size     = font_size + 8            # letters/digits/symbols: big, like Windows' OSK
     settings_size = max(14, font_size - 2)   # Settings text follows Font size too
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
+    key_size      = font_size
+    dot_r         = max(1.0, 2.0 * key_fit)  # accent-mark dot radius
+    if key_fit < 1.0:                        # keys dragged small: labels follow
+        key_size, char_size, special_size, sublabel_size = (
+            max(6, round(v * key_fit)) for v in (key_size, char_size, special_size, sublabel_size))
     tour_size     = max(14, font_size)       # tour text never smaller than 14px
 
     def _safe_mix(a: str, b: str, t: float, fallback: str) -> str:
@@ -1005,7 +1021,7 @@ window {{ background-color: {c['bg']}; }}
 #search-label {{ color: {c['search_fg']}; font-size: {font_size}px; }}
 .key-btn {{ background-color: {c['key_bg']}; color: {c['key_fg']};
             border: 1px solid {c['key_border']}; border-bottom: 2px solid {c['key_bot']};
-            font-size: {font_size}px; }}
+            font-size: {key_size}px; }}
 .key-btn.char-key {{ font-size: {char_size}px; }}
 #settings-label, .settings-choice, #settings-toggle {{ font-size: {settings_size}px; }}
 #settings-hint {{ font-size: {settings_size - 1}px; }}
@@ -1019,7 +1035,7 @@ window {{ background-color: {c['bg']}; }}
 .special:hover {{ background-color: {c['special_hover']}; }}
 .special:active {{ background-color: {c['special_bg']}; }}
 .space {{ background-color: {c['key_bg']}; border-color: {c['key_border']}; }}
-.key-btn.has-accents {{ background-image: radial-gradient(circle at 86% 18%, {c['sublabel_fg']} 2px, transparent 3px); }}
+.key-btn.has-accents {{ background-image: radial-gradient(circle at 86% 18%, {c['sublabel_fg']} {dot_r:.1f}px, transparent {dot_r + 1:.1f}px); }}
 .accent-choice {{ font-size: {font_size + 2}px; min-width: 44px; min-height: 44px; padding: 0; }}
 .key-btn.key-flash {{ background-color: {flash_bg}; color: {flash_fg}; transition: none; }}
 .key-btn.special.key-flash {{ background-color: {flash_sp_bg}; color: {flash_sp_fg}; }}
@@ -3094,8 +3110,12 @@ class OnScreenKeyboard(Gtk.Window):
         start_wx = self._resize_start_wx
         start_wy = self._resize_start_wy
 
-        min_h = max(int(BASE_KEY_H * KB_ROWS * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12,
-                    getattr(self, "_resize_min_h", 0))
+        overhead = TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
+        min_h = int(BASE_KEY_H * KB_ROWS * 0.3) + overhead
+        if not ("n" in edge or "s" in edge):
+            # Labels shrink with the keys on a top/bottom drag, so only a side
+            # drag is held back by the measured content size.
+            min_h = max(min_h, getattr(self, "_resize_min_h", 0))
         min_w = getattr(self, "_resize_min_w", MIN_W)
         # Never let a measured minimum above the starting size shift the window
         min_w = min(min_w, start_w)
@@ -3141,6 +3161,9 @@ class OnScreenKeyboard(Gtk.Window):
         # Cleared in _on_resize_release so normal layout/scaling resumes.
         pin_w = w if ("e" in edge or "w" in edge) else -1
         pin_h = h if ("n" in edge or "s" in edge) else -1
+        if "n" in edge or "s" in edge:
+            # Labels follow the keys live, so the drag isn't held up by text
+            self._set_key_text_fit((h - overhead) / (BASE_KEY_H * KB_ROWS))
         self.set_size_request(pin_w, pin_h)
         self.resize(w, h)
         if "w" in edge or "n" in edge:
@@ -4083,7 +4106,23 @@ class OnScreenKeyboard(Gtk.Window):
                 fit = min(fit, (win_w - overhead - spacing) / total)
         return max(0.1, fit)
 
+    def _set_key_text_fit(self, scale: float):
+        """Shrink/restore the key labels for keys at `scale` (reloads the theme
+        CSS only when the size actually changes)."""
+        fit = _key_text_fit(scale)
+        current = getattr(self, "_text_fit", 1.0)
+        # Small steps are skipped while dragging; the end sizes always apply
+        if fit == current or (abs(fit - current) < 0.04 and 0.3 < fit < 1.0):
+            return
+        self._text_fit = fit
+        colors = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
+        self._theme_provider.load_from_data(_make_theme_css(
+            colors, self.settings.get("font_size", DEFAULT_FONT_SIZE),
+            self.settings.get("font_family", DEFAULT_FONT), fit).encode())
+
     def _apply_key_scale(self, scale: float, reposition: bool = False, resize: bool = True):
+        if getattr(self, "_theme_provider", None) is not None:
+            self._set_key_text_fit(scale)
         h = int(BASE_KEY_H * scale)
         w, _ = self.get_size()
         wscale = self._key_width_scale(scale, w)
@@ -4911,7 +4950,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Wrap in a scrolled window so all settings are accessible
         scroll_outer = Gtk.ScrolledWindow()
-        scroll_outer.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        # Sideways scrolling when narrow, so the long Settings rows never set
+        # the keyboard's minimum width
+        scroll_outer.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scroll_outer.set_vexpand(True)
         scroll_outer.set_overlay_scrolling(False)   # a real gutter, never on top of rows
         scroll_outer.set_name("settings-scroll")
@@ -6086,7 +6127,8 @@ class OnScreenKeyboard(Gtk.Window):
         colors      = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
         font_size   = self.settings.get("font_size", DEFAULT_FONT_SIZE)
         font_family = self.settings.get("font_family", DEFAULT_FONT)
-        css = _make_theme_css(colors, font_size, font_family)
+        self._text_fit = _key_text_fit(self.settings.get("key_scale", 1.0))
+        css = _make_theme_css(colors, font_size, font_family, self._text_fit)
         self._theme_provider.load_from_data(css.encode())
 
     def _apply_theme(self, theme: str, save: bool = True):
