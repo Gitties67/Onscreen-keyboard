@@ -1503,10 +1503,13 @@ class OnScreenKeyboard(Gtk.Window):
         SW_HIDE, SW_SHOWMINNOACTIVE = 0, 7
         _win_allow_activate[0] = True
         # Style change only reaches the taskbar across a hide/show cycle.
+        _win_log("minimize: step SW_HIDE")
         user32.ShowWindow(hwnd, SW_HIDE)
         ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        _win_log(f"minimize: step SetWindowLongW ex={ex:#x}")
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
                               (ex & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW)
+        _win_log("minimize: step SW_SHOWMINNOACTIVE")
         user32.ShowWindow(hwnd, SW_SHOWMINNOACTIVE)
         _win_log(f"minimize: APPWINDOW set, SW_SHOWMINNOACTIVE; iconic="
                  f"{bool(user32.IsIconic(hwnd))}")
@@ -1603,17 +1606,26 @@ class OnScreenKeyboard(Gtk.Window):
         hwnd = self._win_hwnd
         GWL_EXSTYLE, WS_EX_TOOLWINDOW, WS_EX_APPWINDOW = -20, 0x80, 0x40000
         SW_HIDE, SW_SHOWNOACTIVATE, SW_RESTORE = 0, 4, 9
+        _win_log(f"restore: step begin fg={user32.GetForegroundWindow():#x} "
+                 f"ours={hwnd:#x} collapsed={self._collapsed}")
         if user32.IsIconic(hwnd):
+            _win_log("restore: step SW_RESTORE")
             user32.ShowWindow(hwnd, SW_RESTORE)   # refused/abort path
+        _win_log("restore: step SW_HIDE")
         user32.ShowWindow(hwnd, SW_HIDE)
         # Re-block activation BEFORE re-showing so the show can't take focus.
         _win_allow_activate[0] = False
+        _win_log("restore: step apply_styles")
         self._win_apply_styles(hwnd)              # adds NOACTIVATE|TOOLWINDOW
         ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        _win_log(f"restore: step SetWindowLongW ex={ex:#x}")
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_APPWINDOW)
+        _win_log("restore: step SW_SHOWNOACTIVATE")
         user32.ShowWindow(hwnd, SW_SHOWNOACTIVATE)
         # Taskbar click activated us briefly: hand foreground back to the app.
+        _win_log("restore: step focus_restore")
         _win_focus_restore()
+        _win_log("restore: step focus_restore returned")
 
     def _win_get_hwnd(self):
         """Return this window's native Win32 HWND, or None.
@@ -5378,6 +5390,41 @@ def _run_selftest() -> int:
     return code
 
 
+def _start_hang_watchdog() -> None:
+    """OSK_DEBUG only: if the GTK main loop stalls for >3 s, dump every thread's
+    Python stack to osk_debug.log.hang — pinpoints freezes (e.g. a blocked
+    user32 call) that leave no other trace."""
+    if not _WIN_DEBUG_LOG:
+        return
+    import faulthandler
+    import threading
+    try:
+        hang_file = open(_WIN_DEBUG_LOG + ".hang", "a", encoding="utf-8")
+    except Exception:
+        return
+    faulthandler.enable(file=hang_file, all_threads=True)   # also catches hard crashes
+    beat = [time.monotonic()]
+
+    def _heartbeat():
+        beat[0] = time.monotonic()
+        return True
+    GLib.timeout_add(500, _heartbeat)
+
+    def _watch():
+        while True:
+            time.sleep(1)
+            stalled = time.monotonic() - beat[0]
+            if stalled > 3:
+                hang_file.write(f"=== main loop stalled {stalled:.1f}s at "
+                                f"{time.strftime('%H:%M:%S')} ===\n")
+                hang_file.flush()
+                faulthandler.dump_traceback(file=hang_file, all_threads=True)
+                hang_file.flush()
+                beat[0] = time.monotonic() + 30   # one dump per stall, not a flood
+    threading.Thread(target=_watch, daemon=True, name="osk-hang-watchdog").start()
+    _win_log("watchdog: started")
+
+
 def main():
     if "--selftest" in sys.argv[1:]:
         code = _run_selftest()
@@ -5398,6 +5445,7 @@ def main():
         print("Run this from a terminal opened inside your desktop session.")
         sys.exit(1)
 
+    _start_hang_watchdog()
     win = OnScreenKeyboard()
     Gtk.main()
 
