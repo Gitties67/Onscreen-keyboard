@@ -50,10 +50,13 @@ Name: "startup"; Description: "Start {#AppName} when I sign in"; GroupDescriptio
 Source: "..\dist\OnScreenKeyboard\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+; AppUserModelID must match APP_USER_MODEL_ID in keyboard.py so a pinned taskbar
+; icon and the running keyboard share one taskbar button.
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; AppUserModelID: "Gitties67.OnScreenKeyboard"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon; AppUserModelID: "Gitties67.OnScreenKeyboard"
 ; Debug launch (writes %LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log).  The app is single-instance:
 ; QUIT the running keyboard first, otherwise this just re-shows it and logs nothing new.
+; No AppUserModelID here on purpose: pinning must resolve to the normal shortcut.
 Name: "{autoprograms}\{#AppName} (debug mode)"; Filename: "{app}\{#AppExe}"; Parameters: "--debug"
 
 [Registry]

@@ -543,6 +543,18 @@ DEFAULT_FONT_SIZE = 18     # big and clear by default
 FONT_SETTINGS_VERSION = 2  # bump to re-apply font defaults once on upgrade
 SETTINGS_LABEL_W = 150     # width of the label column on the settings page
 
+# Shared by the running keyboard and the installer's Start-menu shortcut, so a
+# pinned taskbar icon and the open keyboard are the same taskbar button.
+APP_USER_MODEL_ID = "Gitties67.OnScreenKeyboard"
+
+WINDOWS_PIN_STEPS = (
+    "Windows only lets you pin apps yourself, but it's quick:\n\n"
+    "1.  Right-click the keyboard's button on the taskbar.\n"
+    "2.  Choose \"Pin to taskbar\".\n\n"
+    "The icon then stays on your taskbar, even when the keyboard is closed. "
+    "To start it automatically when you sign in, re-run the installer and tick "
+    "\"Start On-Screen Keyboard when I sign in\".")
+
 # What each setting does and why you'd change it (the (i) buttons in Settings).
 SETTINGS_HELP = {
     "Theme": "The keyboard's colours. Dark is easy on the eyes, Light suits bright rooms, "
@@ -571,8 +583,11 @@ SETTINGS_HELP = {
                      "Ctrl, then C, to copy). Sticky keeps them on until you tap them again.",
     "Shift key": "One-shot capitalises just the next letter. Sticky keeps Shift on until you "
                  "tap it again, handy for typing several capitals.",
-    "Taskbar": "Pins the keyboard to your panel and starts it when you log in, so it's "
-               "always one click away.",
+    "Taskbar": ("Keeps the keyboard on your taskbar so it's always one click away. Windows "
+                "only lets you pin apps yourself, so this shows you how (it takes two clicks)."
+                if IS_WINDOWS else
+                "Pins the keyboard to your panel and starts it when you log in, so it's "
+                "always one click away."),
     "Tutorial": "Replays the four quick tips shown the first time the keyboard opened.",
     "Learn my words": "Remembers which words you use (on this computer only, never sent "
                       "anywhere) so they're suggested sooner. Words next to numbers or symbols, "
@@ -4585,6 +4600,20 @@ class OnScreenKeyboard(Gtk.Window):
             shortcut_row.pack_start(self._pin_status_label, False, False, 4)
 
             inner.pack_start(shortcut_row, False, False, 0)
+        else:
+            # Windows has no API for an app to pin itself (Microsoft removed it),
+            # so the button explains the two-click way.  The shared
+            # AppUserModelID makes the pinned icon and the running keyboard
+            # one taskbar button.
+            shortcut_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            shortcut_row.pack_start(self._settings_row_label("Taskbar"), False, False, 0)
+            pin_btn = Gtk.Button(label="Pin to taskbar")
+            pin_btn.get_style_context().add_class("settings-choice")
+            pin_btn.set_size_request(190, -1)
+            pin_btn.connect("clicked", lambda b: self._toggle_setting_help(
+                b, "Pin to taskbar", WINDOWS_PIN_STEPS))
+            shortcut_row.pack_start(pin_btn, False, False, 0)
+            inner.pack_start(shortcut_row, False, False, 0)
 
         inner.pack_start(self._settings_section_header("Help"), False, False, 0)
 
@@ -6508,6 +6537,14 @@ def main():
 
     srv = None
     if IS_WINDOWS:
+        try:
+            # Before any window exists: group our windows under the same ID as
+            # the Start-menu shortcut (needed for "Pin to taskbar" to stick).
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                ctypes.c_wchar_p(APP_USER_MODEL_ID))
+        except Exception as exc:
+            _win_log(f"AppUserModelID not set ({exc})")
         try:
             _win_single_instance_or_exit()
         except SystemExit:

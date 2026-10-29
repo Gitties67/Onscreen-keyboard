@@ -136,7 +136,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 | **Key sound** | Off / Click (default, soft tick) / Beep |
 | **Modifier keys** | Auto-release or sticky |
 | **Shift key** | One-shot or sticky |
-| **Taskbar** | Pin to Cinnamon panel + autostart (Linux) |
+| **Taskbar** | Linux: pin to Cinnamon panel + autostart. Windows: shows how to pin it (Windows doesn't let apps pin themselves; right-click its taskbar button → *Pin to taskbar*) |
 | **Tutorial** | Show the first-run tour again |
 | **Custom dictionary** | Add/remove personal words and phrases |
 | **Learn my words** | On (default) / Off — learn word usage from your typing to improve suggestions |
