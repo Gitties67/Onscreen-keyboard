@@ -941,6 +941,7 @@ TITLEBAR_H   = 32   # height of the custom title-bar strip (Windows 10/11 captio
 CAPTION_W    = 46   # width of a Windows-style caption button (minimize / close)
 STRIP_H      = 11   # height of the top/bottom resize strips
 MIN_W        = 400  # minimum window width during resize
+KEY_ROW_H_OVERHEAD = 32  # side margins + padding around a key row (fallback)
 SIDE_ZONE    = 10   # width of the left/right margins that act as e/w resize zones
 EDGE_ZONE    = 16   # corner size: px from a window corner that resizes diagonally
 
@@ -2693,10 +2694,29 @@ class OnScreenKeyboard(Gtk.Window):
         self._resize_start_y  = event.y_root
         self._resize_start_w, self._resize_start_h = self.get_size()
         self._resize_start_wx, self._resize_start_wy = self.get_position()
-        # Clear button height minimums so GTK won't resist vertical shrinking
-        if "n" in edge or "s" in edge:
+        # Clear the button minimums on the dragged axis so GTK won't resist
+        # shrinking; _apply_key_scale restores them (fitted) on release.
+        scale = self.settings.get("key_scale", 1.0)
+        wscale = self._key_width_scale(scale, self._resize_start_w)
+        vertical = "n" in edge or "s" in edge
+        horizontal = "e" in edge or "w" in edge
+        if vertical or horizontal:
             for btn, base_w in self._all_key_btns:
-                btn.set_size_request(int(base_w * self.settings.get("key_scale", 1.0)), 1)
+                btn.set_size_request(1 if horizontal else int(base_w * wscale),
+                                     1 if vertical else int(BASE_KEY_H * scale))
+        # The real minimum is whatever the keys need (labels, font size), which
+        # is usually more than MIN_W.  Clamp to it, otherwise a west/north drag
+        # keeps moving the window after GTK has refused to shrink it further,
+        # and the whole keyboard slides across the screen.
+        self._resize_min_w, self._resize_min_h = MIN_W, 0
+        try:
+            child = self.get_child()
+            border = 2 * self.get_border_width()
+            if child is not None:
+                self._resize_min_w = max(MIN_W, child.get_preferred_width()[0] + border)
+                self._resize_min_h = child.get_preferred_height()[0] + border
+        except Exception:
+            pass
 
     def _on_resize_motion(self, widget, event):
         if not self._resizing:
@@ -2718,7 +2738,12 @@ class OnScreenKeyboard(Gtk.Window):
         start_wx = self._resize_start_wx
         start_wy = self._resize_start_wy
 
-        min_h = int(BASE_KEY_H * 6 * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
+        min_h = max(int(BASE_KEY_H * 6 * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12,
+                    getattr(self, "_resize_min_h", 0))
+        min_w = getattr(self, "_resize_min_w", MIN_W)
+        # Never let a measured minimum above the starting size shift the window
+        min_w = min(min_w, start_w)
+        min_h = min(min_h, start_h)
 
         # Start from the baselines.  Each edge touches ONLY the geometry
         # components it owns: horizontal edges (e/w) read dx and write width
@@ -2730,7 +2755,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # East/south edges: only size grows, the opposite edge/position anchored.
         if "e" in edge:
-            w = max(MIN_W, start_w + dx)
+            w = max(min_w, start_w + dx)
         if "s" in edge:
             h = max(min_h, start_h + dy)
 
@@ -2739,7 +2764,7 @@ class OnScreenKeyboard(Gtk.Window):
         # (start_size - new_size) rather than from dx makes the clamp and the
         # move agree even when the size hits MIN_W / min_h.
         if "w" in edge:
-            w  = max(MIN_W, start_w - dx)
+            w  = max(min_w, start_w - dx)
             wx = start_wx + (start_w - w)
         if "n" in edge:
             h  = max(min_h, start_h - dy)
@@ -2778,7 +2803,11 @@ class OnScreenKeyboard(Gtk.Window):
             # present when motion occurred.
             self.set_size_request(-1, -1)
             scale = self.settings.get("key_scale", 1.0)
-            if self._resize_edge and not self._collapsed:
+            vertical = "n" in self._resize_edge or "s" in self._resize_edge
+            if not vertical:
+                # Side drag: height and key scale untouched, only refit widths
+                self._apply_key_scale(scale, resize=False)
+            elif self._resize_edge and not self._collapsed:
                 # Derive scale from the new window height and snap buttons to fit
                 _, new_h = self.get_size()
                 overhead = TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
@@ -2791,16 +2820,16 @@ class OnScreenKeyboard(Gtk.Window):
                     self._key_scale_label.set_label(f"{scale:.2f}×")
             # Always restore button sizes (covers the collapsed-drag path where
             # scale doesn't change but min-heights were stripped by _start_resize)
-            self._apply_key_scale(scale)
+            if vertical:
+                self._apply_key_scale(scale)
         elif self._resizing and ("n" in self._resize_edge or "s" in self._resize_edge):
             # No motion, but _start_resize stripped the button height minimums
             # to 1px for n/s edges.  Restore them at the current scale without
             # touching window geometry, otherwise a pure click on the top/bottom
             # strip leaves the keys squashed.
-            scale = self.settings.get("key_scale", 1.0)
-            h = int(BASE_KEY_H * scale)
-            for btn, base_w in self._all_key_btns:
-                btn.set_size_request(int(base_w * scale), h)
+            self._apply_key_scale(self.settings.get("key_scale", 1.0), resize=False)
+        elif self._resizing and ("e" in self._resize_edge or "w" in self._resize_edge):
+            self._apply_key_scale(self.settings.get("key_scale", 1.0), resize=False)
         self._resizing        = False
         self._resize_did_move = False
         self._resize_edge     = ""
@@ -3442,13 +3471,34 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Key size scaling ──────────────────────────────────────────────────────
 
-    def _apply_key_scale(self, scale: float, reposition: bool = False):
-        h = int(BASE_KEY_H * scale)
+    def _key_width_scale(self, scale: float, win_w: int) -> float:
+        """Width scale for the key minimums: `scale`, or less if the window is
+        too narrow for the full layout at that scale.  Heights keep `scale`, so
+        dragging a side edge narrows the keys instead of hitting a wall."""
+        rows = {}
         for btn, base_w in self._all_key_btns:
-            btn.set_size_request(int(base_w * scale), h)
+            rows.setdefault(btn.get_parent(), []).append(base_w)
+        fit = scale
+        for parent, widths in rows.items():
+            spacing = parent.get_spacing() * (len(widths) - 1) if parent else 0
+            overhead = KEY_ROW_H_OVERHEAD
+            if parent is not None and parent.get_allocated_width() > 1:
+                overhead = max(0, self.get_allocated_width() - parent.get_allocated_width())
+            total = sum(widths)
+            if total > 0:
+                fit = min(fit, (win_w - overhead - spacing) / total)
+        return max(0.1, fit)
+
+    def _apply_key_scale(self, scale: float, reposition: bool = False, resize: bool = True):
+        h = int(BASE_KEY_H * scale)
+        w, _ = self.get_size()
+        wscale = self._key_width_scale(scale, w)
+        for btn, base_w in self._all_key_btns:
+            btn.set_size_request(int(base_w * wscale), h)
+        if not resize:
+            return
         keys_h = int(BASE_KEY_H * 6 * scale)
         total_h = keys_h + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
-        w, _ = self.get_size()
         self.resize(w, total_h)
         if reposition:
             display = Gdk.Display.get_default()
