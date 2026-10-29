@@ -294,15 +294,10 @@ class WordPredictor:
         # Binary search to find where this prefix starts
         idx = bisect.bisect_left(words, prefix)
 
-        # Collect all words that start with the prefix
-        candidates: list[str] = []
-        for i in range(idx, len(words)):
-            w = words[i]
-            if not w.startswith(prefix):
-                break
-            candidates.append(w)
-            if len(candidates) >= 500:   # cap scan window for speed
-                break
+        # Slice the whole prefix range — capping the scan would only ever see
+        # the alphabetically-first words and miss short common ones.
+        end = bisect.bisect_left(words, prefix + "\uffff", idx)
+        candidates = words[idx:end]
 
         if not candidates:
             return []

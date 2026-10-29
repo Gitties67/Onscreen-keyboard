@@ -1,22 +1,37 @@
 # On-Screen Keyboard
 
+> **Heads up — this is a one-person hobby project.** I'm a single person, not a professional developer. This keyboard might be shit. It also might not be shit. Either way, it's free, it's built in my spare time, and bug reports and suggestions are genuinely welcome via [GitHub Issues](https://github.com/Gitties67/Onscreen-keyboard/issues).
+
 A full-featured on-screen keyboard for Linux and Windows, built with Python 3 and GTK3. Designed for Linux Mint Cinnamon but compatible with any X11 desktop (XFCE, MATE, etc.) and Windows 10/11.
+
+> **Wayland is not supported.** On Linux the keyboard needs an X11 session (on Ubuntu/Fedora, pick "Xorg" at the login screen).
 
 ---
 
-## Windows — Download and run
+## Windows — Install
 
-**No installation required.**
+**Recommended: the installer. No administrator rights needed.**
 
 1. Go to the [Releases page](https://github.com/Gitties67/Onscreen-keyboard/releases/latest)
-2. Download **`OnScreenKeyboard.exe`**
-3. Double-click it
+2. Download **`OnScreenKeyboard-Setup-<version>.exe`** and run it
+3. Choose the optional extras on the Tasks page:
+   - **Desktop icon**
+   - **Start On-Screen Keyboard when I sign in** (adds a per-user startup entry; removed on uninstall)
+4. Finish — tick *Launch On-Screen Keyboard* to start it right away
 
-That's it. No Python, no GTK, no dependencies to install.
+By default it installs for your user only (`%LOCALAPPDATA%\Programs\OnScreenKeyboard`) and adds a Start Menu entry. Choose "all users" in the first dialog only if you want it in Program Files (that asks for admin rights). Uninstall from **Settings → Apps**. Your settings are kept.
 
-> **First launch takes ~10 seconds** while the app unpacks its resources. Subsequent launches are faster.
->
-> **Windows SmartScreen warning:** Click **More info → Run anyway**. This appears because the exe isn't code-signed yet.
+No Python, GTK or other dependencies are needed.
+
+**Portable alternative:** download **`OnScreenKeyboard-portable-<version>.zip`**, extract the *whole folder* anywhere, and run `OnScreenKeyboard.exe` inside it (keep the exe in its folder; it needs the files beside it).
+
+> **Windows SmartScreen warning:** click **More info → Run anyway**. It appears because the files aren't code-signed yet. Checksums are published in `SHA256SUMS.txt` on each release.
+
+**Where settings live:** `%APPDATA%\OnScreenKeyboard` (settings, custom words, themes, macros). Settings from older versions (`~\.config\onscreen_keyboard`) are copied there automatically on first run.
+
+**Updates:** *Settings → Check for updates* downloads the new installer, verifies its SHA-256 against the release's `SHA256SUMS.txt`, installs silently and restarts the keyboard.
+
+**Debug log:** to troubleshoot typing problems, set the environment variable `OSK_DEBUG=1` before launching (e.g. `set OSK_DEBUG=1` then run the exe from Command Prompt). The log is written to `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`; typed characters are never recorded.
 
 ---
 
@@ -24,21 +39,20 @@ That's it. No Python, no GTK, no dependencies to install.
 
 ### Requirements
 
-| Package | Purpose | Install |
+| Package | Required? | Purpose |
 |---|---|---|
-| `python3-gi` | GTK3 bindings | `sudo apt install python3-gi` |
-| `python3-xlib` | XTEST key synthesis (primary typing method) | `sudo apt install python3-xlib` |
-| `gir1.2-gtk-3.0` | GTK3 GObject introspection | `sudo apt install gir1.2-gtk-3.0` |
-| `at-spi2-core` | AT-SPI2 fallback typing | `sudo apt install at-spi2-core` |
-| `xdotool` | Emoji insertion | `sudo apt install xdotool` |
-| `flameshot` | PrtScn snipping tool | `sudo apt install flameshot` |
+| `python3-gi`, `gir1.2-gtk-3.0` | Required | GTK3 UI |
+| `python3-xlib` | Required | XTEST key synthesis (primary typing method) |
+| `at-spi2-core`, `gir1.2-atspi-2.0` | Recommended | AT-SPI2 fallback typing |
+| `xdotool` | Recommended | Emoji insertion |
+| `flameshot` | Optional | PrtScn snipping tool |
 
 ### Installation
 
 ```bash
-git clone git@github.com:Gitties67/Onscreen-keyboard.git ~/onscreen_keyboard
-cd ~/onscreen_keyboard
-sudo apt install python3-gi python3-xlib gir1.2-gtk-3.0 at-spi2-core xdotool flameshot
+git clone https://github.com/Gitties67/Onscreen-keyboard.git
+cd Onscreen-keyboard
+sudo apt install python3-gi gir1.2-gtk-3.0 python3-xlib at-spi2-core gir1.2-atspi-2.0 xdotool flameshot
 bash install.sh
 ```
 
@@ -47,7 +61,7 @@ bash install.sh
 ### Running manually
 
 ```bash
-bash ~/onscreen_keyboard/launch.sh
+bash path/to/Onscreen-keyboard/launch.sh
 ```
 
 Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI2 bus before starting.
@@ -86,7 +100,7 @@ Click **⚙** in the suggestion bar to open settings.
 |---|---|
 | **Theme** | Dark / Light / Midnight / High Contrast + custom themes |
 | **Layout** | QWERTY / AZERTY / QWERTZ |
-| **Font** | Ubuntu / Noto Sans / DejaVu Sans / Monospace |
+| **Font** | Segoe UI (Windows) / Ubuntu / Noto Sans / DejaVu Sans / Roboto / Arial / Courier New |
 | **Font size** | 10–22 px, live |
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
@@ -99,7 +113,7 @@ Click **⚙** in the suggestion bar to open settings.
 | **Macros** | Trigger → expansion pairs |
 | **Updates** | Check for updates; install or download latest version |
 
-Settings saved to `~/.config/onscreen_keyboard/settings.json` (Linux) or `~\.config\onscreen_keyboard\settings.json` (Windows).
+Settings saved to `~/.config/onscreen_keyboard/settings.json` (Linux) or `%APPDATA%\OnScreenKeyboard\settings.json` (Windows).
 
 ---
 
@@ -115,7 +129,7 @@ Add your own words so they appear first in suggestions.
 
 Phrases work the same way. Add `See you later` and typing `see` offers the full phrase.
 
-Custom words are stored in `~/.config/onscreen_keyboard/custom_words.json` — you can also edit it directly to bulk-import entries.
+Custom words are stored in `custom_words.json` in the settings folder (`~/.config/onscreen_keyboard/` on Linux, `%APPDATA%\OnScreenKeyboard\` on Windows) — you can also edit it directly to bulk-import entries.
 
 ---
 
@@ -152,50 +166,58 @@ onscreen_keyboard/
 ├── words.txt            # Bundled English dictionary (used by Windows exe)
 ├── VERSION              # Current version string (read by update checker)
 ├── launch.sh            # Linux: env setup + launch
-├── launch.bat           # Windows: run from source via MSYS2
+├── launch.bat           # Windows: run from source via MSYS2 (developers)
 ├── install.sh           # Linux: app menu entry + autostart setup
-├── osk.spec             # PyInstaller spec — builds the Windows exe
-├── rthook_gtk.py        # PyInstaller runtime hook — sets GTK env vars in exe
+├── osk.spec             # PyInstaller spec — builds the Windows onedir app
+├── rthook_gtk.py        # PyInstaller runtime hook — GTK/fontconfig env vars
+├── osk.ico / osk.png    # App icon (generated by tools/make_icon.py)
+├── tools/
+│   ├── make_icon.py         # Regenerates osk.ico / osk.png (needs Pillow)
+│   └── gen_version_info.py  # VERSION -> version_info.txt (exe version resource)
+├── installer/
+│   └── OnScreenKeyboard.iss # Inno Setup 6 script for the Windows installer
 └── .github/
     └── workflows/
-        └── build-windows.yml   # GitHub Actions: auto-builds exe on every push
+        └── build-windows.yml   # GitHub Actions: build, smoke-test, package
 ```
 
 ---
 
-## How the Windows exe is built
+## How the Windows release is built
 
-Every push to `main` triggers a GitHub Actions build on a Windows runner. It:
+Every push to `main` (and any manual *Run workflow*, on any branch) triggers a GitHub Actions build on a Windows runner. It:
 
-1. Installs MSYS2 + GTK3 + Python (MINGW64)
-2. Installs PyInstaller and pynput
-3. Runs `pyinstaller osk.spec` — bundles everything into a single exe
-4. Uploads `OnScreenKeyboard.exe` as a build artifact
+1. Installs MSYS2 + GTK3 + Python (MINGW64) and pinned PyInstaller / hooks-contrib
+2. Generates `version_info.txt` from `VERSION`
+3. Runs `pyinstaller osk.spec` — a **onedir** build in `dist/OnScreenKeyboard/`
+4. Smoke-tests it: runs `OnScreenKeyboard.exe --selftest` with MSYS2 removed from `PATH` (builds the full window, runs the GTK loop for ~3 s, must exit 0)
+5. Builds the Inno Setup installer, test-installs it, runs the installed app's selftest, uninstalls
+6. Produces `OnScreenKeyboard-Setup-<ver>.exe`, `OnScreenKeyboard-portable-<ver>.zip` and `SHA256SUMS.txt`, uploaded as workflow artifacts
 
-When a version tag (`v*`) is pushed, the exe is also attached to a GitHub Release automatically.
+When a version tag (`v*`) is pushed, those three files are also attached to a GitHub Release. The tag must match the `VERSION` file.
 
-**To trigger a release:**
+**To trigger a release:** update `VERSION` and `__version__` in `keyboard.py` (they must match), then:
 
 ```bash
-git tag v0.1.0-beta
-git push origin v0.1.0-beta
+git tag v0.1.9
+git push origin v0.1.9
 ```
 
-The Actions workflow runs, builds the exe, and publishes it to the Releases page.
+Run `python tools/gen_version_info.py` locally to check the two versions agree.
 
 ---
 
 ## Troubleshooting
 
 **Windows: nothing is typed when I press keys**
-- Run as Administrator if typing into elevated windows (Task Manager, UAC dialogs)
-- pynput cannot inject into some protected system windows — this is a Windows security constraint
+- Typing into an elevated (administrator) window, Task Manager or UAC prompts is blocked by Windows unless the keyboard is also elevated. Normal apps never need that; start the keyboard as administrator only for a specific elevated app.
+- Set `OSK_DEBUG=1` and check `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`.
 
-**Windows: first launch is slow**
-- Normal — the exe is unpacking GTK on first run. Subsequent launches are faster.
+**Windows: the app does not start**
+- Run `OnScreenKeyboard.exe --selftest`; it writes `osk_selftest.log` next to the exe (or in `%TEMP%`) with the error.
 
-**Windows: SmartScreen blocks the exe**
-- Click **More info → Run anyway**. The exe is not signed yet.
+**Windows: SmartScreen blocks the installer**
+- Click **More info → Run anyway**. The files are not signed yet.
 
 **Linux: keyboard launches but nothing is typed**
 - Ensure `python3-xlib` is installed: `sudo apt install python3-xlib`
@@ -208,7 +230,7 @@ The Actions workflow runs, builds the exe, and publishes it to the Releases page
 - Open a terminal inside your desktop session; do not run from SSH
 
 **Settings not saving**
-- Check write permissions: `ls -la ~/.config/onscreen_keyboard/`
+- Check write permissions: `ls -la ~/.config/onscreen_keyboard/` (Linux) or the `%APPDATA%\OnScreenKeyboard` folder (Windows)
 
 ---
 

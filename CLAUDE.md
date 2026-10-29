@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The keyboard **must** be launched from a terminal opened inside the AnyDesk/desktop session — not from a Claude Code terminal. GTK requires an active X display.
 
 ```bash
-bash /home/bigboy/onscreen_keyboard/launch.sh
+bash /home/bigboy/projects/onscreen_keyboard/launch.sh
 ```
 
 `launch.sh` auto-detects `DISPLAY`, `XAUTHORITY`, `DBUS_SESSION_BUS_ADDRESS`, and `AT_SPI_BUS_ADDRESS` (live AT-SPI2 socket from the X11 root window property) before exec-ing `keyboard.py`.

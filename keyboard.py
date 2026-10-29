@@ -22,6 +22,16 @@ import subprocess
 import sys
 import time
 import wave
+
+# Windowed (console=False) PyInstaller builds start with sys.stdout/stderr = None;
+# any print() would then raise.  Point them at devnull before anything prints.
+for _name in ("stdout", "stderr"):
+    if getattr(sys, _name) is None:
+        try:
+            setattr(sys, _name, open(os.devnull, "w", encoding="utf-8"))
+        except Exception:
+            pass
+
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -83,12 +93,23 @@ def _win_focus_restore() -> None:
 # must go to the *focused control inside the target's thread*, found via
 # AttachThreadInput+GetFocus / GetGUIThreadInfo — NOT the top-level window.
 
-_WIN_DEBUG_LOG = r"C:\Users\Public\osk_debug.log"
+# Diagnostics are off unless OSK_DEBUG=1 and never record typed characters.
+_WIN_DEBUG = os.environ.get("OSK_DEBUG") == "1"
+_WIN_DEBUG_LOG = ""
+if IS_WINDOWS and _WIN_DEBUG:
+    import tempfile
+    _log_dir = os.path.join(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir(),
+                            "OnScreenKeyboard")
+    try:
+        os.makedirs(_log_dir, exist_ok=True)
+    except Exception:
+        _log_dir = tempfile.gettempdir()
+    _WIN_DEBUG_LOG = os.path.join(_log_dir, "osk_debug.log")
 _win_protos_ready = False
 
 def _win_log(msg: str) -> None:
-    """Append a diagnostic line to a world-writable log (EXE has console=False)."""
-    if not IS_WINDOWS:
+    """Append a diagnostic line to the per-user debug log (EXE has console=False)."""
+    if not IS_WINDOWS or not _WIN_DEBUG_LOG:
         return
     try:
         with open(_WIN_DEBUG_LOG, "a", encoding="utf-8") as f:
@@ -144,6 +165,8 @@ def _win_setup_protos() -> None:
                                             ctypes.c_ssize_t]
         u.SetWindowsHookExW.restype  = wintypes.HHOOK
         u.CallNextHookEx.restype     = ctypes.c_ssize_t
+        u.CallNextHookEx.argtypes    = [ctypes.c_void_p, ctypes.c_int,
+                                        ctypes.c_size_t, ctypes.c_ssize_t]
         u.GetForegroundWindow.argtypes = []
         _win_protos_ready = True
     except Exception as exc:
@@ -264,12 +287,12 @@ def _win_post_char(hwnd: int, ch: str) -> bool:
             kernel32.SetLastError(0)
             if not user32.PostMessageW(hwnd, _WM_CHAR, unit, 1):
                 err = kernel32.GetLastError()
-                _win_log(f"post_char {ch!r}: PostMessage failed err={err} "
+                _win_log(f"post_char len={len(ch)}: PostMessage failed err={err} "
                          f"({'UIPI/access-denied' if err == 5 else 'other'})")
                 return False
         return True
     except Exception as exc:
-        _win_log(f"post_char {ch!r} error: {exc}")
+        _win_log(f"post_char len={len(ch)} error: {exc}")
         return False
 
 
@@ -306,10 +329,10 @@ def _win_inject_char(char: str, mods: list[str]) -> bool:
         return False
     hwnd = _win_target_focus_hwnd()
     if not hwnd:
-        _win_log(f"inject_char {char!r}: no target hwnd")
+        _win_log(f"inject_char len={len(char)}: no target hwnd")
         return False
     ok = _win_post_char(hwnd, char)
-    _win_log(f"inject_char {char!r} -> hwnd={hwnd:#x} ok={ok}")
+    _win_log(f"inject_char len={len(char)} -> hwnd={hwnd:#x} ok={ok}")
     return ok
 
 
@@ -416,13 +439,61 @@ if not IS_WINDOWS:
         print("[keyboard] xdotool not found — emoji will use pynput fallback.")
         print("           Install with: sudo apt install xdotool")
 
+def _child_env() -> dict:
+    """Environment for processes we spawn that must not inherit PyInstaller state.
+
+    A relaunched copy of ourselves (or an installer that relaunches us) would
+    otherwise pick up _PYI_*/_MEIPASS2 and GTK paths from this process and
+    mis-locate its own bundle.
+    """
+    env = dict(os.environ)
+    if getattr(sys, "frozen", False):
+        for k in list(env):
+            if k.startswith("_PYI") or k == "_MEIPASS2":
+                del env[k]
+        for k in ("GDK_PIXBUF_MODULE_FILE", "GSETTINGS_SCHEMA_DIR", "GI_TYPELIB_PATH",
+                  "GTK_DATA_PREFIX", "GTK_EXE_PREFIX", "XDG_DATA_DIRS",
+                  "FONTCONFIG_PATH", "FONTCONFIG_FILE"):
+            env.pop(k, None)
+        env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    return env
+
+
+def _parse_version(v: str):
+    """'v0.1.8' / '0.1.8-beta' -> (0, 1, 8); None if no leading numeric version."""
+    m = re.match(r"\s*[vV]?(\d+(?:\.\d+)*)", v or "")
+    return tuple(int(x) for x in m.group(1).split(".")) if m else None
+
+
+def _version_newer(remote: str, local: str) -> bool:
+    """True only when both parse and remote > local (trailing zeros ignored)."""
+    r, l = _parse_version(remote), _parse_version(local)
+    if r is None or l is None:
+        return False
+    n = max(len(r), len(l))
+    return r + (0,) * (n - len(r)) > l + (0,) * (n - len(l))
+
+
 # ── Persistent settings ───────────────────────────────────────────────────────
-CONFIG_DIR        = os.path.expanduser("~/.config/onscreen_keyboard")
+if IS_WINDOWS:
+    CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"),
+                              "OnScreenKeyboard")
+    # One-time migration from the pre-0.1.9 location.
+    _legacy_cfg = os.path.expanduser("~/.config/onscreen_keyboard")
+    if not os.path.exists(CONFIG_DIR) and os.path.isdir(_legacy_cfg):
+        try:
+            shutil.copytree(_legacy_cfg, CONFIG_DIR)
+        except Exception as _e:
+            print(f"[config] Could not migrate old settings: {_e}")
+else:
+    CONFIG_DIR = os.path.expanduser("~/.config/onscreen_keyboard")
 CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
 CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
 MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
+
+DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
@@ -434,7 +505,7 @@ DEFAULT_SETTINGS: dict = {
     "shift_sticky":          False,   # False = one-shot (release after keypress), True = sticky like Ctrl
     "opacity":              1.0,      # window opacity (0.3 – 1.0)
     "key_scale":            1.0,      # key size scale factor (0.3 – 1.5)
-    "font_family":          "Ubuntu", # key label font family
+    "font_family":          DEFAULT_FONT, # key label font family
     "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
     "update_check_enabled": True,
 }
@@ -444,7 +515,7 @@ DEFAULT_MACROS = [
     {"trigger": "time", "expansion": "{time}"},
 ]
 
-FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
+FONT_FAMILIES = (["Segoe UI"] if IS_WINDOWS else []) + ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
 __version__ = "0.1.8"
 
@@ -573,14 +644,15 @@ WIZARD_DEFAULTS = {
 }
 
 
-def _make_theme_css(c: dict, font_size: int = 14, font_family: str = "Ubuntu") -> str:
+def _make_theme_css(c: dict, font_size: int = 14, font_family: str = DEFAULT_FONT) -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
     if font_family not in FONT_FAMILIES:
-        print(f"[theme] Unknown font_family {font_family!r}, falling back to Ubuntu")
-        font_family = "Ubuntu"
+        print(f"[theme] Unknown font_family {font_family!r}, falling back to {DEFAULT_FONT}")
+        font_family = DEFAULT_FONT
     special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
-    return f"""* {{ font-family: "{font_family}", sans-serif; }}
+    # Fallback stack so a missing family never leaves keys without labels.
+    return f"""* {{ font-family: "{font_family}", "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif; }}
 
 window {{ background-color: {c['bg']}; }}
 #main-box {{ background-color: {c['bg']}; }}
@@ -996,7 +1068,7 @@ class KeyTyper:
                 if k:
                     ctrl.release(k)
         except Exception as exc:
-            print(f"[pynput] type_char {char!r}: {exc}")
+            print(f"[pynput] type_char len={len(char)}: {exc}")
 
     def _pynput_send_special(self, name: str, mods: list[str]) -> None:
         key = PYNPUT_KEY_MAP.get(name)
@@ -1049,7 +1121,7 @@ class KeyTyper:
         if IS_WINDOWS:
             hwnd = _win_target_focus_hwnd()
             if hwnd and _win_post_char(hwnd, emoji_str):
-                _win_log(f"emoji {emoji_str!r} -> hwnd={hwnd:#x} ok")
+                _win_log(f"emoji len={len(emoji_str)} -> hwnd={hwnd:#x} ok")
                 return
             _win_focus_restore()
             if PYNPUT_OK:
@@ -1300,11 +1372,23 @@ class OnScreenKeyboard(Gtk.Window):
         self._apply_key_scale(self.settings.get("key_scale", 1.0))
         self.set_opacity(self.settings.get("opacity", 1.0))
         self._init_click_sound()
+        if IS_WINDOWS:
+            self._set_window_icon()
         self.show_all()
 
         # Connect clipboard monitoring after show_all
         cb = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         cb.connect("owner-change", self._on_clipboard_change)
+
+    def _set_window_icon(self):
+        """Use the bundled osk.png as the GTK window icon (Windows only)."""
+        try:
+            base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+            png = os.path.join(base, "osk.png")
+            if os.path.isfile(png):
+                self.set_icon_from_file(png)
+        except Exception as exc:
+            print(f"[icon] Could not set window icon: {exc}")
 
     # ── Window setup ──────────────────────────���──────────────────────────────
 
@@ -1467,8 +1551,8 @@ class OnScreenKeyboard(Gtk.Window):
             ctypes.c_ssize_t,  # LRESULT (LONG_PTR — pointer-sized)
             ctypes.c_void_p,   # HWND
             ctypes.c_uint,     # UINT  (message id)
-            ctypes.c_void_p,   # WPARAM
-            ctypes.c_void_p,   # LPARAM
+            ctypes.c_size_t,   # WPARAM (UINT_PTR — c_void_p would give None for 0)
+            ctypes.c_ssize_t,  # LPARAM (LONG_PTR)
         )
 
         WM_MOUSEACTIVATE = 0x0021
@@ -1589,12 +1673,13 @@ class OnScreenKeyboard(Gtk.Window):
 
             # Fresh diagnostic log each session (EXE has console=False, so this
             # is the only way the user can see what the typing path is doing).
-            try:
-                with open(_WIN_DEBUG_LOG, "w", encoding="utf-8") as f:
-                    f.write(f"=== OSK {__version__} session start "
-                            f"{time.strftime('%Y-%m-%d %H:%M:%S')} ===\n")
-            except Exception:
-                pass
+            if _WIN_DEBUG_LOG:
+                try:
+                    with open(_WIN_DEBUG_LOG, "w", encoding="utf-8") as f:
+                        f.write(f"=== OSK {__version__} session start "
+                                f"{time.strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+                except Exception:
+                    pass
             _win_setup_protos()
 
             # ── 1+2+3. HWND-dependent setup (isolated; failure is non-fatal) ─
@@ -1641,8 +1726,8 @@ class OnScreenKeyboard(Gtk.Window):
             CBT_HOOKPROC  = ctypes.WINFUNCTYPE(
                 ctypes.c_ssize_t,  # LRESULT
                 ctypes.c_int,      # nCode
-                ctypes.c_void_p,   # wParam — HWND gaining focus
-                ctypes.c_void_p,   # lParam — HWND losing focus
+                ctypes.c_size_t,   # wParam — HWND gaining focus
+                ctypes.c_ssize_t,  # lParam — HWND losing focus
             )
 
             def _cbt_proc(nCode, wParam, lParam):
@@ -2429,6 +2514,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         elif action == "tab":
             self.typer.send_special("tab", mods)
+            self.current_word = ""
+            self._refresh_suggestions()
 
         elif action == "prtscn":
             self._launch_snipping_tool()
@@ -2438,6 +2525,8 @@ class OnScreenKeyboard(Gtk.Window):
                         "f1", "f2", "f3", "f4", "f5", "f6",
                         "f7", "f8", "f9", "f10", "f11", "f12"):
             self.typer.send_special(action, mods)
+            self.current_word = ""
+            self._refresh_suggestions()
 
         else:
             self._type_character(action, mods)
@@ -2457,14 +2546,27 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Custom word input mode ────────────────────────────────────────────────
 
+    def _close_other_panels(self, keep: str):
+        """Close every open panel/mode except `keep` using its own close routine,
+        and cancel any pending fuzzy update (it must not repaint over a panel)."""
+        if keep != "settings" and self._settings_mode:
+            self._toggle_settings()
+        if keep != "emoji" and self._emoji_mode:
+            self._close_emoji_mode()
+        if keep != "clipboard" and self._clipboard_mode:
+            self._close_clipboard_mode()
+        if keep != "app" and self._app_mode:
+            self._close_app_mode()
+        if keep != "custom_input" and self._custom_input_mode:
+            self._close_custom_input_mode()
+        if self._fuzzy_timer is not None:
+            GLib.source_remove(self._fuzzy_timer)
+            self._fuzzy_timer = None
+
     def _open_custom_input_mode(self, target: str = "word"):
         """Switch to key grid and capture typing into the custom word buffer."""
+        self._close_other_panels("custom_input")
         self._custom_input_mode_target = target
-        # Close any other active panel
-        if self._settings_mode:
-            self._toggle_settings()
-        if self._emoji_mode:
-            self._close_emoji_mode()
         self._custom_input_mode = True
         self._custom_input_text = ""
         if self._key_stack:
@@ -2708,12 +2810,8 @@ class OnScreenKeyboard(Gtk.Window):
             self._open_clipboard_mode()
 
     def _open_clipboard_mode(self):
+        self._close_other_panels("clipboard")
         self._clipboard_mode = True
-        # Close other panels
-        if self._settings_mode:
-            self._toggle_settings()
-        if self._emoji_mode:
-            self._close_emoji_mode()
 
         if not self._clipboard_panel_ready and self._key_stack:
             panel = self._build_clipboard_panel()
@@ -2864,7 +2962,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._refresh_font_family_buttons()
 
     def _refresh_font_family_buttons(self):
-        current = self.settings.get("font_family", "Ubuntu")
+        current = self.settings.get("font_family", DEFAULT_FONT)
         for family, btn in self._font_family_btns.items():
             ctx = btn.get_style_context()
             if family == current:
@@ -3035,7 +3133,7 @@ class OnScreenKeyboard(Gtk.Window):
         """Apply current wizard colours to the keyboard CSS as a live preview."""
         c = _build_custom_theme(**self._wizard_colors)
         font_size   = self.settings.get("font_size", 14)
-        font_family = self.settings.get("font_family", "Ubuntu")
+        font_family = self.settings.get("font_family", DEFAULT_FONT)
         self._theme_provider.load_from_data(_make_theme_css(c, font_size, font_family).encode())
 
     def _wizard_go_back(self):
@@ -3202,10 +3300,6 @@ class OnScreenKeyboard(Gtk.Window):
             if self._app_mode:
                 self._close_app_mode()
             else:
-                if self._emoji_mode:
-                    self._close_emoji_mode()
-                if self._settings_mode:
-                    self._toggle_settings()
                 self._open_app_mode()
 
     @contextlib.contextmanager
@@ -3310,7 +3404,7 @@ class OnScreenKeyboard(Gtk.Window):
                 if shutil.which(cmd[0]) or cmd[0] == "explorer":
                     try:
                         subprocess.Popen(
-                            cmd, close_fds=False,
+                            cmd, close_fds=False, env=_child_env(),
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                         )
                     except Exception as exc:
@@ -3373,6 +3467,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _toggle_settings(self):
         self._settings_mode = not self._settings_mode
         if self._settings_mode:
+            self._close_other_panels("settings")
             self._key_stack.set_visible_child_name("settings")
             if self._settings_btn:
                 self._settings_btn.get_style_context().add_class("active")
@@ -3979,7 +4074,7 @@ class OnScreenKeyboard(Gtk.Window):
                     status = (
                         "Update available!\n"
                         "Run in a terminal:\n"
-                        "  cd ~/onscreen_keyboard && git pull"
+                        f"  cd {shlex.quote(install_dir)} && git pull"
                     )
                 elif dirty:
                     status = (
@@ -4019,9 +4114,12 @@ class OnScreenKeyboard(Gtk.Window):
 
         GLib.idle_add(_apply)
 
+    _RELEASES_URL = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/releases/latest"
+    _ASSET_URL_PREFIX = "https://github.com/Gitties67/Onscreen-keyboard/releases/download/"
+
     def _do_update_check_exe_mode(self):
+        import fnmatch
         import urllib.request, urllib.error, json as _json
-        RELEASES_URL = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/releases/latest"
 
         version_file = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))), "VERSION")
         local_ver = "unknown"
@@ -4029,139 +4127,186 @@ class OnScreenKeyboard(Gtk.Window):
             with open(version_file) as f:
                 local_ver = f.read().strip()
 
-        if local_ver == "unknown":
+        info = None  # dict(url, name, sums_url) when an installer update is available
+        new_etag = self._update_etag
+        if _parse_version(local_ver) is None:
             status = "Cannot determine installed version — VERSION file missing."
-            asset_url = None
-            new_etag = self._update_etag
         else:
             headers = {"User-Agent": "OSK-updater/1.0"}
             if self._update_etag:
                 headers["If-None-Match"] = self._update_etag
             try:
-                req = urllib.request.Request(RELEASES_URL, headers=headers)
+                req = urllib.request.Request(self._RELEASES_URL, headers=headers)
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     new_etag = resp.headers.get("ETag", self._update_etag)
                     data = _json.loads(resp.read())
                 latest_tag = data.get("tag_name", "unknown")
 
-                asset_url = None
+                setup = sums = None
                 for asset in data.get("assets", []):
-                    if asset.get("name", "").lower().endswith(".exe"):
-                        asset_url = asset.get("browser_download_url")
-                        break
+                    name = asset.get("name", "")
+                    if fnmatch.fnmatch(name.lower(), "onscreenkeyboard-setup-*.exe"):
+                        setup = asset
+                    elif name.lower() == "sha256sums.txt":
+                        sums = asset
 
-                if local_ver == latest_tag:
+                if not _version_newer(latest_tag, local_ver):
                     status = "You're on the latest version."
-                    asset_url = None
-                elif asset_url:
+                elif setup and sums:
+                    info = {"url": setup.get("browser_download_url", ""),
+                            "name": setup.get("name", ""),
+                            "sums_url": sums.get("browser_download_url", "")}
                     status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
                               "Click below to download and install automatically.")
                 else:
-                    status = f"Update available ({latest_tag}) but no .exe found in release assets."
+                    status = (f"Update available ({latest_tag}), but the release has no installer "
+                              "with a checksum file. Download it from the GitHub Releases page.")
             except urllib.error.HTTPError as e:
-                new_etag = self._update_etag
                 if e.code == 304:
                     # Not Modified — our cached ETag matched, no API quota used
                     status = "You're on the latest version."
-                    asset_url = None
                 elif e.code == 404:
                     status = "No releases published yet — this build is the latest."
-                    asset_url = None
                 elif e.code in (403, 429):
                     status = ("GitHub rate limit reached — you can only check a few times per hour.\n"
                               "Try again later.")
-                    asset_url = None
                 else:
                     status = f"Update server returned HTTP {e.code} {e.reason}."
-                    asset_url = None
             except urllib.error.URLError as e:
-                new_etag = self._update_etag
                 status = f"Network error — check your internet connection.\n({e.reason})"
-                asset_url = None
             except Exception as e:
-                new_etag = self._update_etag
                 status = f"Update check failed: {e}"
-                asset_url = None
 
-        def _apply(status=status, asset_url=asset_url, etag=new_etag):
+        def _apply(status=status, info=info, etag=new_etag):
             self._update_etag = etag
             if self._update_status_label:
                 self._update_status_label.set_text(status)
             if self._update_btn:
                 self._update_btn.set_sensitive(True)
-                if asset_url:
+                if info and not self._is_installed_build():
+                    # Portable zip: running Setup would create a second, installed copy.
+                    if self._update_status_label:
+                        self._update_status_label.set_text(
+                            status + "\nPortable copy — download the new zip from the "
+                            "Releases page on GitHub.")
+                    self._update_btn.set_label("Check for updates")
+                elif info:
                     self._update_btn.set_label("Download & install update")
                     try:
                         self._update_btn.disconnect_by_func(self._on_check_for_updates)
                     except Exception:
                         pass
                     self._update_btn.connect(
-                        "clicked", lambda _, u=asset_url: self._on_download_update(u))
+                        "clicked", lambda _, i=info: self._on_download_update(i))
                 else:
                     self._update_btn.set_label("Check for updates")
         GLib.idle_add(_apply)
 
-    def _on_download_update(self, asset_url: str):
+    @staticmethod
+    def _is_installed_build() -> bool:
+        """True when running from the Inno Setup install (uninstaller sits beside the exe)."""
+        return os.path.exists(os.path.join(os.path.dirname(sys.executable), "unins000.exe"))
+
+    def _on_download_update(self, info: dict):
         if self._update_status_label:
             self._update_status_label.set_text("Starting download…")
         if self._update_btn:
             self._update_btn.set_sensitive(False)
         import threading
-        threading.Thread(target=self._do_download_update, args=(asset_url,), daemon=True).start()
+        threading.Thread(target=self._do_download_update, args=(info,), daemon=True).start()
 
-    def _do_download_update(self, asset_url: str):
+    def _do_download_update(self, info: dict):
+        """Download the Setup exe, verify it against SHA256SUMS.txt, run it silently."""
+        import hashlib
+        import tempfile
         import urllib.request, urllib.error
+        tmp_dir = None
         try:
-            current_exe = sys.executable
-            exe_dir = os.path.dirname(current_exe)
-            tmp_path = os.path.join(exe_dir, "OnScreenKeyboard_update.exe")
+            for u in (info["url"], info["sums_url"]):
+                if not u.startswith(self._ASSET_URL_PREFIX):
+                    raise RuntimeError("unexpected download URL; refusing to continue")
 
-            req = urllib.request.Request(asset_url, headers={"User-Agent": "OSK-updater/1.0"})
-            with urllib.request.urlopen(req) as resp:
+            def _set_status(text):
+                GLib.idle_add(lambda: (self._update_status_label and
+                                       self._update_status_label.set_text(text)) and False)
+
+            # 1. checksum list (small) — required; no checksum, no install
+            req = urllib.request.Request(info["sums_url"], headers={"User-Agent": "OSK-updater/1.0"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                sums_text = resp.read(256 * 1024).decode("utf-8", "replace")
+            expected = None
+            for line in sums_text.splitlines():
+                parts = line.strip().split(None, 1)
+                if len(parts) == 2 and parts[1].lstrip("*").strip() == info["name"]:
+                    expected = parts[0].lower()
+                    break
+            if not expected or not re.fullmatch(r"[0-9a-f]{64}", expected):
+                raise RuntimeError(f"{info['name']} not listed in SHA256SUMS.txt")
+
+            # 2. installer
+            tmp_dir = tempfile.mkdtemp(prefix="osk_update_")
+            tmp_path = os.path.join(tmp_dir, os.path.basename(info["name"]))
+            digest = hashlib.sha256()
+            req = urllib.request.Request(info["url"], headers={"User-Agent": "OSK-updater/1.0"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 total = int(resp.headers.get("Content-Length", 0))
                 downloaded = 0
+                last_pct = -1
                 with open(tmp_path, "wb") as f:
                     while True:
                         chunk = resp.read(65536)
                         if not chunk:
                             break
                         f.write(chunk)
+                        digest.update(chunk)
                         downloaded += len(chunk)
                         if total:
                             pct = int(downloaded * 100 / total)
-                            GLib.idle_add(
-                                lambda p=pct: self._update_status_label and
-                                self._update_status_label.set_text(f"Downloading… {p}%") and False
-                            )
+                            if pct != last_pct:
+                                last_pct = pct
+                                _set_status(f"Downloading… {pct}%")
 
-            # Write a batch script that waits for us to exit, swaps the exe, then restarts.
-            bat_path = os.path.join(exe_dir, "osk_update.bat")
-            with open(bat_path, "w") as f:
-                f.write(
-                    f'@echo off\r\n'
-                    f'timeout /t 2 /nobreak > nul\r\n'
-                    f'move /y "{tmp_path}" "{current_exe}"\r\n'
-                    f'start "" "{current_exe}"\r\n'
-                    f'del "%~f0"\r\n'
-                )
+            if digest.hexdigest().lower() != expected:
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+                raise RuntimeError("checksum mismatch — download discarded")
 
             def _finish():
                 if self._update_status_label:
-                    self._update_status_label.set_text("Download complete — restarting…")
-                subprocess.Popen(
-                    ["cmd", "/c", bat_path],
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                )
+                    self._update_status_label.set_text("Verified — installing and restarting…")
+                try:
+                    # /RELAUNCH=1 is read by installer/OnScreenKeyboard.iss to start the
+                    # new version once files are replaced (silent mode skips postinstall).
+                    subprocess.Popen(
+                        [tmp_path, "/SP-", "/SILENT", "/CLOSEAPPLICATIONS", "/RELAUNCH=1"],
+                        env=_child_env(),
+                        creationflags=getattr(subprocess, "DETACHED_PROCESS", 0)
+                                      | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
+                        close_fds=True,
+                    )
+                except Exception as exc:
+                    if self._update_status_label:
+                        self._update_status_label.set_text(f"Could not start installer: {exc}")
+                    if self._update_btn:
+                        self._update_btn.set_sensitive(True)
+                    return False
                 Gtk.main_quit()
+                return False
             GLib.idle_add(_finish)
 
         except Exception as exc:
+            if tmp_dir:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+
             def _err(msg=str(exc)):
                 if self._update_status_label:
                     self._update_status_label.set_text(f"Download failed: {msg}")
                 if self._update_btn:
                     self._update_btn.set_sensitive(True)
                     self._update_btn.set_label("Download & install update")
+                return False
             GLib.idle_add(_err)
 
     def _on_install_update(self, _btn):
@@ -4206,7 +4351,7 @@ class OnScreenKeyboard(Gtk.Window):
         if IS_WINDOWS or getattr(sys, "frozen", False):
             # os.execv on Windows doesn't replace the process before GTK tears down;
             # spawn a new process first, then quit cleanly.
-            subprocess.Popen([sys.executable])
+            subprocess.Popen([sys.executable], env=_child_env())
             Gtk.main_quit()
             return
         launch = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch.sh")
@@ -4357,7 +4502,7 @@ class OnScreenKeyboard(Gtk.Window):
         """Regenerate and reload the theme CSS (colours + font size + font family)."""
         colors      = THEME_COLORS.get(self.settings.get("theme", "dark"), THEME_COLORS["dark"])
         font_size   = self.settings.get("font_size", 14)
-        font_family = self.settings.get("font_family", "Ubuntu")
+        font_family = self.settings.get("font_family", DEFAULT_FONT)
         css = _make_theme_css(colors, font_size, font_family)
         self._theme_provider.load_from_data(css.encode())
 
@@ -4452,12 +4597,10 @@ class OnScreenKeyboard(Gtk.Window):
         if self._emoji_mode:
             self._close_emoji_mode()
         else:
-            # Mutually exclusive with other panels
-            if self._settings_mode:
-                self._toggle_settings()
             self._open_emoji_mode()
 
     def _open_emoji_mode(self):
+        self._close_other_panels("emoji")
         self._emoji_mode  = True
         self._emoji_query = ""
 
@@ -4503,6 +4646,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._emoji_flowbox.invalidate_filter()
 
     def _open_app_mode(self):
+        self._close_other_panels("app")
         self._app_mode  = True
         self._app_query = ""
         self._app_results = []
@@ -4669,7 +4813,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Pad to 4 word slots with common fallback words (marked as fallback so
         # the fuzzy timer knows these aren't real predictions for the current prefix)
-        fallback = self.predictor.predict_padded("", 20)
+        # Only when no word is in progress — otherwise a fallback word would
+        # complete to something unrelated to the typed prefix.
+        fallback = [] if w else self.predictor.predict_padded("", 20)
         for v in fallback:
             if len(slots) >= 4:
                 break
@@ -4687,6 +4833,9 @@ class OnScreenKeyboard(Gtk.Window):
                 emoji_slot = (hits[0], True, False, False, False, "", False)
                 break
         if emoji_slot:
+            # Keep emoji at index 4 — pad short word lists with blank slots so
+            # the fuzzy updater (which fills 0–3) can never overwrite it.
+            slots.extend([None] * (4 - len(slots)))
             slots.append(emoji_slot)
         else:
             # 5th word
@@ -4705,7 +4854,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._suggestion_macro_expansions: list[str] = [""] * 5
 
         for i, btn in enumerate(self._suggestion_btns):
-            if i < len(slots):
+            if i < len(slots) and slots[i] is not None:
                 val, is_emoji, is_custom, is_fuzzy, is_macro, expansion, _is_fb = slots[i]
                 # Store raw value; display with shift/caps casing applied
                 display = val if (is_emoji or is_macro) else self._case_word(val)
@@ -4723,13 +4872,17 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Schedule fuzzy spell-check only when there are real empty word slots —
         # fallback words don't count as real predictions for the current prefix.
-        n_real = sum(1 for s in slots[:4] if not s[1] and not s[4] and not s[6])
+        n_real = sum(1 for s in slots[:4]
+                     if s is not None and not s[1] and not s[4] and not s[6])
         if w and n_real < 4 and len(w) >= 3:
             self._fuzzy_timer = GLib.timeout_add(250, self._run_fuzzy_update)
 
     def _run_fuzzy_update(self) -> bool:
         """Run fuzzy spell-check and fill remaining suggestion slots (debounced)."""
         self._fuzzy_timer = None
+        if (self._settings_mode or self._emoji_mode or self._clipboard_mode
+                or self._app_mode or self._custom_input_mode):
+            return False
         w = self.current_word
         if not w or len(w) < 3:
             return False
@@ -4759,8 +4912,11 @@ class OnScreenKeyboard(Gtk.Window):
                 break
             self._suggestion_btns[idx].set_label(self._case_word(v))
             self._suggestion_btns[idx].set_sensitive(True)
-            self._suggestion_values[idx]   = v
-            self._suggestion_is_fuzzy[idx] = True
+            self._suggestion_values[idx]    = v
+            self._suggestion_is_fuzzy[idx]  = True
+            self._suggestion_is_emoji[idx]  = False
+            self._suggestion_is_custom[idx] = False
+            self._suggestion_is_macro[idx]  = False
 
         return False  # don't repeat
 
@@ -4902,7 +5058,93 @@ class OnScreenKeyboard(Gtk.Window):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+def _selftest_log_paths() -> list:
+    """Where --selftest writes its log: next to the exe (if writable), then %TEMP%."""
+    import tempfile
+    paths = []
+    if getattr(sys, "frozen", False):
+        paths.append(os.path.join(os.path.dirname(sys.executable), "osk_selftest.log"))
+    paths.append(os.path.join(tempfile.gettempdir(), "osk_selftest.log"))
+    return paths
+
+
+def _run_selftest() -> int:
+    """Build the full window, spin the GTK main loop ~3 s, return exit code.
+
+    Used by CI to prove the frozen bundle starts (typelibs, DLLs, pixbuf
+    loaders, CSS, fonts).  Any exception, including ones raised inside GTK
+    callbacks, yields exit code 1 and a traceback in the log file and stderr.
+    """
+    import traceback
+    lines: list = []
+    problems: list = []
+
+    def log(msg):
+        lines.append(msg)
+        try:
+            print(msg, file=sys.stderr)
+        except Exception:
+            pass
+
+    def hook(et, ev, tb):
+        problems.append("".join(traceback.format_exception(et, ev, tb)))
+
+    sys.excepthook = hook
+    code = 1
+    try:
+        log(f"OSK selftest: version {__version__}, frozen={getattr(sys, 'frozen', False)}, "
+            f"python {sys.version.split()[0]}, config dir {CONFIG_DIR}")
+        ok, _ = Gtk.init_check([sys.argv[0]])
+        if not ok:
+            raise RuntimeError("Gtk.init_check failed (no display)")
+
+        # Exercise the GdkPixbuf loader chain (loaders.cache + png loader).
+        from gi.repository import GdkPixbuf
+        base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+        png = os.path.join(base, "osk.png")
+        if os.path.isfile(png):
+            pb = GdkPixbuf.Pixbuf.new_from_file(png)
+            log(f"pixbuf loaded {pb.get_width()}x{pb.get_height()}")
+        else:
+            raise RuntimeError(f"osk.png missing at {png}")
+
+        win = OnScreenKeyboard()
+        GLib.timeout_add(3000, Gtk.main_quit)
+        Gtk.main()
+        if not win.get_realized():
+            raise RuntimeError("main window was never realized")
+        if problems:
+            raise RuntimeError("exception(s) raised inside GTK callbacks:\n" + "\n".join(problems))
+        log("SELFTEST OK")
+        code = 0
+    except BaseException:
+        log("SELFTEST FAILED")
+        log(traceback.format_exc())
+        for p in problems:
+            log(p)
+        code = 1
+    for path in _selftest_log_paths():
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines) + "\n")
+            break
+        except Exception:
+            continue
+    return code
+
+
 def main():
+    if "--selftest" in sys.argv[1:]:
+        code = _run_selftest()
+        # Skip interpreter teardown: unloading GTK/Win32 hooks can crash on exit
+        # and turn a passing selftest into a non-zero exit code.
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except Exception:
+                pass
+        os._exit(code)
+
     ok, _ = Gtk.init_check(sys.argv)
     if not ok:
         print("ERROR: Could not connect to a display.")

@@ -1,22 +1,28 @@
 #!/bin/bash
 # Launch the on-screen keyboard with a full desktop session environment.
 
-# ── Find active X display ──────────────────────────────────────────────────────
-DISPLAY_NUM=""
-for lock in /tmp/.X*-lock; do
-    [ -f "$lock" ] || continue
-    num="${lock#/tmp/.X}"
-    num="${num%-lock}"
-    DISPLAY_NUM=":${num}"
-    break
-done
-[ -z "$DISPLAY_NUM" ] && DISPLAY_NUM=":0"
-export DISPLAY="$DISPLAY_NUM"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── Find active X display (keep the session's own DISPLAY if already set) ─────
+if [ -z "$DISPLAY" ]; then
+    DISPLAY_NUM=""
+    for lock in /tmp/.X*-lock; do
+        [ -f "$lock" ] || continue
+        num="${lock#/tmp/.X}"
+        num="${num%-lock}"
+        DISPLAY_NUM=":${num}"
+        break
+    done
+    [ -z "$DISPLAY_NUM" ] && DISPLAY_NUM=":0"
+    export DISPLAY="$DISPLAY_NUM"
+fi
 
 # ── Find Xauthority ────────────────────────────────────────────────────────────
-for f in "/home/bigboy/.Xauthority" "/run/user/$(id -u)/gdm/Xauthority"; do
-    [ -f "$f" ] && export XAUTHORITY="$f" && break
-done
+if [ -z "$XAUTHORITY" ]; then
+    for f in "$HOME/.Xauthority" "/run/user/$(id -u)/gdm/Xauthority"; do
+        [ -f "$f" ] && export XAUTHORITY="$f" && break
+    done
+fi
 
 # ── Inherit session env vars from the running Cinnamon process ────────────────
 for SESSION_PROC in cinnamon-session cinnamon xfce4-session mate-session; do
@@ -47,7 +53,10 @@ fi
 # If AT-SPI2 bus still not found, try starting the daemon
 if [ -z "$AT_SPI_BUS_ADDRESS" ]; then
     if ! pgrep -u "$(id -u)" at-spi2-registryd &>/dev/null; then
-        /usr/lib/at-spi2-core/at-spi-bus-launcher --launch-immediately &
+        for launcher in /usr/lib/at-spi2-core/at-spi-bus-launcher \
+                        /usr/libexec/at-spi-bus-launcher; do
+            [ -x "$launcher" ] && { "$launcher" --launch-immediately & break; }
+        done
         sleep 0.5
         ATSPI_BUS=$(xprop -root AT_SPI_BUS 2>/dev/null | grep -o '"[^"]*"' | tr -d '"')
         [ -n "$ATSPI_BUS" ] && export AT_SPI_BUS_ADDRESS="$ATSPI_BUS"
@@ -55,7 +64,9 @@ if [ -z "$AT_SPI_BUS_ADDRESS" ]; then
 fi
 
 # Redirect output to a log file when not running in an interactive terminal
-LOG_FILE="/tmp/onscreen_keyboard.log"
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/onscreen_keyboard"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/launch.log"
 if [ ! -t 1 ]; then
     exec >> "$LOG_FILE" 2>&1
 fi
@@ -63,4 +74,4 @@ fi
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Launching keyboard on DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"
 echo "  DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-<not set>}"
 echo "  AT_SPI_BUS_ADDRESS=${AT_SPI_BUS_ADDRESS:-<not set>}"
-exec python3 /home/bigboy/onscreen_keyboard/keyboard.py
+exec python3 "$SCRIPT_DIR/keyboard.py" "$@"

@@ -1,10 +1,16 @@
-name: Build Windows EXE
+name: Build Windows installer
 
 on:
   push:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+
+env:
+  # Pinned: the gi hooks (typelibs, GdkPixbuf loaders) live in hooks-contrib,
+  # so both must move together and be bumped deliberately.
+  PYINSTALLER_VERSION: "6.16.0"
+  PYINSTALLER_HOOKS_VERSION: "2025.9"
 
 jobs:
   build:
@@ -15,6 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim().TrimStart('v','V')
+          if ($v -notmatch '^\d+(\.\d+){1,3}$') { throw "VERSION '$v' is not numeric" }
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $tag = $env:GITHUB_REF_NAME.TrimStart('v','V')
+            if ($tag -ne $v) { throw "Tag $env:GITHUB_REF_NAME does not match VERSION file ($v)" }
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Building version $v"
+
       - name: Install MSYS2 + GTK3 + Python
         uses: msys2/setup-msys2@v2
         with:
@@ -24,32 +43,126 @@ jobs:
             mingw-w64-x86_64-gtk3
             mingw-w64-x86_64-python
             mingw-w64-x86_64-python-pip
+            mingw-w64-x86_64-python-setuptools
             mingw-w64-x86_64-python-gobject
             mingw-w64-x86_64-python-cairo
             mingw-w64-x86_64-adwaita-icon-theme
+            mingw-w64-x86_64-gcc
 
-      - name: Install PyInstaller and pynput
+      - name: Install PyInstaller (pinned) and pynput
         shell: msys2 {0}
         run: |
-          python3 -m pip install --break-system-packages pyinstaller pynput
+          python3 -m pip install --break-system-packages \
+            "pyinstaller==${PYINSTALLER_VERSION}" \
+            "pyinstaller-hooks-contrib==${PYINSTALLER_HOOKS_VERSION}" \
+            pynput
 
-      - name: Regenerate pixbuf loaders cache
+      - name: Generate version resource
         shell: msys2 {0}
         run: |
-          gdk-pixbuf-query-loaders.exe > "${MINGW_PREFIX}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+          python3 tools/gen_version_info.py
+          cat version_info.txt
 
-      - name: Build single-file exe
+      # osk.ico / osk.png are committed. Regenerate only if missing.
+      - name: Ensure icon exists
         shell: msys2 {0}
-        env:
-          MINGW_PREFIX_WIN: "C:/msys64/mingw64"
         run: |
+          if [ ! -f osk.ico ] || [ ! -f osk.png ]; then
+            pacman -S --noconfirm mingw-w64-x86_64-python-pillow
+            python3 tools/make_icon.py
+          fi
+          ls -l osk.ico osk.png
+
+      - name: Build onedir app with PyInstaller
+        shell: msys2 {0}
+        run: |
+          export MINGW_PREFIX_WIN="$(cygpath -m "$MINGW_PREFIX")"
+          echo "MINGW_PREFIX_WIN=$MINGW_PREFIX_WIN"
           python3 -m PyInstaller --clean --noconfirm osk.spec
 
-      - name: Upload exe as artifact
+      - name: List dist contents
+        shell: pwsh
+        run: |
+          $d = "dist\OnScreenKeyboard"
+          if (-not (Test-Path "$d\OnScreenKeyboard.exe")) { throw "OnScreenKeyboard.exe missing from $d" }
+          Get-ChildItem $d | Format-Table Name, Length
+          $files = Get-ChildItem $d -Recurse -File
+          "{0} files, {1:N1} MB" -f $files.Count, (($files | Measure-Object Length -Sum).Sum / 1MB)
+          Write-Host "--- DLLs/typelibs/loaders sanity ---"
+          $files | Where-Object { $_.Name -match 'libgtk-3|libgdk_pixbuf|gspawn-win64-helper|\.typelib$|loaders\.cache|fonts\.conf|gschemas\.compiled' } |
+            ForEach-Object { $_.FullName.Substring((Resolve-Path $d).Path.Length) } | Sort-Object
+
+      # Run from pwsh with msys64 stripped from PATH so the test proves the
+      # bundle is self-contained (no DLLs silently resolved from MSYS2).
+      - name: Smoke test (--selftest, no MSYS2 on PATH)
+        shell: pwsh
+        run: |
+          $env:PATH = (($env:PATH -split ';') | Where-Object { $_ -and $_ -notmatch 'msys64|mingw' }) -join ';'
+          $exe = (Resolve-Path "dist\OnScreenKeyboard\OnScreenKeyboard.exe").Path
+          $logs = @((Join-Path (Split-Path $exe) 'osk_selftest.log'), (Join-Path $env:TEMP 'osk_selftest.log'))
+          $logs | Where-Object { Test-Path $_ } | Remove-Item -Force
+          $p = Start-Process -FilePath $exe -ArgumentList '--selftest' -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); $code = 'timeout' } else { $code = $p.ExitCode }
+          foreach ($l in $logs) { if (Test-Path $l) { Write-Host "=== $l ==="; Get-Content $l } }
+          $logs | Where-Object { Test-Path $_ } | Remove-Item -Force   # keep it out of the portable zip
+          if ($code -ne 0) { Write-Host "::error::selftest failed (exit $code)"; exit 1 }
+          Write-Host "selftest passed"
+
+      - name: Install or upgrade Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          # Always install/upgrade: the .iss uses x64compatible, which needs Inno Setup >= 6.3.
+          choco upgrade innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" installer\OnScreenKeyboard.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed ($LASTEXITCODE)" }
+          Get-ChildItem installer\Output
+
+      # Install per-user into a temp dir, run the installed app's selftest, uninstall.
+      - name: Installer smoke test (install, selftest, uninstall)
+        shell: pwsh
+        run: |
+          $env:PATH = (($env:PATH -split ';') | Where-Object { $_ -and $_ -notmatch 'msys64|mingw' }) -join ';'
+          $setup = (Resolve-Path "installer\Output\OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe").Path
+          $dir = Join-Path $env:RUNNER_TEMP 'osk-install'
+          $p = Start-Process $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\osk-setup.log`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\osk-setup.log" -ErrorAction SilentlyContinue; throw "installer exit $($p.ExitCode)" }
+          $app = Join-Path $dir 'OnScreenKeyboard.exe'
+          if (-not (Test-Path $app)) { throw "installed exe missing" }
+          $t = Start-Process $app -ArgumentList '--selftest' -PassThru
+          if (-not $t.WaitForExit(90000)) { $t.Kill(); throw "installed selftest timeout" }
+          foreach ($l in @((Join-Path $dir 'osk_selftest.log'), (Join-Path $env:TEMP 'osk_selftest.log'))) { if (Test-Path $l) { Get-Content $l } }
+          if ($t.ExitCode -ne 0) { throw "installed selftest exit $($t.ExitCode)" }
+          $u = Start-Process (Join-Path $dir 'unins000.exe') -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES' -Wait -PassThru
+          Write-Host "uninstall exit $($u.ExitCode)"
+
+      - name: Package portable zip and checksums
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item "installer\Output\OnScreenKeyboard-Setup-$v.exe" release\
+          Compress-Archive -Path "dist\OnScreenKeyboard" -DestinationPath "release\OnScreenKeyboard-portable-$v.zip" -CompressionLevel Optimal
+          $lines = Get-ChildItem release -File | Where-Object Name -ne 'SHA256SUMS.txt' | Sort-Object Name | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          }
+          [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'release\SHA256SUMS.txt'),
+            (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
+          Get-Content release\SHA256SUMS.txt
+          Get-ChildItem release | Format-Table Name, Length
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OnScreenKeyboard-windows
-          path: dist/OnScreenKeyboard.exe
+          name: OnScreenKeyboard-windows-${{ steps.ver.outputs.version }}
+          path: release/*
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -58,13 +171,21 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          files: dist/OnScreenKeyboard.exe
+          files: release/*
           body: |
             ## On-Screen Keyboard ${{ github.ref_name }}
 
             ### Windows
-            Download **OnScreenKeyboard.exe** and double-click to run.
-            No installation required. Windows SmartScreen may appear on first launch — click **More info → Run anyway**.
+            **Recommended:** download **OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe** and run it.
+            It installs for your user account only (no administrator rights needed) and can add a Start Menu entry, a desktop icon, and optionally start the keyboard when you sign in.
+
+            **Portable alternative:** download **OnScreenKeyboard-portable-${{ steps.ver.outputs.version }}.zip**, extract the whole folder anywhere, and run `OnScreenKeyboard.exe` inside it. Do not move the exe out of its folder.
+
+            Checksums for the files above are in **SHA256SUMS.txt**.
+
+            The files are not code-signed yet, so Windows SmartScreen may appear on first launch — click **More info → Run anyway**.
+
+            Settings are stored in `%APPDATA%\OnScreenKeyboard`.
 
             ### Linux
             ```bash
