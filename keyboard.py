@@ -118,6 +118,9 @@ def _win_log(msg: str) -> None:
     if not IS_WINDOWS or not _WIN_DEBUG_LOG:
         return
     try:
+        # ASCII-only: PowerShell 5 reads BOM-less UTF-8 as ANSI (mojibake).
+        msg = msg.replace("\u2014", "-").replace("\u2192", "->")
+        msg = msg.encode("ascii", "replace").decode("ascii")
         with open(_WIN_DEBUG_LOG, "a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
     except Exception:
@@ -169,10 +172,6 @@ def _win_setup_protos() -> None:
             u.SetWindowLongPtrW.restype  = ctypes.c_ssize_t
             u.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int,
                                             ctypes.c_ssize_t]
-        u.SetWindowsHookExW.restype  = wintypes.HHOOK
-        u.CallNextHookEx.restype     = ctypes.c_ssize_t
-        u.CallNextHookEx.argtypes    = [ctypes.c_void_p, ctypes.c_int,
-                                        ctypes.c_size_t, ctypes.c_ssize_t]
         u.GetForegroundWindow.argtypes = []
         # Minimize/restore path (HWND must not be truncated to C int).
         u.ShowWindow.restype         = wintypes.BOOL
@@ -1487,7 +1486,7 @@ class OnScreenKeyboard(Gtk.Window):
         simply hidden (GTK-level) and a tiny, invisible, ordinary window — the
         proxy — is shown and iconified: THAT window owns the taskbar button.
         Restoring the proxy (taskbar click) brings the OSK back.  The OSK HWND
-        is never iconified, and the focus-block (WNDPROC/CBT) is never relaxed.
+        is never iconified, and the focus-block (WNDPROC) is never relaxed.
         """
         if self._minimized:
             return
@@ -1911,7 +1910,7 @@ class OnScreenKeyboard(Gtk.Window):
         that feeds the focus-independent PostMessage injection path.
 
         Mechanisms, in order of importance:
-          4+5. Foreground poll + CBT hook — these run UNCONDITIONALLY, even if
+          4.   Foreground poll - runs UNCONDITIONALLY, even if
                the HWND can't be obtained.  _win_last_target[0] is the linchpin
                of PostMessage typing; if the poll never starts, every keystroke
                falls through to pynput and lands in the OSK itself.
@@ -1976,40 +1975,9 @@ class OnScreenKeyboard(Gtk.Window):
             _win_log("poll: foreground-window polling started (50ms)")
             print("[windows] foreground-window polling started")
 
-            # ── 5. WH_CBT hook — cancels SetFocus before it completes ──────────
-            # WM_SETFOCUS is a notification sent AFTER focus changed — returning 0
-            # from it doesn't undo the steal.  HCBT_SETFOCUS fires BEFORE SetFocus
-            # completes; returning non-zero cancels it, keeping focus on the target.
-            WH_CBT        = 5
-            HCBT_SETFOCUS = 9
-            CBT_HOOKPROC  = ctypes.WINFUNCTYPE(
-                ctypes.c_ssize_t,  # LRESULT
-                ctypes.c_int,      # nCode
-                ctypes.c_size_t,   # wParam — HWND gaining focus
-                ctypes.c_ssize_t,  # lParam — HWND losing focus
-            )
-
-            def _cbt_proc(nCode, wParam, lParam):
-                if nCode == HCBT_SETFOCUS and wParam:
-                    pid = ctypes.c_ulong()
-                    user32.GetWindowThreadProcessId(wParam, ctypes.byref(pid))
-                    if pid.value == _win_our_pid:
-                        return 1  # cancel: don't let focus come to our window
-                return user32.CallNextHookEx(None, nCode, wParam, lParam)
-
-            self._win_cbt_proc = CBT_HOOKPROC(_cbt_proc)
-            self._win_cbt_hook = user32.SetWindowsHookExW(
-                WH_CBT,
-                self._win_cbt_proc,
-                None,                          # no DLL needed for same-thread hook
-                user32.GetCurrentThreadId(),
-            )
-            if self._win_cbt_hook:
-                _win_log("cbt: WH_CBT focus-block hook installed")
-                print("[windows] WH_CBT focus-block hook installed")
-            else:
-                _win_log("cbt: WH_CBT hook FAILED — focus steal may occur")
-                print("[windows] WH_CBT hook failed — focus steal may occur")
+            # (A WH_CBT focus-veto hook used to be installed here.  It never
+            # actually ran on Windows - GetCurrentThreadId was looked up on
+            # user32 - and focus behaviour is good without it, so it was removed.)
 
             self.connect("destroy", self._on_windows_destroy)
 
@@ -2026,10 +1994,6 @@ class OnScreenKeyboard(Gtk.Window):
 
             import ctypes
             user32 = ctypes.windll.user32
-
-            cbt_hook = getattr(self, "_win_cbt_hook", None)
-            if cbt_hook:
-                user32.UnhookWindowsHookEx(cbt_hook)
 
             hwnd = getattr(self, "_win_hwnd", None)
             addr = getattr(self, "_win_original_addr", None)
