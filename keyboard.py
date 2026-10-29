@@ -590,6 +590,8 @@ SETTINGS_HELP = {
                   "or the space yourself.",
     "Dwell click": "Hover over a key without clicking and it presses itself after the delay. "
                    "Useful if clicking is hard or tiring, e.g. with a head mouse or eye tracker.",
+    "Sound volume": "How loud the key sound is. It only changes the keyboard's own sound, "
+                    "not your computer's volume.",
     "Key sound": "A sound on every key press, so you know it registered. Click is soft, Beep "
                  "is louder, Off is silent.",
     "Modifier keys": "How Ctrl and Alt behave. Auto-release lets go after the next key (tap "
@@ -633,6 +635,7 @@ DEFAULT_SETTINGS: dict = {
     "font_version":         FONT_SETTINGS_VERSION,
     "language":             _detect_language(),  # en_AU | en_GB | en_US (word suggestions)
     "space_after_suggestion": True,   # type a space after an accepted suggestion
+    "sound_volume":         0.7,      # key sound loudness, 0.05 – 1.0
 }
 
 DEFAULT_MACROS = [
@@ -1455,6 +1458,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._forget_timer = None      # confirm-window timer for "Forget learned words"
         self._forget_armed = False
         self._flash_timers: dict = {}  # key button → timer removing its .key-flash
+        self._sound_bufs: dict = {}    # Windows: style → (wav bytes, ctypes buffer)
+        self._sound_keep: list = []    # buffers kept alive for async PlaySound
+        self._volume_timer = None      # debounce for regenerating sounds on slider move
         self._word_title = False       # first letter of current_word typed upper-case
         self._word_upper = False       # every letter of current_word typed upper-case
         self.shift_active = False
@@ -2976,6 +2982,9 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _cancel_all_timers(self):
         """Cancel all pending GLib timers to prevent callbacks firing on torn-down widgets."""
+        if self._volume_timer is not None:
+            GLib.source_remove(self._volume_timer)
+            self._volume_timer = None
         for btn, tid in list(self._flash_timers.items()):
             GLib.source_remove(tid)
             btn.get_style_context().remove_class("key-flash")
@@ -4232,6 +4241,10 @@ class OnScreenKeyboard(Gtk.Window):
             merged = {**DEFAULT_SETTINGS, **data}
             if merged.get("click_style") not in ("click", "beep"):
                 merged["click_style"] = "click"
+            try:
+                merged["sound_volume"] = min(1.0, max(0.05, float(merged.get("sound_volume", 0.7))))
+            except (TypeError, ValueError):
+                merged["sound_volume"] = DEFAULT_SETTINGS["sound_volume"]
             if merged.get("language") not in DICTIONARIES:
                 merged["language"] = DEFAULT_SETTINGS["language"]
             for key in ("learn_words", "tutorial_done", "click_sound", "dwell_enabled",
@@ -4553,6 +4566,24 @@ class OnScreenKeyboard(Gtk.Window):
         self._refresh_sound_buttons()
 
         inner.pack_start(sound_row, False, False, 0)
+
+        # ── Key sound volume ───────────────────────────────────────────────
+        vol_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        vol_row.pack_start(self._settings_row_label("Sound volume"), False, False, 0)
+        cur_vol = float(self.settings.get("sound_volume", 0.7))
+        vol_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.05, 1.0, 0.05)
+        vol_scale.set_value(cur_vol)
+        vol_scale.set_draw_value(False)
+        vol_scale.set_hexpand(True)
+        vol_scale.set_size_request(120, -1)
+        vol_scale.get_accessible().set_name("Key sound volume")
+        self._volume_label = Gtk.Label(label=f"{int(round(cur_vol * 100))}%")
+        self._volume_label.set_name("settings-label")
+        self._volume_label.set_size_request(40, -1)
+        vol_scale.connect("value-changed", self._on_volume_changed)
+        vol_row.pack_start(vol_scale, True, True, 0)
+        vol_row.pack_start(self._volume_label, False, False, 0)
+        inner.pack_start(vol_row, False, False, 0)
 
         # ── 9. Modifier auto-release row ───────────────────────────────────
         mod_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -4943,6 +4974,23 @@ class OnScreenKeyboard(Gtk.Window):
         self._refresh_sound_buttons()
         self._save_settings()
         self._play_click_sound()   # preview the new choice
+
+    def _on_volume_changed(self, scale_widget: Gtk.Scale):
+        value = round(scale_widget.get_value(), 2)
+        self.settings["sound_volume"] = value
+        if self._volume_label:
+            self._volume_label.set_label(f"{int(round(value * 100))}%")
+        # Regenerate + preview once the slider settles, not on every pixel.
+        if self._volume_timer is not None:
+            GLib.source_remove(self._volume_timer)
+        self._volume_timer = GLib.timeout_add(180, self._apply_volume)
+
+    def _apply_volume(self) -> bool:
+        self._volume_timer = None
+        self._init_click_sound()
+        self._save_settings()
+        self._play_click_sound(force=True)   # preview, even if sounds are Off
+        return False
 
     def _refresh_sound_buttons(self):
         current = (self.settings.get("click_style", "click")
@@ -5718,49 +5766,93 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Click sound ───────────────────────────────────────────────────────────
 
     @staticmethod
-    def _write_wav(path: str, rate: int, samples) -> None:
-        with wave.open(path, "w") as wf:
+    def _wav_bytes(rate: int, samples, peak: float) -> bytes:
+        """16-bit mono WAV, normalised so the loudest sample is `peak` (0–1),
+        with 40 ms of trailing silence: Windows' audio engine can drop a sound
+        that's only a few milliseconds long."""
+        import io
+        samples = list(samples)
+        top = max((abs(v) for v in samples), default=0) or 1.0
+        gain = 32000 * peak / top
+        pcm = [int(v * gain) for v in samples] + [0] * int(rate * 0.04)
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
             wf.setnchannels(1)
             wf.setsampwidth(2)
             wf.setframerate(rate)
-            wf.writeframes(b"".join(struct.pack("<h", int(v)) for v in samples))
+            wf.writeframes(b"".join(struct.pack("<h", v) for v in pcm))
+        return buf.getvalue()
 
     def _init_click_sound(self):
-        """Generate the key-sound WAVs in the config directory (always regenerated)."""
+        """Generate both key sounds at the current volume.  Kept in memory for
+        Windows (PlaySound from memory) and written to the config dir for
+        paplay/aplay on Linux.  Re-run when the volume slider moves."""
         import random
+        vol = float(self.settings.get("sound_volume", 0.7))
+        rate = 44100
+        # Click: a short bright tick (band-limited noise, ~3 ms decay) on top
+        # of a small low "thock" (180 Hz, ~7 ms decay) - like a laptop key.
+        rng = random.Random(7)
+        lp = hp_prev = 0.0
+        click = []
+        for i in range(int(rate * 0.025)):
+            t = i / rate
+            lp += 0.5 * (rng.uniform(-1, 1) - lp)
+            hp = lp - hp_prev            # crude high-pass keeps it crisp
+            hp_prev = lp
+            click.append(hp * math.exp(-t / 0.003)
+                         + 0.45 * math.sin(2 * math.pi * 180 * t) * math.exp(-t / 0.007))
+        beep = [math.exp(-i / rate * 140) * math.sin(2 * math.pi * 1100 * i / rate)
+                for i in range(int(rate * 0.04))]
+        # Click peaks a little under the beep so equal volume sounds similar.
+        self._sound_data = {
+            "click": self._wav_bytes(rate, click, 0.75 * vol),
+            "beep":  self._wav_bytes(rate, beep, 0.85 * vol),
+        }
         try:
             os.makedirs(CONFIG_DIR, exist_ok=True)
-
-            # Soft click: ~6 ms of low-passed noise with a fast decay — a quiet
-            # tick like a laptop key rather than a tone.
-            rate = 44100
-            rng = random.Random(7)
-            lp, click = 0.0, []
-            for i in range(int(rate * 0.006)):
-                lp += 0.35 * (rng.uniform(-1, 1) - lp)
-                click.append(9000 * math.exp(-i / rate * 900) * lp)
-            self._write_wav(CLICK_WAV, rate, click)
-
-            # Beep: the original 1100 Hz tone
-            rate = 22050
-            self._write_wav(BEEP_WAV, rate, (
-                28000 * math.exp(-i / rate * 140) * math.sin(2 * math.pi * 1100 * i / rate)
-                for i in range(int(rate * 0.04))))
+            for path, key in ((CLICK_WAV, "click"), (BEEP_WAV, "beep")):
+                tmp = path + ".tmp"
+                with open(tmp, "wb") as f:
+                    f.write(self._sound_data[key])
+                os.replace(tmp, path)
         except Exception as exc:
-            print(f"[sound] Could not generate key sounds: {exc}")
+            print(f"[sound] Could not write key sounds: {exc}")
 
-    def _play_click_sound(self):
-        if not self.settings.get("click_sound"):
+    def _play_click_sound(self, force: bool = False):
+        if not (self.settings.get("click_sound") or force):
             return
-        wav = BEEP_WAV if self.settings.get("click_style") == "beep" else CLICK_WAV
-        if not os.path.exists(wav):
-            return
+        style = "beep" if self.settings.get("click_style") == "beep" else "click"
         if IS_WINDOWS:
+            data = getattr(self, "_sound_data", {}).get(style)
+            if not data:
+                return
             try:
-                import winsound
-                winsound.PlaySound(wav, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
-            except Exception:
-                pass
+                # winmm directly (no dependency on the winsound module being
+                # present in the bundled Python).  SND_MEMORY: no file I/O.
+                import ctypes
+                SND_ASYNC, SND_NODEFAULT, SND_MEMORY = 0x0001, 0x0002, 0x0004
+                winmm = ctypes.windll.winmm
+                winmm.PlaySoundW.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint]
+                winmm.PlaySoundW.restype = ctypes.c_int
+                buf = self._sound_bufs.get(style)
+                if buf is None or buf[0] is not data:
+                    buf = (data, ctypes.create_string_buffer(data, len(data)))
+                    self._sound_bufs[style] = buf
+                    self._sound_keep.append(buf)
+                    del self._sound_keep[:-8]
+                ok = winmm.PlaySoundW(ctypes.addressof(buf[1]), None,
+                                      SND_MEMORY | SND_ASYNC | SND_NODEFAULT)
+                if not ok and not getattr(self, "_sound_fail_logged", False):
+                    self._sound_fail_logged = True
+                    _win_log("sound: PlaySoundW returned 0")
+            except Exception as exc:
+                if not getattr(self, "_sound_fail_logged", False):
+                    self._sound_fail_logged = True
+                    _win_log(f"sound: PlaySoundW error ({exc})")
+            return
+        wav = BEEP_WAV if style == "beep" else CLICK_WAV
+        if not os.path.exists(wav):
             return
         for player in ("paplay", "aplay"):
             try:

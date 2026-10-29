@@ -134,6 +134,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 | **Auto space** | On (default) / Off — type a space after a picked suggestion |
 | **Dwell click** | Hover-to-click with adjustable delay |
 | **Key sound** | Off / Click (default, soft tick) / Beep |
+| **Sound volume** | 5% – 100% (default 70%), previews as you drag |
 | **Modifier keys** | Auto-release or sticky |
 | **Shift key** | One-shot or sticky |
 | **Taskbar** | Linux: pin to Cinnamon panel + autostart. Windows: shows how to pin it (Windows doesn't let apps pin themselves; right-click its taskbar button → *Pin to taskbar*) |
