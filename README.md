@@ -182,6 +182,8 @@ With Fn:   1–0 - = → F1–F12    ← → Home/End    ↑ ↓ → PgUp/PgDn  
 
 Five rows like the Windows on-screen keyboard, so every key is bigger. The function keys sit on the **Fn** layer instead of taking a row of their own.
 
+On Windows the keyboard follows **display scaling** (Settings → Display → Scale): at 175 % its text and keys are 1.75× bigger, like other apps. Font size goes up to 36 px for more.
+
 | Key | Behaviour |
 |---|---|
 | **⇧ Shift** | One-shot — capitalises next keypress then auto-releases (configurable) |

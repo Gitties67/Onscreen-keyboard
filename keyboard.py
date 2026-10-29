@@ -614,11 +614,78 @@ def learned_words_file(language: str) -> str:
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
 BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 
+def _windows_display_scale() -> float:
+    """Windows' display scaling (Settings → Display → Scale) as a factor:
+    1.0 at 100 %, 1.75 at 175 %.  Read from the registry, which holds the real
+    value even when this process isn't DPI-aware (GetDpiForSystem would then
+    report 96)."""
+    if not IS_WINDOWS:
+        return 1.0
+    dpi = 0
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                            r"Control Panel\Desktop\WindowMetrics") as k:
+            dpi = int(winreg.QueryValueEx(k, "AppliedDPI")[0])
+    except Exception:
+        try:
+            import ctypes
+            dpi = ctypes.windll.user32.GetDpiForSystem()
+        except Exception:
+            pass
+    return dpi / 96 if dpi >= 96 else 1.0
+
+
+def _text_scale() -> float:
+    """How much to enlarge our pixel sizes so text matches the display scaling.
+    GTK already applies whole-number scales itself (×2 at 200 %), so only the
+    remainder is ours: 175 % → ×1.75, 200 % → ×1, 250 % → ×1.25.
+    OSK_TEXT_SCALE overrides it (testing, or a user who wants it different)."""
+    override = os.environ.get("OSK_TEXT_SCALE")
+    if override:
+        try:
+            return max(0.5, min(4.0, float(override)))
+        except ValueError:
+            pass
+    scale = _windows_display_scale()
+    try:
+        display = Gdk.Display.get_default()
+        monitor = display.get_primary_monitor() or display.get_monitor(0)
+        gdk_scale = monitor.get_scale_factor()
+    except Exception:
+        gdk_scale = 1
+    return max(1.0, min(4.0, scale / max(1, gdk_scale)))
+
+
+TEXT_SCALE = _text_scale()
+
+
+def _px(n: float) -> int:
+    """A size in pixels at 100 % display scaling → pixels on this display."""
+    return round(n * TEXT_SCALE)
+
+
+_CSS_PX_RE = re.compile(r"(?<![\w.#-])(\d+(?:\.\d+)?)px")
+
+
+def _scale_css_fonts(css: str) -> str:
+    """Enlarge a stylesheet's sizes by TEXT_SCALE: text, button heights,
+    padding, corner radii.  1–2 px values (borders, hairlines) stay crisp."""
+    if TEXT_SCALE == 1.0:
+        return css
+
+    def _one(m):
+        v = float(m.group(1))
+        return m.group(0) if v <= 2 else f"{_px(v)}px"
+    return _CSS_PX_RE.sub(_one, css)
+
+
 # Segoe UI is what the built-in Windows on-screen keyboard uses.
 DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
 DEFAULT_FONT_SIZE = 18     # big and clear by default
+FONT_SIZE_MAX = 36
 FONT_SETTINGS_VERSION = 2  # bump to re-apply font defaults once on upgrade
-SETTINGS_LABEL_W = 150     # width of the label column on the settings page
+SETTINGS_LABEL_W = _px(150)  # width of the label column on the settings page
 
 # Shared by the running keyboard and the installer's Start-menu shortcut, so a
 # pinned taskbar icon and the open keyboard are the same taskbar button.
@@ -690,7 +757,7 @@ _DETECTED_LANGUAGE = _detect_language()
 
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
-    "font_size":            DEFAULT_FONT_SIZE, # key label font size in px (10–22)
+    "font_size":            DEFAULT_FONT_SIZE, # key label font size in px (10–36, before display scaling)
     "dwell_enabled":        False,
     "dwell_delay":          0.8,      # seconds (0.3 – 2.0)
     "click_sound":          True,
@@ -883,12 +950,17 @@ WIZARD_DEFAULTS = {
 
 
 def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: str = DEFAULT_FONT) -> str:
+    """Theme stylesheet, with its text enlarged for the display scaling."""
+    return _scale_css_fonts(_theme_css_at_100(c, font_size, font_family))
+
+
+def _theme_css_at_100(c: dict, font_size: int, font_family: str) -> str:
     """Generate a complete colour-override CSS string from a theme dict."""
     if font_family not in FONT_FAMILIES:
         print(f"[theme] Unknown font_family {font_family!r}, falling back to {DEFAULT_FONT}")
         font_family = DEFAULT_FONT
-    special_size  = max(9,  font_size - 3)   # modifier/nav labels slightly smaller
-    char_size     = font_size + 5            # letters/digits/symbols: big, like Windows' OSK
+    special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
+    char_size     = font_size + 8            # letters/digits/symbols: big, like Windows' OSK
     settings_size = max(14, font_size - 2)   # Settings text follows Font size too
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
     tour_size     = max(14, font_size)       # tour text never smaller than 14px
@@ -1167,14 +1239,19 @@ SHIFT_MAP = {
 # ── Layout constants ─────────────────────────────────────────────────────────
 # Base key dimensions — used as the reference for proportional scaling
 BASE_KEY_W  = 52
-BASE_KEY_H  = 52
-SUGGESTION_H = 44   # height of the suggestion bar row
-TITLEBAR_H   = 32   # height of the custom title-bar strip (Windows 10/11 caption height)
+BASE_KEY_H  = _px(52)   # keys grow with the display scaling, like their text
+SUGGESTION_H = _px(40)   # height of the suggestion bar row
+TITLEBAR_H   = _px(28)   # height of the custom title-bar strip
+# Tight gaps, like the Windows on-screen keyboard: the space goes to the keys
+ROW_GAP      = 2      # between key rows (and between title/suggestion bar/keys)
+KEY_GAP      = 2      # between keys in a row
+# Vertical space that isn't keys: 7 gaps + the bars' own padding
+LAYOUT_OVERHEAD = 7 * ROW_GAP + 12
 CAPTION_W    = 46   # width of a Windows-style caption button (minimize / close)
-STRIP_H      = 11   # height of the top/bottom resize strips
+STRIP_H      = 8    # height of the top/bottom resize strips
 MIN_W        = 400  # minimum window width during resize
 KEY_ROW_H_OVERHEAD = 32  # side margins + padding around a key row (fallback)
-SIDE_ZONE    = 10   # width of the left/right margins that act as e/w resize zones
+SIDE_ZONE    = 7    # width of the left/right margins that act as e/w resize zones
 EDGE_ZONE    = 16   # corner size: px from a window corner that resizes diagonally
 
 # Resize-zone cursors: (CSS cursor name, Gdk.CursorType fallback).  GDK maps the
@@ -1825,7 +1902,7 @@ class OnScreenKeyboard(Gtk.Window):
         geo     = monitor.get_geometry()
         sw, sh  = geo.width, geo.height
 
-        kb_h = BASE_KEY_H * KB_ROWS + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
+        kb_h = BASE_KEY_H * KB_ROWS + TITLEBAR_H + SUGGESTION_H + LAYOUT_OVERHEAD
         # Restore saved position/size, or default to full-width bar at screen bottom
         saved_x = self.settings.get("win_x", 0)
         saved_y = self.settings.get("win_y", sh - kb_h)
@@ -1849,7 +1926,7 @@ class OnScreenKeyboard(Gtk.Window):
         # hint entirely, and Clutter treats our window as unmanaged (causing
         # menu close events to fire as if we clicked on the stage background).
 
-        # Window-level events for left/right edge resize (8px margins)
+        # Window-level events for left/right edge resize (SIDE_ZONE margins)
         self.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK   |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
@@ -2434,7 +2511,8 @@ class OnScreenKeyboard(Gtk.Window):
         # Base structural styles (layout, radii, transitions — no colours)
         base = Gtk.CssProvider()
         css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "style.css")
-        base.load_from_path(css_path)
+        with open(css_path, encoding="utf-8") as f:
+            base.load_from_data(_scale_css_fonts(f.read()).encode())
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), base,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
@@ -2455,7 +2533,7 @@ class OnScreenKeyboard(Gtk.Window):
     # ── UI construction ────────────────────────────���──────────────────────────
 
     def _build_ui(self):
-        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=ROW_GAP)
         root.set_name("main-box")
         root.set_margin_start(SIDE_ZONE)   # left/right margins act as resize zones
         root.set_margin_end(SIDE_ZONE)
@@ -2517,9 +2595,9 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _build_keys_box(self, rows) -> Gtk.Box:
         """Build a vertical box of key rows from a layout definition."""
-        keys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        keys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=ROW_GAP)
         for row_def in rows:
-            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=KEY_GAP)
             for label, action, width, extra_classes in row_def:
                 btn = self._make_key(label, action, width, extra_classes)
                 row_box.pack_start(btn, True, True, 0)
@@ -2656,7 +2734,7 @@ class OnScreenKeyboard(Gtk.Window):
         grip.set_valign(Gtk.Align.END)
         # 22×14: covers the 7px bottom strip plus ~7px of the key row above it —
         # a deliberate trade-off for a dwell-friendly target size.
-        grip.set_size_request(22, 14)
+        grip.set_size_request(_px(22), _px(14))
         lbl = Gtk.Label(label="◢")   # corner triangle reads as a resize grip
         lbl.set_name("resize-label")
         grip.add(lbl)
@@ -3295,7 +3373,7 @@ class OnScreenKeyboard(Gtk.Window):
             b = Gtk.Button(label=shown)
             b.get_style_context().add_class("key-btn")
             b.get_style_context().add_class("accent-choice")
-            b.set_size_request(48, 48)
+            b.set_size_request(_px(48), _px(48))
             b.get_accessible().set_name(shown)
             b.connect("clicked", lambda _b, ch=v: self._on_accent_chosen(ch))
             row.pack_start(b, False, False, 0)
@@ -3763,7 +3841,7 @@ class OnScreenKeyboard(Gtk.Window):
         remove_btn = Gtk.Button(label="×")
         remove_btn.get_style_context().add_class("settings-choice")
         remove_btn.get_style_context().add_class("list-remove")
-        remove_btn.set_size_request(36, -1)
+        remove_btn.set_size_request(_px(36), -1)
         remove_btn.set_valign(Gtk.Align.CENTER)
         remove_btn.set_tooltip_text("Remove")
         remove_btn.connect("clicked", lambda _b, w=word: self._remove_custom_word(w))
@@ -3850,7 +3928,7 @@ class OnScreenKeyboard(Gtk.Window):
         remove_btn = Gtk.Button(label="×")
         remove_btn.get_style_context().add_class("settings-choice")
         remove_btn.get_style_context().add_class("list-remove")
-        remove_btn.set_size_request(36, -1)
+        remove_btn.set_size_request(_px(36), -1)
         remove_btn.set_valign(Gtk.Align.CENTER)
         remove_btn.set_tooltip_text("Remove")
         remove_btn.connect("clicked", lambda _b, t=trigger: self._remove_macro(t))
@@ -4014,7 +4092,7 @@ class OnScreenKeyboard(Gtk.Window):
         if not resize:
             return
         keys_h = int(BASE_KEY_H * KB_ROWS * scale)
-        total_h = keys_h + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
+        total_h = keys_h + TITLEBAR_H + SUGGESTION_H + LAYOUT_OVERHEAD
         self.resize(w, total_h)
         if reposition:
             display = Gdk.Display.get_default()
@@ -4195,7 +4273,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._wizard_preview_swatches = []
         for _i in range(len(WIZARD_STEPS)):
             eb = Gtk.EventBox()
-            eb.set_size_request(22, 22)
+            eb.set_size_request(_px(22), _px(22))
             swatch_box.pack_start(eb, False, False, 0)
             self._wizard_preview_swatches.append(eb)
         top_row.pack_end(swatch_box, False, False, 12)
@@ -4212,7 +4290,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._wizard_current.get_style_context().add_class("current")
         self._wizard_current.set_can_focus(False)
         self._wizard_current.get_accessible().set_name("Chosen colour")
-        self._wizard_current.set_size_request(72, 72)
+        self._wizard_current.set_size_request(_px(72), _px(72))
         self._wizard_current.set_valign(Gtk.Align.CENTER)
         picker_row.pack_start(self._wizard_current, False, False, 0)
 
@@ -4224,7 +4302,7 @@ class OnScreenKeyboard(Gtk.Window):
         for i, hex_c in enumerate(WIZARD_PALETTE):
             b = Gtk.Button()
             b.get_style_context().add_class("palette-swatch")
-            b.set_size_request(32, 32)
+            b.set_size_request(_px(32), _px(32))
             b.set_tooltip_text(hex_c)
             b.get_accessible().set_name(f"Colour {hex_c}")
             self._set_swatch_color(b, hex_c)
@@ -4238,7 +4316,7 @@ class OnScreenKeyboard(Gtk.Window):
         for text, toward in (("☀ Lighter", "#ffffff"), ("☾ Darker", "#000000")):
             b = Gtk.Button(label=text)
             b.get_style_context().add_class("settings-choice")
-            b.set_size_request(100, -1)
+            b.set_size_request(_px(100), -1)
             b.connect("clicked", lambda _b, t=toward: self._wizard_nudge(t))
             tune.pack_start(b, False, False, 0)
         picker_row.pack_start(tune, False, False, 0)
@@ -4257,7 +4335,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         back_btn = Gtk.Button(label="◀ Back")
         back_btn.get_style_context().add_class("settings-choice")
-        back_btn.set_size_request(100, -1)
+        back_btn.set_size_request(_px(100), -1)
         back_btn.connect("clicked", lambda _: self._wizard_go_back())
         nav_row.pack_start(back_btn, False, False, 0)
 
@@ -4266,7 +4344,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._wizard_next_btn = Gtk.Button(label="Next ▶")
         self._wizard_next_btn.get_style_context().add_class("settings-choice")
-        self._wizard_next_btn.set_size_request(100, -1)
+        self._wizard_next_btn.set_size_request(_px(100), -1)
         self._wizard_next_btn.connect("clicked", lambda _: self._wizard_go_next())
         nav_row.pack_end(self._wizard_next_btn, False, False, 0)
 
@@ -4508,7 +4586,7 @@ class OnScreenKeyboard(Gtk.Window):
 
             edit_btn = Gtk.Button(label="✎")
             edit_btn.get_style_context().add_class("settings-choice")
-            edit_btn.set_size_request(28, -1)
+            edit_btn.set_size_request(_px(28), -1)
             edit_btn.set_tooltip_text(f"Edit the colours of {name}")
             edit_btn.get_accessible().set_name(f"Edit theme {name}")
             edit_btn.connect("clicked", lambda _b, n=name: self._edit_custom_theme(n))
@@ -4516,7 +4594,7 @@ class OnScreenKeyboard(Gtk.Window):
 
             del_btn = Gtk.Button(label="×")
             del_btn.get_style_context().add_class("settings-choice")
-            del_btn.set_size_request(28, -1)
+            del_btn.set_size_request(_px(28), -1)
             del_btn.connect("clicked", lambda _b, n=name: self._delete_custom_theme(n))
             wrap.pack_start(del_btn, False, False, 0)
 
@@ -4631,7 +4709,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         target_h = self._pre_collapse_h or (
             int(BASE_KEY_H * KB_ROWS * self.settings.get("key_scale", 1.0))
-            + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
+            + TITLEBAR_H + SUGGESTION_H + LAYOUT_OVERHEAD
         )
         self.resize(w, target_h)
         # Repopulate the suggestion bar for whatever mode is active.
@@ -4892,19 +4970,19 @@ class OnScreenKeyboard(Gtk.Window):
 
         font_dec = Gtk.Button(label="−")
         font_dec.get_style_context().add_class("settings-choice")
-        font_dec.set_size_request(36, -1)
+        font_dec.set_size_request(_px(36), -1)
         font_dec.connect("clicked", self._on_font_size_change, -1)
         font_row.pack_start(font_dec, False, False, 0)
 
         cur_size = self.settings.get("font_size", DEFAULT_FONT_SIZE)
         self._font_size_label = Gtk.Label(label=f"{cur_size}px")
         self._font_size_label.set_name("settings-label")
-        self._font_size_label.set_size_request(42, -1)
+        self._font_size_label.set_size_request(_px(42), -1)
         font_row.pack_start(self._font_size_label, False, False, 0)
 
         font_inc = Gtk.Button(label="+")
         font_inc.get_style_context().add_class("settings-choice")
-        font_inc.set_size_request(36, -1)
+        font_inc.set_size_request(_px(36), -1)
         font_inc.connect("clicked", self._on_font_size_change, +1)
         font_row.pack_start(font_inc, False, False, 0)
 
@@ -4916,19 +4994,19 @@ class OnScreenKeyboard(Gtk.Window):
 
         ks_dec = Gtk.Button(label="−")
         ks_dec.get_style_context().add_class("settings-choice")
-        ks_dec.set_size_request(36, -1)
+        ks_dec.set_size_request(_px(36), -1)
         ks_dec.connect("clicked", self._on_key_scale_change, -0.05)
         key_scale_row.pack_start(ks_dec, False, False, 0)
 
         cur_scale = self.settings.get("key_scale", 1.0)
         self._key_scale_label = Gtk.Label(label=f"{cur_scale:.2f}×")
         self._key_scale_label.set_name("settings-label")
-        self._key_scale_label.set_size_request(46, -1)
+        self._key_scale_label.set_size_request(_px(46), -1)
         key_scale_row.pack_start(self._key_scale_label, False, False, 0)
 
         ks_inc = Gtk.Button(label="+")
         ks_inc.get_style_context().add_class("settings-choice")
-        ks_inc.set_size_request(36, -1)
+        ks_inc.set_size_request(_px(36), -1)
         ks_inc.connect("clicked", self._on_key_scale_change, +0.05)
         key_scale_row.pack_start(ks_inc, False, False, 0)
 
@@ -4944,11 +5022,11 @@ class OnScreenKeyboard(Gtk.Window):
         opacity_scale.set_value(cur_opacity)
         opacity_scale.set_draw_value(False)
         opacity_scale.set_hexpand(True)
-        opacity_scale.set_size_request(120, -1)
+        opacity_scale.set_size_request(_px(120), -1)
 
         self._opacity_label = Gtk.Label(label=f"{int(cur_opacity * 100)}%")
         self._opacity_label.set_name("settings-label")
-        self._opacity_label.set_size_request(40, -1)
+        self._opacity_label.set_size_request(_px(40), -1)
 
         opacity_scale.connect("value-changed", self._on_opacity_changed)
         opacity_row.pack_start(opacity_scale, True, True, 0)
@@ -4983,7 +5061,7 @@ class OnScreenKeyboard(Gtk.Window):
         space_on = bool(self.settings.get("space_after_suggestion", True))
         space_toggle = Gtk.ToggleButton(label="On" if space_on else "Off")
         space_toggle.set_name("settings-toggle")
-        space_toggle.set_size_request(100, -1)
+        space_toggle.set_size_request(_px(100), -1)
         space_toggle.set_active(space_on)
         space_toggle.connect("toggled", self._on_space_after_toggled)
         space_toggle.get_accessible().set_description(
@@ -5001,7 +5079,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         dwell_toggle = Gtk.ToggleButton(label="Off")
         dwell_toggle.set_name("settings-toggle")
-        dwell_toggle.set_size_request(60, -1)
+        dwell_toggle.set_size_request(_px(60), -1)
         dwell_toggle.set_active(self.settings["dwell_enabled"])
         dwell_toggle.set_label("On" if self.settings["dwell_enabled"] else "Off")
         dwell_toggle.connect("toggled", self._on_dwell_toggled, dwell_toggle)
@@ -5014,7 +5092,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         dec_btn = Gtk.Button(label="−")
         dec_btn.get_style_context().add_class("settings-choice")
-        dec_btn.set_size_request(44, -1)
+        dec_btn.set_size_request(_px(44), -1)
         dec_btn.connect("clicked", self._on_dwell_delay, -0.1)
         dec_btn.get_accessible().set_name("Decrease dwell delay")
         dwell_row.pack_start(dec_btn, False, False, 0)
@@ -5022,12 +5100,12 @@ class OnScreenKeyboard(Gtk.Window):
         self._dwell_label = Gtk.Label(
             label=f"{self.settings['dwell_delay']:.1f}s")
         self._dwell_label.set_name("settings-label")
-        self._dwell_label.set_size_request(42, -1)
+        self._dwell_label.set_size_request(_px(42), -1)
         dwell_row.pack_start(self._dwell_label, False, False, 0)
 
         inc_btn = Gtk.Button(label="+")
         inc_btn.get_style_context().add_class("settings-choice")
-        inc_btn.set_size_request(44, -1)
+        inc_btn.set_size_request(_px(44), -1)
         inc_btn.connect("clicked", self._on_dwell_delay, +0.1)
         inc_btn.get_accessible().set_name("Increase dwell delay")
         dwell_row.pack_start(inc_btn, False, False, 0)
@@ -5060,11 +5138,11 @@ class OnScreenKeyboard(Gtk.Window):
         vol_scale.set_value(cur_vol)
         vol_scale.set_draw_value(False)
         vol_scale.set_hexpand(True)
-        vol_scale.set_size_request(120, -1)
+        vol_scale.set_size_request(_px(120), -1)
         vol_scale.get_accessible().set_name("Key sound volume")
         self._volume_label = Gtk.Label(label=f"{int(round(cur_vol * 100))}%")
         self._volume_label.set_name("settings-label")
-        self._volume_label.set_size_request(40, -1)
+        self._volume_label.set_size_request(_px(40), -1)
         vol_scale.connect("value-changed", self._on_volume_changed)
         vol_row.pack_start(vol_scale, True, True, 0)
         vol_row.pack_start(self._volume_label, False, False, 0)
@@ -5077,7 +5155,7 @@ class OnScreenKeyboard(Gtk.Window):
         auto_release = self.settings.get("modifier_auto_release", True)
         mod_toggle = Gtk.ToggleButton(label="Auto-release" if auto_release else "Sticky")
         mod_toggle.set_name("settings-toggle")
-        mod_toggle.set_size_request(100, -1)
+        mod_toggle.set_size_request(_px(100), -1)
         mod_toggle.set_active(auto_release)
         mod_toggle.connect("toggled", self._on_mod_release_toggled, mod_toggle)
         mod_toggle.get_accessible().set_description("Ctrl and Alt release automatically after the next keypress")
@@ -5100,7 +5178,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._shift_toggle = Gtk.ToggleButton(
             label="Sticky" if shift_sticky else "One-shot")
         self._shift_toggle.set_name("settings-toggle")
-        self._shift_toggle.set_size_request(100, -1)
+        self._shift_toggle.set_size_request(_px(100), -1)
         self._shift_toggle.set_active(shift_sticky)
         self._shift_toggle.connect("toggled", self._on_shift_sticky_toggled)
         shift_row.pack_start(self._shift_toggle, False, False, 0)
@@ -5120,7 +5198,7 @@ class OnScreenKeyboard(Gtk.Window):
 
             pin_btn = Gtk.Button(label="Pin to panel")
             pin_btn.get_style_context().add_class("settings-choice")
-            pin_btn.set_size_request(100, -1)
+            pin_btn.set_size_request(_px(100), -1)
             pin_btn.connect("clicked", self._on_pin_to_panel, pin_btn)
             shortcut_row.pack_start(pin_btn, False, False, 0)
 
@@ -5139,7 +5217,7 @@ class OnScreenKeyboard(Gtk.Window):
             shortcut_row.pack_start(self._settings_row_label("Taskbar"), False, False, 0)
             pin_btn = Gtk.Button(label="Pin to taskbar")
             pin_btn.get_style_context().add_class("settings-choice")
-            pin_btn.set_size_request(190, -1)
+            pin_btn.set_size_request(_px(190), -1)
             pin_btn.connect("clicked", lambda b: self._toggle_setting_help(
                 b, "Pin to taskbar", WINDOWS_PIN_STEPS))
             shortcut_row.pack_start(pin_btn, False, False, 0)
@@ -5153,7 +5231,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         tour_btn = Gtk.Button(label="Show tutorial")
         tour_btn.get_style_context().add_class("settings-choice")
-        tour_btn.set_size_request(140, 44)
+        tour_btn.set_size_request(_px(140), _px(44))
         tour_btn.connect("clicked", lambda _b: self._start_tour())
         tour_btn.get_accessible().set_description(
             "Replay the four-step introduction to the keyboard")
@@ -5170,7 +5248,7 @@ class OnScreenKeyboard(Gtk.Window):
         learn_on = bool(self.settings.get("learn_words", True))
         learn_toggle = Gtk.ToggleButton(label="On" if learn_on else "Off")
         learn_toggle.set_name("settings-toggle")
-        learn_toggle.set_size_request(100, -1)
+        learn_toggle.set_size_request(_px(100), -1)
         learn_toggle.set_active(learn_on)
         learn_toggle.connect("toggled", self._on_learn_toggled)
         learn_toggle.get_accessible().set_description(
@@ -5182,7 +5260,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._forget_btn.connect("clicked", self._on_forget_clicked)
         self._forget_btn.get_accessible().set_description(
             "Erase the words and phrases the keyboard has learned from your typing")
-        self._forget_btn.set_size_request(190, -1)
+        self._forget_btn.set_size_request(_px(190), -1)
         learn_row.pack_start(self._forget_btn, False, False, 0)
         inner.pack_start(learn_row, False, False, 0)
 
@@ -5201,7 +5279,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         add_btn = Gtk.Button(label="+ Add word or phrase")
         add_btn.get_style_context().add_class("settings-choice")
-        add_btn.set_size_request(190, -1)
+        add_btn.set_size_request(_px(190), -1)
         add_btn.connect("clicked", lambda _: self._open_custom_input_mode())
         dict_header.pack_end(add_btn, False, False, 0)
         inner.pack_start(dict_header, False, False, 0)
@@ -5231,7 +5309,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         add_macro_btn = Gtk.Button(label="+ Add macro")
         add_macro_btn.get_style_context().add_class("settings-choice")
-        add_macro_btn.set_size_request(190, -1)
+        add_macro_btn.set_size_request(_px(190), -1)
         add_macro_btn.connect("clicked",
                               lambda _: self._open_custom_input_mode(target="macro_trigger"))
         macros_header.pack_end(add_macro_btn, False, False, 0)
@@ -5254,7 +5332,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         new_theme_btn = Gtk.Button(label="+ New theme")
         new_theme_btn.get_style_context().add_class("settings-choice")
-        new_theme_btn.set_size_request(190, -1)
+        new_theme_btn.set_size_request(_px(190), -1)
         new_theme_btn.connect("clicked", lambda _: self._open_theme_wizard())
         ctheme_hdr.pack_end(new_theme_btn, False, False, 0)
         inner.pack_start(ctheme_hdr, False, False, 0)
@@ -5275,7 +5353,7 @@ class OnScreenKeyboard(Gtk.Window):
         ):
             b = Gtk.Button(label=text)
             b.get_style_context().add_class("settings-choice")
-            b.set_size_request(190, -1)
+            b.set_size_request(_px(190), -1)
             b.set_tooltip_text(desc + " (opens your browser)")
             b.get_accessible().set_description(desc)
             b.connect("clicked", lambda _b, u=url: self._open_url(u))
@@ -5297,7 +5375,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._update_btn = Gtk.Button(label="Check for updates")
         self._update_btn.get_style_context().add_class("settings-choice")
-        self._update_btn.set_size_request(190, -1)
+        self._update_btn.set_size_request(_px(190), -1)
         self._update_btn.connect("clicked", self._on_check_for_updates)
         update_row.pack_start(self._update_btn, False, False, 0)
         update_row.pack_start(self._update_status_label, True, True, 4)
@@ -5518,7 +5596,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._save_settings()
 
     def _on_font_size_change(self, _btn, delta: int):
-        size = max(10, min(22, self.settings.get("font_size", DEFAULT_FONT_SIZE) + delta))
+        size = max(10, min(FONT_SIZE_MAX, self.settings.get("font_size", DEFAULT_FONT_SIZE) + delta))
         self.settings["font_size"] = size
         if self._font_size_label:
             self._font_size_label.set_label(f"{size}px")
@@ -6132,7 +6210,7 @@ class OnScreenKeyboard(Gtk.Window):
             ctx = btn.get_style_context()
             ctx.add_class("tour-btn")
             ctx.add_class(cls)
-            btn.set_size_request(96, 44)
+            btn.set_size_request(_px(96), _px(44))
             btn.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK |
                            Gdk.EventMask.LEAVE_NOTIFY_MASK |
                            Gdk.EventMask.POINTER_MOTION_MASK)

@@ -24,7 +24,7 @@ window.hc #settings-toggle:focus {
 /* ── Suggestion bar ────────────────────────────────────────── */
 #suggestion-bar {
     padding: 0 4px;
-    min-height: 44px;
+    min-height: 40px;
 }
 
 .suggestion-btn {
@@ -53,16 +53,16 @@ window.hc #settings-toggle:focus {
 /* ── Base key style ────────────────────────────────────────── */
 .key-btn {
     background-image: none;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 13px;
     font-weight: 500;
-    padding: 2px 4px;
+    padding: 0 2px;
     box-shadow: none;
     text-shadow: none;
     transition: background-color 80ms ease, border-color 80ms ease;
 }
 .key-btn:hover  { background-image: none; }
-.key-btn:active { background-image: none; border-bottom-width: 1px; padding-top: 3px; }
+.key-btn:active { background-image: none; border-bottom-width: 1px; padding-top: 1px; }
 
 /* ── Special/modifier keys ─────────────────────────────────── */
 .special { font-size: 11px; font-weight: 500; }
