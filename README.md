@@ -97,7 +97,8 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **First-run tour** — four quick tips on first launch; skip it, or replay it any time from Settings → Help
 - **Full key layout** — F1–F12, Esc, Del, Home, End, PrtScn, arrows, QWERTY/AZERTY/QWERTZ
 - **Word prediction** — 5 suggestions from the dictionary, your custom words and a phrase model, keeping the capitals you type ("A" → *Alex*, "i" → *I'm*)
-- **Australian, UK or US English** — suggestions and spell-check use your region's spelling (*colour* vs *color*); picked automatically, changeable in Settings
+- **Your language** — English (Australian, UK or US spelling), Deutsch, Français, Español, Italiano, Português or Nederlands. It starts on your PC's language (and the matching layout: QWERTZ for German, AZERTY for French), changeable in Settings
+- **No accent hunting** — type *uber* and pick *über*, *cafe* → *café*, *manana* → *mañana*. Or hold a letter for its accents (hold **e** → é è ê ë); keys with accents have a small dot
 - **Context-aware suggestions** — predictions take the words before into account ("thank" → *you*, "how are" → *you*); the context resets at . ! ? and Enter
 - **Learns your words** — remembers the words and word pairs you actually use, locally, to rank them higher (can be turned off or erased)
 - **Spell-check** — fuzzy matching catches common misspellings; correction appears ~250 ms after you pause
@@ -130,7 +131,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 | **Font size** | 10–22 px (default 18), live |
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
-| **Dictionary** | English (Australia) / English (UK) / English (US); defaults to your system region |
+| **Language** | English (Australia / UK / US), Deutsch, Français, Español, Italiano, Português, Nederlands; defaults to your PC's language |
 | **Auto space** | On (default) / Off — type a space after a picked suggestion |
 | **Dwell click** | Hover-to-click with adjustable delay |
 | **Key sound** | Off / Click (default, soft tick) / Beep |
@@ -192,10 +193,10 @@ Ctrl  ⊞  Alt  [         Space         ]  Alt  Ctrl  ←  ↑  ↓  →
 
 With **⚙ Settings → Data → Learn my words** on (the default), the keyboard counts which words and two/three-word sequences you type, so words you use often rank higher in suggestions.
 
-- **Local only** — nothing is ever sent anywhere. The data is one file, `learned_words.json`, in the settings folder (`~/.config/onscreen_keyboard/` on Linux, `%APPDATA%\OnScreenKeyboard\` on Windows).
-- **Words only** — only lowercase alphabetic dictionary/custom words up to 20 letters are counted; numbers, symbols and unknown strings are never stored, and no raw text is kept. Counts are capped and decay over time so the file stays small.
+- **Local only** — nothing is ever sent anywhere. The data is one file per language (`learned_words.json` for English, `learned_words_de.json` for German, and so on) in the settings folder (`~/.config/onscreen_keyboard/` on Linux, `%APPDATA%\OnScreenKeyboard\` on Windows).
+- **Words only** — only alphabetic dictionary/custom words up to 20 letters are counted; numbers, symbols and unknown strings are never stored, and no raw text is kept. Counts are capped and decay over time so the file stays small.
 - **Turn it off** — switch **Learn my words** to *Off*: learning stops and the learned data no longer affects suggestions (the file is kept until you erase it).
-- **Erase it** — click **Forget learned words** twice (the second click within 3 s confirms), or delete `learned_words.json`.
+- **Erase it** — click **Forget learned words** twice (the second click within 3 s confirms), or delete the `learned_words*.json` files. Erasing clears every language.
 
 Note: the keyboard cannot tell when you are typing into a password field. Words next to digits or symbols (`@ / _ - #` and so on, as in emails, usernames and most passwords) are never learned, but a password made of plain dictionary words separated by spaces would be counted like any other words (still words only, never full text).
 
@@ -212,6 +213,8 @@ onscreen_keyboard/
 ├── words.txt            # English (US) dictionary
 ├── words_en_AU.txt      # English (Australia) dictionary (tools/build_dicts.py)
 ├── words_en_GB.txt      # English (UK) dictionary
+├── words_de.txt …       # German/French/Spanish/Italian/Portuguese/Dutch word lists +
+├── ngrams_de.txt …      #   phrase models (tools/build_lang.py)
 ├── THIRD_PARTY_NOTICES.txt  # Licences for the bundled word lists and data
 ├── word_freq.txt        # Word frequency ranking (CC BY-SA 4.0, see Credits)
 ├── ngrams.txt           # Bigram/trigram phrase model (Tatoeba, CC BY 2.0 FR, see Credits)
@@ -225,6 +228,7 @@ onscreen_keyboard/
 ├── tools/
 │   ├── build_ngrams.py      # Builds ngrams.txt from the Tatoeba English sentences export
 │   ├── build_dicts.py       # Builds the UK/Australian dictionaries from SCOWL / hunspell
+│   ├── build_lang.py        # Builds the other languages' word lists + phrase models
 │   ├── make_icon.py         # Regenerates osk.ico / osk.png (needs Pillow)
 │   └── gen_version_info.py  # VERSION -> version_info.txt (exe version resource)
 ├── installer/
@@ -297,5 +301,7 @@ MIT
 The dictionaries (`words.txt`, `words_en_AU.txt`, `words_en_GB.txt`) come from [SCOWL](http://wordlist.aspell.net/) by Kevin Atkinson (the Australian list is expanded from the hunspell en_AU dictionary). Copyright 2000-2011 Kevin Atkinson; used under its permissive licence, reproduced in full in `THIRD_PARTY_NOTICES.txt`.
 
 Word suggestions are ranked using [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018 English list). That data is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); the derived `word_freq.txt` is distributed under the same license. Regenerate it with `tools/build_word_freq.py`.
+
+The German, French, Spanish, Italian, Portuguese and Dutch word lists and phrase models (`words_<lang>.txt`, `ngrams_<lang>.txt`) are built by `tools/build_lang.py` from the FrequencyWords lists for those languages (CC BY-SA 4.0, so the word lists are too) and [Tatoeba](https://tatoeba.org) sentences (CC BY 2.0 FR), which also supply the capitalisation (German nouns) and filter out accent typos.
 
 Context-aware suggestions use a bigram/trigram phrase model built from English sentences from [Tatoeba](https://tatoeba.org) (eng_sentences export), licensed [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/). `ngrams.txt` contains only aggregate word-sequence counts derived from that data; regenerate it with `tools/build_ngrams.py`.

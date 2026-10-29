@@ -18,6 +18,7 @@ import re
 import sys as _sys
 import os as _os
 import time
+import unicodedata
 
 
 def _data_path(name: str) -> str | None:
@@ -35,16 +36,48 @@ def _default_dict_path() -> str:
 
 
 # Regional dictionaries (see tools/build_dicts.py).  "words.txt" is US English.
+# Other languages: tools/build_lang.py.  Their word lists are in frequency
+# order (the file order IS the rank) and each has its own phrase model.
 DICTIONARIES = {
     "en_AU": ("words_en_AU.txt", "/usr/share/dict/british-english"),
     "en_GB": ("words_en_GB.txt", "/usr/share/dict/british-english"),
     "en_US": ("words.txt",       "/usr/share/dict/american-english"),
+    "de":    ("words_de.txt",    None),
+    "fr":    ("words_fr.txt",    None),
+    "es":    ("words_es.txt",    None),
+    "it":    ("words_it.txt",    None),
+    "pt":    ("words_pt.txt",    None),
+    "nl":    ("words_nl.txt",    None),
 }
+
+# Languages that write elided words with an apostrophe (l'homme, dell'anno):
+# the part before the apostrophe is a separate little word, not a stem.
+ELISION_LANGUAGES = {"fr", "it"}
+
+
+def is_english(language: str) -> bool:
+    return language.startswith("en")
 
 
 def dict_path_for(language: str) -> str:
     bundled, system = DICTIONARIES.get(language, DICTIONARIES["en_US"])
-    return _data_path(bundled) or system
+    return _data_path(bundled) or system or ""
+
+
+def ngrams_path_for(language: str) -> str | None:
+    return _data_path("ngrams.txt" if is_english(language) else f"ngrams_{language}.txt")
+
+
+_FOLD_EXTRA = str.maketrans({"ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "ł": "l"})
+
+
+def fold(text: str) -> str:
+    """Accent-free form for matching: "Über" → "uber", "straße" → "strasse"."""
+    text = text.lower().translate(_FOLD_EXTRA)
+    if text.isascii():
+        return text
+    return "".join(c for c in unicodedata.normalize("NFD", text)
+                   if not unicodedata.combining(c))
 
 
 # Commonwealth → US spelling rewrites.  The frequency list and phrase model
@@ -150,7 +183,11 @@ def _parse_conts(raw: str) -> dict[str, int]:
     return out
 
 
-_TOKEN_RE = re.compile(r"^[a-z]{1,20}$")
+_TOKEN_RE = re.compile(r"^[^\W\d_]{1,20}$")   # letters only (any alphabet)
+
+
+def _is_token(w: str) -> bool:
+    return bool(_TOKEN_RE.match(w)) and w == w.lower()
 
 
 class UserModel:
@@ -183,7 +220,7 @@ class UserModel:
 
     # ── learning ────────────────────────────────────────────────────────────
     def _ok(self, w: str) -> bool:
-        if not _TOKEN_RE.match(w):
+        if not _is_token(w):
             return False
         return self._is_known is None or bool(self._is_known(w))
 
@@ -301,7 +338,7 @@ class UserModel:
         if not isinstance(d, dict):
             raise TypeError("counts must be an object")
         return {w: c for w, c in d.items()
-                if isinstance(w, str) and _TOKEN_RE.match(w)
+                if isinstance(w, str) and _is_token(w)
                 and isinstance(c, int) and not isinstance(c, bool) and 0 < c < 10**9}
 
     @classmethod
@@ -313,7 +350,7 @@ class UserModel:
             if not isinstance(k, str):
                 continue
             parts = k.split(" ")
-            if len(parts) != ctx_words or not all(_TOKEN_RE.match(p) for p in parts):
+            if len(parts) != ctx_words or not all(_is_token(p) for p in parts):
                 continue
             sub = cls._clean_counts(sub)
             if sub:
@@ -574,8 +611,14 @@ COMMON_WORDS = {
 
 
 class WordPredictor:
-    def __init__(self, dict_path: str = None, ngrams_path: str = None):
+    def __init__(self, dict_path: str = None, ngrams_path: str = None,
+                 language: str = None):
+        self.language = "en_US"
+        self._english = True
         self._words: list[str] = []
+        # Accent-free lookup for words with accents: fold(word) sorted, + the word
+        self._fold_keys: list[str] = []
+        self._fold_words: list[str] = []
         self._wordset: set[str] = set()
         self._common: set[str] = COMMON_WORDS
         self._rank: dict[str, int] = _load_freq_ranks()
@@ -594,11 +637,35 @@ class WordPredictor:
         self._cased: dict[str, str] = {}      # "alex" → "Alex" (proper nouns, acronyms)
         self._rank_alias: dict[str, str] = {} # "colour" → "color" (borrowed rank)
         self._local_of: dict[str, str] = {}   # "color" → "colour" (regional form)
-        self._load(dict_path if dict_path is not None else _default_dict_path())
+        if language is not None:
+            self.set_language(language)
+        else:
+            self._load(dict_path if dict_path is not None else _default_dict_path())
 
     def set_dictionary(self, path: str) -> None:
         """Switch to another word list (e.g. a different English variant)."""
         self._load(path)
+
+    def set_language(self, language: str) -> None:
+        """Switch language: word list, frequency ranking and phrase model."""
+        if language not in DICTIONARIES:
+            language = "en_US"
+        was_english = self._english
+        self.language = language
+        self._english = is_english(language)
+        if self._english:
+            if not was_english or not self._rank:
+                self._rank = _load_freq_ranks()
+            self._common = COMMON_WORDS
+            self._fallback_pos = {}
+            for i, w in enumerate(TOP_WORDS):
+                self._fallback_pos.setdefault(w.lower(), i)
+        else:
+            self._rank = {}           # filled from the word list's own order
+            self._common = set()
+            self._fallback_pos = {}
+        self._bi, self._tri = _load_ngrams(ngrams_path_for(language))
+        self._load(dict_path_for(language))
 
     def _load(self, path: str) -> None:
         try:
@@ -623,8 +690,14 @@ class WordPredictor:
                     seen.add(w)
                     words.append(w)
 
+        if not self._english:
+            # Frequency-ordered list: line order is the rank (most common first)
+            self._rank = {w: i for i, w in enumerate(words)}
         self._words = sorted(words)
         self._wordset = set(self._words)
+        pairs = sorted((fold(w), w) for w in self._words if not w.isascii())
+        self._fold_keys = [k for k, _ in pairs]
+        self._fold_words = [w for _, w in pairs]
         self._cased = cased
         self._prefix_cache.clear()
         self._top_cache = []
@@ -634,7 +707,7 @@ class WordPredictor:
         # US-only spellings from the phrase model map to the local form.
         alias: dict[str, str] = {}
         local_of: dict[str, str] = {}
-        if self._rank:
+        if self._rank and self._english:
             for w in self._words:
                 if w in self._rank:
                     continue
@@ -704,13 +777,22 @@ class WordPredictor:
         """Dictionary words starting with prefix, by frequency rank (cached)."""
         cached = self._prefix_cache.get(prefix)
         if cached is None or len(cached) < n:
-            words = self._words
-            idx = bisect.bisect_left(words, prefix)
+            # Match accent-free, so "uber" finds "über" and "cafe" finds "café".
             # Slice the whole prefix range — capping the scan would only ever see
             # the alphabetically-first words and miss short common ones.
-            end = bisect.bisect_left(words, prefix + "\uffff", idx)
+            fp = fold(prefix)
+            words, keys = self._words, self._fold_keys
+            idx = bisect.bisect_left(words, fp)
+            end = bisect.bisect_left(words, fp + "\uffff", idx)
             cands = words[idx:end]
-            cands.sort(key=lambda w: (self._word_rank(w), len(w), w))
+            idx = bisect.bisect_left(keys, fp)
+            end = bisect.bisect_left(keys, fp + "\uffff", idx)
+            if end > idx:
+                cands = list(set(cands).union(self._fold_words[idx:end]))
+            # Accents the user typed on purpose must match exactly first.
+            strict = not prefix.isascii()
+            cands.sort(key=lambda w: (strict and not w.startswith(prefix),
+                                      self._word_rank(w), len(w), w))
             cached = cands[:max(limit, n)]
             if len(self._prefix_cache) > 4000:
                 self._prefix_cache.clear()
@@ -739,8 +821,8 @@ class WordPredictor:
         return (e[0], conts)
 
     def display_form(self, word: str) -> str:
-        """Natural casing of a suggestion: "I", "I'm", "Alex", "NASA"."""
-        if word == "i" or word.startswith("i'"):
+        """Natural casing of a suggestion: "I", "I'm", "Alex", "NASA", "Haus"."""
+        if self._english and (word == "i" or word.startswith("i'")):
             return "I" + word[1:]
         return self._cased.get(word, word)
 
@@ -759,7 +841,7 @@ class WordPredictor:
             t2 = self._lookup(self._bi, ctx[-1])
             if len(ctx) >= 2:
                 t3 = self._lookup(self._tri, ctx[-2] + " " + ctx[-1])
-            if t2 is None and not self._bi and ctx[-1] in BIGRAMS:
+            if t2 is None and not self._bi and self._english and ctx[-1] in BIGRAMS:
                 # Legacy fallback: hand-written table, pseudo-counts by position
                 legacy = BIGRAMS[ctx[-1]]
                 t2 = (100, {w.lower(): 10 - i for i, w in enumerate(legacy[:10])})
@@ -778,8 +860,9 @@ class WordPredictor:
             cands = set(self._prefix_top(prefix, 30))
             # Phrase-model words must be real dictionary words (or contractions)
             # so one-letter tokens like "i"/"a" never complete a typed prefix.
+            fp = fold(prefix)
             for table in (c3, c2):
-                cands.update(w for w in table if w.startswith(prefix)
+                cands.update(w for w in table if fold(w).startswith(fp)
                              and (w in self._wordset or "'" in w))
             if user:
                 cands.update(user.words_with_prefix(prefix))
@@ -805,7 +888,7 @@ class WordPredictor:
             scored.append((-p, len(w), w))
         scored.sort()
         out = [w for _, _, w in scored[:n]]
-        if not prefix:
+        if not prefix and self._english:
             # "i", "i'm", "i'll" … are stored lowercase in the model
             out = ["I" + w[1:] if (w == "i" or w.startswith("i'")) else w for w in out]
         return out
@@ -816,7 +899,7 @@ class WordPredictor:
             if len(self._top_cache) != k:
                 self._top_cache = sorted(self._rank, key=self._rank.get)[:k]
             return self._top_cache
-        return [w.lower() for w in TOP_WORDS[:k]]
+        return [w.lower() for w in TOP_WORDS[:k]] if self._english else []
 
     def _word_rank(self, w: str) -> int:
         r = self._rank.get(self._rank_alias.get(w, w))
@@ -829,7 +912,8 @@ class WordPredictor:
         common words when there aren't enough prefix matches."""
         results = self.predict(prefix, n) if prefix else []
         seen = set(results)
-        for w in TOP_WORDS:
+        filler = TOP_WORDS if self._english else [self.display_form(w) for w in self._top_words(n + 5)]
+        for w in filler:
             if len(results) >= n:
                 break
             if w not in seen:

@@ -45,6 +45,9 @@ datas = [
     (_here("THIRD_PARTY_NOTICES.txt"), "."),
     (_here("word_freq.txt"), "."),
     (_here("ngrams.txt"), "."),      # phrase model for context-aware prediction
+    # other languages: word list + phrase model each (tools/build_lang.py)
+    *[(_here(f"{kind}_{code}.txt"), ".") for code in ("de", "fr", "es", "it", "pt", "nl")
+      for kind in ("words", "ngrams")],
     (_here("VERSION"), "."),
     (_here("osk.png"), "."),   # runtime GTK window icon
     (_here("osk.ico"), "."),

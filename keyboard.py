@@ -431,30 +431,72 @@ if not IS_WINDOWS:
         if not XLIB_OK and not PYNPUT_OK:
             print(f"[keyboard] AT-SPI2 also unavailable ({_e}) — typing disabled.")
 
-from predictor import WordPredictor, UserModel, DICTIONARIES, dict_path_for
+from predictor import (WordPredictor, UserModel, DICTIONARIES, ELISION_LANGUAGES,
+                       is_english)
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
 
 
 LANGUAGE_LABELS = {"en_AU": "English (Australia)", "en_GB": "English (UK)",
-                   "en_US": "English (US)"}
+                   "en_US": "English (US)",
+                   "de": "Deutsch", "fr": "Français", "es": "Español",
+                   "it": "Italiano", "pt": "Português", "nl": "Nederlands"}
+ENGLISH_CODES = ("en_AU", "en_GB", "en_US")
+OTHER_LANGUAGE_CODES = ("de", "fr", "es", "it", "pt", "nl")
+
+# The keyboard layout people of each language normally use
+LANGUAGE_LAYOUT = {"de": "qwertz", "fr": "azerty"}
+
+# Hold a letter key to get these (the plain letter stays the tap).  English
+# gets a general set, for café, naïve, señor and friends.
+ACCENTS = {
+    "en": {"a": "á à â ä", "e": "é è ê ë", "i": "í ï", "o": "ó ô ö",
+           "u": "ú ü", "c": "ç", "n": "ñ"},
+    "de": {"a": "ä", "o": "ö", "u": "ü", "s": "ß", "e": "é"},
+    "fr": {"e": "é è ê ë", "a": "à â æ", "c": "ç", "i": "î ï", "o": "ô œ",
+           "u": "ù û ü", "y": "ÿ"},
+    "es": {"a": "á", "e": "é", "i": "í", "o": "ó", "u": "ú ü", "n": "ñ"},
+    "it": {"a": "à", "e": "è é", "i": "ì", "o": "ò ó", "u": "ù"},
+    "pt": {"a": "á â ã à", "e": "é ê", "i": "í", "o": "ó ô õ", "u": "ú", "c": "ç"},
+    "nl": {"e": "é ë è", "i": "ï", "o": "ö ó", "u": "ü", "a": "á"},
+}
+LONG_PRESS_MS = 450
 
 
-def _detect_language() -> str:
-    """Dictionary matching the user's region: en-AU/NZ → Australian,
-    UK & most of the Commonwealth → British, anything else → US."""
-    region = ""
+def accents_for(language: str) -> dict[str, list[str]]:
+    table = ACCENTS["en" if is_english(language) else language]
+    return {k: v.split() for k, v in table.items()}
+
+
+def dict_path_for(language: str) -> str:
+    from predictor import dict_path_for as _p
+    return _p(language)
+
+
+def _system_locale() -> str:
+    """The PC's language/region, e.g. "de-DE" or "en_AU.UTF-8"."""
     try:
         if IS_WINDOWS:
             import ctypes
             buf = ctypes.create_unicode_buffer(85)
             if ctypes.windll.kernel32.GetUserDefaultLocaleName(buf, 85):
-                region = buf.value                      # e.g. "en-AU"
-        else:
-            region = (os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES")
-                      or os.environ.get("LANG") or "")  # e.g. "en_AU.UTF-8"
+                return buf.value                        # e.g. "en-AU"
+            return ""
+        return (os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES")
+                or os.environ.get("LANG") or "")        # e.g. "en_AU.UTF-8"
     except Exception:
-        pass
+        return ""
+
+
+def _detect_language(region: str = None) -> str:
+    """Language matching the PC: German/French/... when the PC is set to it;
+    for English, en-AU/NZ → Australian, UK & most of the Commonwealth →
+    British, anything else → US."""
+    if region is None:
+        region = _system_locale()
     parts = region.replace("-", "_").split(".")[0].split("_")
+    lang = parts[0].lower()
+    if lang in OTHER_LANGUAGE_CODES:
+        return lang
     country = parts[1].upper() if len(parts) > 1 else ""
     if country in ("AU", "NZ"):
         return "en_AU"
@@ -547,6 +589,13 @@ CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
 MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
 LEARNED_WORDS_FILE = os.path.join(CONFIG_DIR, "learned_words.json")
+
+
+def learned_words_file(language: str) -> str:
+    """Each language learns separately (all English variants share one)."""
+    if is_english(language):
+        return LEARNED_WORDS_FILE
+    return os.path.join(CONFIG_DIR, f"learned_words_{language}.json")
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
 BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 
@@ -582,9 +631,10 @@ SETTINGS_HELP = {
                 "less of the screen. Dragging the top or bottom edge does the same thing.",
     "Opacity": "How see-through the keyboard is. Lower it to see what's behind the keyboard "
                "while you type.",
-    "Dictionary": "Which English spelling word suggestions and spell-check use: Australian "
-                  "and UK English say 'colour' and 'organise', US English says 'color' and "
-                  "'organize'. It starts on the one for your region.",
+    "Language": "The language word suggestions use. It starts on your PC's language. "
+                "English comes in Australian/UK ('colour') and US ('color') spelling. "
+                "You don't need to type accents: 'uber' suggests 'über'. To type one "
+                "yourself, hold a letter key down (e → é è ê ë).",
     "Auto space": "When you pick a suggested word, a space is typed after it so you can go "
                   "straight on to the next word. Turn it off if you'd rather add punctuation "
                   "or the space yourself.",
@@ -618,6 +668,9 @@ SETTINGS_HELP = {
                        "note. It's the best way to tell me what to fix next.",
 }
 
+# What the PC is set to: the starting language (and layout) on a fresh install
+_DETECTED_LANGUAGE = _detect_language()
+
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
     "font_size":            DEFAULT_FONT_SIZE, # key label font size in px (10–22)
@@ -630,12 +683,12 @@ DEFAULT_SETTINGS: dict = {
     "opacity":              1.0,      # window opacity (0.3 – 1.0)
     "key_scale":            1.0,      # key size scale factor (0.3 – 1.5)
     "font_family":          DEFAULT_FONT, # key label font family
-    "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
+    "layout":               LANGUAGE_LAYOUT.get(_DETECTED_LANGUAGE, "qwerty"),  # qwerty | azerty | qwertz
     "update_check_enabled": True,
     "learn_words":          True,     # learn word usage from what you type (local only)
     "tutorial_done":        False,    # first-run tour shown (fresh installs only; see _load_settings)
     "font_version":         FONT_SETTINGS_VERSION,
-    "language":             _detect_language(),  # en_AU | en_GB | en_US (word suggestions)
+    "language":             _DETECTED_LANGUAGE,  # en_AU | en_GB | en_US | de | fr | ... (word suggestions)
     "space_after_suggestion": True,   # type a space after an accepted suggestion
     "sound_volume":         0.7,      # key sound loudness, 0.05 – 1.0
 }
@@ -871,6 +924,8 @@ window {{ background-color: {c['bg']}; }}
 .special:hover {{ background-color: {c['special_hover']}; }}
 .special:active {{ background-color: {c['special_bg']}; }}
 .space {{ background-color: {c['key_bg']}; border-color: {c['key_border']}; }}
+.key-btn.has-accents {{ background-image: radial-gradient(circle at 86% 18%, {c['sublabel_fg']} 2px, transparent 3px); }}
+.accent-choice {{ font-size: {font_size + 2}px; min-width: 44px; min-height: 44px; padding: 0; }}
 .key-btn.key-flash {{ background-color: {flash_bg}; color: {flash_fg}; transition: none; }}
 .key-btn.special.key-flash {{ background-color: {flash_sp_bg}; color: {flash_sp_fg}; }}
 .caption-btn {{ background-color: transparent; background-image: none; color: {tb_fg};
@@ -1284,8 +1339,11 @@ class KeyTyper:
             if PYNPUT_OK:
                 self._pynput_type_char(char, mods or [])
             return
-        # Linux — prefer XTEST, fall back to AT-SPI2, then pynput
-        keysym      = ord(char)
+        # Linux — prefer XTEST, fall back to AT-SPI2, then pynput.  Latin-1
+        # (é ü ß ñ...) keysyms equal the code point; others (œ ő) use the
+        # X11 Unicode keysym range.
+        cp          = ord(char)
+        keysym      = cp if cp < 0x100 else 0x1000000 + cp
         needs_shift = char.isupper() or char in "!@#$%^&*()_+{}|:\"<>?~"
         if XLIB_OK and self._disp:
             keycode = self._disp.keysym_to_keycode(keysym)
@@ -1479,7 +1537,7 @@ class OnScreenKeyboard(Gtk.Window):
     def __init__(self):
         super().__init__()
         self.predictor    = WordPredictor(
-            dict_path_for(self._load_settings().get("language", "en_US")))
+            language=self._load_settings().get("language", "en_US"))
         self.typer        = KeyTyper()
         self.current_word = ""
         self._last_word   = ""   # last committed word of this sentence ("" = none)
@@ -1640,6 +1698,11 @@ class OnScreenKeyboard(Gtk.Window):
         # Key repeat state
         self._repeat_timers: dict[str, int] = {}  # action → GLib source ID
         self._repeat_active: set[str]        = set()  # actions in fast-repeat phase
+        # Hold-for-accents: pending timer, the key whose popup is showing (its
+        # release must not also type the plain letter) and the popup itself
+        self._longpress_timer: int | None    = None
+        self._longpress_fired: str | None    = None
+        self._accent_pop: Gtk.Popover | None = None
 
         # Fuzzy spell-check debounce timer
         self._fuzzy_timer: int | None = None
@@ -1667,7 +1730,8 @@ class OnScreenKeyboard(Gtk.Window):
         self.predictor.set_custom_words(self._custom_words)
 
         # Learned-words model (local JSON; boosts words you actually use)
-        self._user_model = UserModel(LEARNED_WORDS_FILE, self.predictor.is_known)
+        self._user_model = UserModel(learned_words_file(self.predictor.language),
+                                     self.predictor.is_known)
         self._apply_learn_setting()
 
         self._custom_themes = self._load_custom_themes()
@@ -2813,6 +2877,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         if len(action) == 1 and action.isalpha():
             self._letter_btns[action.lower()] = btn
+            if self._accent_variants(action):
+                ctx.add_class("has-accents")
         if action == "shift":
             self._shift_btns.append(btn)
         elif action == "caps":
@@ -3020,6 +3086,7 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(tid)
             btn.get_style_context().remove_class("key-flash")
         self._flash_timers.clear()
+        self._longpress_cancel()
         for tid in list(self._repeat_timers.values()):
             GLib.source_remove(tid)
         self._repeat_timers.clear()
@@ -3052,9 +3119,15 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Key event handling ───────────────────────────────────────────────────
 
-    def _on_key_press_event(self, _widget, event, action: str):
-        """Start the key-repeat timer when a button is held down."""
+    def _on_key_press_event(self, widget, event, action: str):
+        """Start the key-repeat timer when a button is held down (or, for a
+        letter with accented forms, the hold-for-accents timer)."""
         if event.button != 1 or action in NON_REPEAT_ACTIONS:
+            return False
+        if self._accent_variants(action):
+            self._longpress_cancel()
+            self._longpress_timer = GLib.timeout_add(
+                LONG_PRESS_MS, self._on_long_press, widget, action)
             return False
         self._repeat_stop(action)
 
@@ -3079,7 +3152,75 @@ class OnScreenKeyboard(Gtk.Window):
         """Cancel the repeat timer when the button is released."""
         if event.button == 1:
             self._repeat_stop(action)
+            self._longpress_cancel()
         return False
+
+    # -- Hold a letter for its accents ----------------------------------------
+
+    def _accent_variants(self, action: str) -> list[str]:
+        if len(action) != 1 or not action.isalpha():
+            return []
+        return accents_for(self.predictor.language).get(action.lower(), [])
+
+    def _longpress_cancel(self):
+        if self._longpress_timer is not None:
+            GLib.source_remove(self._longpress_timer)
+            self._longpress_timer = None
+
+    def _on_long_press(self, widget, action: str) -> bool:
+        self._longpress_timer = None
+        self._longpress_fired = action      # the release must not type the letter
+        self._open_accent_popup(widget, action)
+        return False
+
+    def _open_accent_popup(self, anchor: Gtk.Widget, action: str):
+        self._close_accent_popup()
+        upper = self.shift_active ^ self.caps_lock
+        pop = Gtk.Popover()
+        pop.set_modal(False)                # never take focus from the typed-into app
+        pop.get_style_context().add_class("tour-popover")
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        row.set_margin_start(6); row.set_margin_end(6)
+        row.set_margin_top(6); row.set_margin_bottom(6)
+        for v in [action.lower()] + self._accent_variants(action):
+            shown = v.upper() if upper and len(v.upper()) == 1 else v
+            b = Gtk.Button(label=shown)
+            b.get_style_context().add_class("key-btn")
+            b.get_style_context().add_class("accent-choice")
+            b.set_size_request(48, 48)
+            b.get_accessible().set_name(shown)
+            b.connect("clicked", lambda _b, ch=v: self._on_accent_chosen(ch))
+            row.pack_start(b, False, False, 0)
+        row.show_all()
+        pop.add(row)
+        pop.set_relative_to(anchor)
+        pop.set_position(Gtk.PositionType.TOP)
+        self._accent_pop = pop
+        pop.popup()
+
+    def _on_accent_chosen(self, ch: str):
+        self._close_accent_popup()
+        self._play_click_sound()
+        mods = self._active_sticky_modifiers()
+        self._type_character(ch, mods)
+        if mods:
+            self.ctrl_active = self.alt_active = False
+            self._update_modifier_visuals()
+
+    def _close_accent_popup(self):
+        pop, self._accent_pop = self._accent_pop, None
+        if pop is not None:
+            pop.hide()
+            pop.destroy()
+
+    def _refresh_accent_marks(self):
+        """A small dot on letter keys that have accented forms (hold them)."""
+        for letter, btn in self._letter_btns.items():
+            ctx = btn.get_style_context()
+            if self._accent_variants(letter):
+                ctx.add_class("has-accents")
+            else:
+                ctx.remove_class("has-accents")
 
     def _repeat_stop(self, action: str):
         """Cancel any pending repeat timer for this action."""
@@ -3093,6 +3234,10 @@ class OnScreenKeyboard(Gtk.Window):
         # on release — ignore it since repeat is already handling the key.
         if action in self._repeat_active:
             return
+        if self._longpress_fired == action:  # held for accents: popup is up
+            self._longpress_fired = None
+            return
+        self._longpress_fired = None
         self._flash_key(btn)
         self._handle_key(action)
 
@@ -3116,6 +3261,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._flash_timers[btn] = GLib.timeout_add(self.KEY_FLASH_MS, _off)
 
     def _handle_key(self, action: str):
+        self._close_accent_popup()
         self._play_click_sound()
         if action in ("ctrl", "alt"):
             self._toggle_modifier(action)
@@ -3801,7 +3947,15 @@ class OnScreenKeyboard(Gtk.Window):
             return
         self.settings["language"] = code
         self._save_settings()
-        self.predictor.set_dictionary(dict_path_for(code))
+        self.predictor.set_language(code)
+        # Learned words belong to a language: save these, load that one's
+        self._user_model.save()
+        self._user_model = UserModel(learned_words_file(code), self.predictor.is_known)
+        self._apply_learn_setting()
+        self.current_word = ""
+        self._ctx_reset()
+        self._close_accent_popup()
+        self._refresh_accent_marks()
         self._refresh_language_buttons()
         self._refresh_suggestions()
 
@@ -4665,17 +4819,23 @@ class OnScreenKeyboard(Gtk.Window):
 
         inner.pack_start(self._settings_section_header("Input"), False, False, 0)
 
-        # ── Dictionary (English variant for suggestions + spell-check) ──────
-        lang_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lang_row.pack_start(self._settings_row_label("Dictionary"), False, False, 0)
+        # ── Language (word suggestions); English variants on the first line ─
         self._language_btns = {}
-        for code in ("en_AU", "en_GB", "en_US"):
-            btn = Gtk.Button(label=LANGUAGE_LABELS[code])
-            btn.get_style_context().add_class("settings-choice")
-            btn.connect("clicked", lambda _b, c=code: self._on_language_clicked(c))
-            lang_row.pack_start(btn, True, True, 0)
-            self._language_btns[code] = btn
-        inner.pack_start(lang_row, False, False, 0)
+        for i, codes in enumerate((ENGLISH_CODES, OTHER_LANGUAGE_CODES)):
+            lang_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            if i == 0:
+                lang_row.pack_start(self._settings_row_label("Language"), False, False, 0)
+            else:
+                pad = Gtk.Box()
+                pad.set_size_request(SETTINGS_LABEL_W, -1)
+                lang_row.pack_start(pad, False, False, 0)
+            for code in codes:
+                btn = Gtk.Button(label=LANGUAGE_LABELS[code])
+                btn.get_style_context().add_class("settings-choice")
+                btn.connect("clicked", lambda _b, c=code: self._on_language_clicked(c))
+                lang_row.pack_start(btn, True, True, 0)
+                self._language_btns[code] = btn
+            inner.pack_start(lang_row, False, False, 0)
         self._refresh_language_buttons()
 
         # ── Space after a suggestion ───────────────────────────────────────
@@ -5126,6 +5286,16 @@ class OnScreenKeyboard(Gtk.Window):
         else:
             self._forget_armed = False
             self._user_model.forget()
+            # ...and what was learned in the other languages
+            for code in OTHER_LANGUAGE_CODES + ("en_US",):
+                path = learned_words_file(code)
+                if path != self._user_model.path:
+                    try:
+                        os.remove(path)
+                    except FileNotFoundError:
+                        pass
+                    except OSError as exc:
+                        print(f"[learn] Could not erase {path}: {exc}")
             if self._learn_save_timer is not None:
                 GLib.source_remove(self._learn_save_timer)
                 self._learn_save_timer = None
@@ -6255,7 +6425,10 @@ class OnScreenKeyboard(Gtk.Window):
         push it onto the sentence context and let the user model learn it."""
         word = (word or "").lower()
         if self._ctx_stem:
-            word = self._ctx_stem + word if word else ""
+            if self.predictor.language in ELISION_LANGUAGES:
+                pass                  # "l'" + "homme": the word is just "homme"
+            else:
+                word = self._ctx_stem + word if word else ""
             self._ctx_stem = ""
         if not word:
             return

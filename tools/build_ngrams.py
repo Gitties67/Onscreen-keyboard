@@ -120,6 +120,12 @@ def main(src: str) -> None:
     print(f"{n_sent:,} sentences, {n_tok:,} tokens, "
           f"{len(bi):,} distinct bigrams, {len(tri):,} distinct trigrams")
 
+    write_model(OUT, bi, tri, "Tatoeba English sentences")
+
+
+def write_model(out: str, bi: Counter, tri: Counter, source: str) -> None:
+    """Prune the bigram/trigram counts and write them in ngrams.txt format
+    (shared with tools/build_lang.py)."""
     def emit(f, tag, counter, ctx_len, min_c, min_ctx, top_k):
         ctx_total: dict = defaultdict(int)
         conts: dict = defaultdict(list)
@@ -143,12 +149,12 @@ def main(src: str) -> None:
         f.write("\n".join(lines) + "\n")
         return len(lines)
 
-    with open(OUT, "w", encoding="utf-8", newline="\n") as f:
+    with open(out, "w", encoding="utf-8", newline="\n") as f:
         f.write(
             "# Word phrase model (bigrams + trigrams) for the on-screen keyboard.\n"
-            "# Derived from Tatoeba English sentences, https://tatoeba.org,\n"
+            f"# Derived from {source}, https://tatoeba.org,\n"
             "# CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).\n"
-            "# Regenerate with tools/build_ngrams.py.\n"
+            "# Regenerate with tools/build_ngrams.py / tools/build_lang.py.\n"
             "#\n"
             "# Format: a '[2]' or '[3]' section header, then one line per context:\n"
             "#   <context words, space-separated>TAB<context total>TAB<w:count w:count ...>\n"
@@ -157,8 +163,8 @@ def main(src: str) -> None:
         )
         n2 = emit(f, "2", bi, 1, MIN_BI, MIN_CTX_BI, TOP_BI)
         n3 = emit(f, "3", tri, 2, MIN_TRI, MIN_CTX_TRI, TOP_TRI)
-    print(f"wrote {OUT}: {n2:,} bigram contexts, {n3:,} trigram contexts, "
-          f"{os.path.getsize(OUT) / 1e6:.2f} MB")
+    print(f"wrote {out}: {n2:,} bigram contexts, {n3:,} trigram contexts, "
+          f"{os.path.getsize(out) / 1e6:.2f} MB")
 
 
 if __name__ == "__main__":

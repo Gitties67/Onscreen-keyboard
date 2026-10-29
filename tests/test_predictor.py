@@ -249,5 +249,64 @@ class TestRegionalDictionaries(unittest.TestCase):
         self.assertEqual(p.display_form("the"), "the")
 
 
+
+class TestOtherLanguages(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.p = {c: WordPredictor(language=c) for c in ("de", "fr", "es", "it", "pt", "nl")}
+
+    def test_all_languages_load_words_and_phrases(self):
+        for code, p in self.p.items():
+            self.assertFalse(p.dict_missing, code)
+            self.assertGreater(len(p._words), 40000, code)
+            self.assertTrue(p._bi and p._tri, code)
+
+    def test_accent_free_typing(self):
+        cases = {"de": ("ub", "über"), "fr": ("cafe", "café"), "es": ("manana", "mañana"),
+                 "it": ("perche", "perché"), "pt": ("nao", "não"), "nl": ("een", "een")}
+        for code, (typed, want) in cases.items():
+            self.assertEqual(self.p[code].predict(typed, 3)[0], want, code)
+
+    def test_accent_slips_filtered(self):
+        self.assertNotIn("tres", self.p["fr"].predict("tre", 10))
+        self.assertNotIn("tambien", self.p["es"].predict("tamb", 10))
+
+    def test_typed_accent_wins(self):
+        self.assertTrue(all(w.startswith("é") for w in self.p["fr"].predict("é", 5)))
+
+    def test_german_nouns_capitalised(self):
+        d = self.p["de"]
+        self.assertEqual(d.display_form("haus"), "Haus")
+        self.assertEqual(d.display_form("ich"), "ich")
+        self.assertEqual(d.display_form("straße"), "Straße")
+
+    def test_no_english_rules(self):
+        it = self.p["it"]
+        self.assertEqual(it.display_form("i"), "i")       # Italian article, not "I"
+        self.assertNotIn("the", it.predict_padded("", 5))
+
+    def test_context(self):
+        self.assertIn("gracias", self.p["es"].predict_next(["muchas"], 3))
+        self.assertIn("habe", self.p["de"].predict_next(["ich"], 5))
+
+    def test_learning_accepts_accented_words(self):
+        um = UserModel(None, self.p["de"].is_known)
+        self.assertTrue(um.observe("über", ["ich"]))
+        self.assertTrue(um.observe("Über"))              # stored lowercase
+        self.assertEqual(um.u1, {"über": 2})
+        self.assertFalse(um.observe("über1"))
+
+    def test_switch_back_to_english(self):
+        p = WordPredictor(language="de")
+        p.set_language("en_US")
+        self.assertEqual(p.predict_next(["thank"], 3)[0], "you")
+        self.assertEqual(p.display_form("i"), "I")
+
+    def test_fold(self):
+        self.assertEqual(predictor.fold("Straße"), "strasse")
+        self.assertEqual(predictor.fold("Über"), "uber")
+        self.assertEqual(predictor.fold("hello"), "hello")
+
+
 if __name__ == "__main__":
     unittest.main()
