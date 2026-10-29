@@ -118,35 +118,50 @@ window.light .dwell-pending {
 window.hc #resize-label { color: #ffffff; }
 window.hc #resize-grip:hover #resize-label { color: #ffdd00; }
 
-/* ── Close button ──────────────────────────────────────────── */
-#close-btn {
+/* ── Caption buttons (Windows 10/11 style minimize / close / expand) ──
+   Flat 46 x 32 px, no border radius or bevel.  Colours (incl. the #c42b1c
+   close hover) are theme-driven — see _make_theme_css. */
+.caption-btn {
     background-image: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 2px 8px;
-    min-height: 26px;
-    min-width: 36px;
+    border-radius: 0;
     box-shadow: none;
     text-shadow: none;
+    padding: 0;
+    margin: 0;
+    min-height: 32px;
+    min-width: 46px;
+    font-size: 13px;
+    font-weight: 400;
+    transition: background-color 80ms ease;
 }
-#close-btn:hover  { background-image: none; }
-#close-btn:active { background-image: none; }
+.caption-btn:hover  { background-image: none; box-shadow: none; }
+.caption-btn:active { background-image: none; box-shadow: none; }
+.caption-btn.unicode label { font-size: 13px; }
+#caption-minimize.unicode label { font-size: 14px; font-weight: 300; }
+#caption-expand.unicode label { font-size: 10px; }
 
-/* ── Minimize / collapse button (Windows 11-style window control) ── */
-#minimize-btn {
+/* ── First-run tour bubble (colours theme-driven) ─────────── */
+popover.tour-popover {
+    border-radius: 8px;
+    box-shadow: none;
+    padding: 0;
+}
+.tour-title { font-weight: 700; }
+.tour-body  { font-weight: 400; }
+.tour-count { font-size: 12px; font-weight: 500; }
+.tour-btn {
     background-image: none;
     border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 2px 8px;
-    min-height: 26px;
-    min-width: 36px;
     box-shadow: none;
     text-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 16px;
+    min-height: 44px;
+    min-width: 96px;
 }
-#minimize-btn:hover  { background-image: none; }
-#minimize-btn:active { background-image: none; }
+.tour-btn:hover  { background-image: none; }
+.tour-btn:active { background-image: none; }
 
 /* ── Settings gear button ──────────────────────────────────── */
 #settings-btn {
@@ -226,8 +241,8 @@ window.hc #resize-grip:hover #resize-label { color: #ffdd00; }
 
 /* ── Title bar ─────────────────────────────────────────────── */
 #title-bar {
-    min-height: 26px;
-    padding: 0 6px;
+    min-height: 32px;
+    padding: 0 0 0 6px;   /* caption buttons sit flush with the right edge */
     border-bottom-width: 1px;
     border-bottom-style: solid;
 }
