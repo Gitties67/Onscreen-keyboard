@@ -107,7 +107,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Clipboard history** — 📋 shows last 20 clipboard entries; click any to type it
 - **Clear key feedback** — the key you press briefly flashes a softly inverted colour, so you can see what registered
 - **Sticky modifiers** — Ctrl, Alt latch on click; configurable auto-release or persistent toggle
-- **DIY theme builder** — 6-step colour wizard with live preview
+- **DIY theme builder** — 6-step colour wizard with a built-in palette (plus lighter/darker) and live preview
 - **4 built-in themes** — Dark, Light, Midnight, High Contrast
 - **Dwell click** — hover-to-click accessibility mode with adjustable delay (0.3–2.0 s)
 - **Key sound** — soft click by default; switch to a beep or turn it off in Settings
@@ -154,9 +154,9 @@ Settings saved to `~/.config/onscreen_keyboard/settings.json` (Linux) or `%APPDA
 
 Add your own words so they appear first in suggestions.
 
-1. Open **⚙ Settings → Custom dictionary → + Add word or phrase**
-2. Type your entry using the keys (Shift works normally)
-3. Press **↵** to save
+1. Open **⚙ Settings → Custom words → + Add word or phrase**
+2. Type your entry using the keyboard's keys (Shift works normally); it shows in the bar at the top
+3. Tap **✓ Save** (or press **↵**). You're taken back to Settings and the new word appears in the list
 
 **Example:** Add `Dinglebob` — typing `din` will offer it as the first suggestion. Click it and the keyboard backtracks the prefix and types `Dinglebob ` with the correct capital.
 

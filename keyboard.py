@@ -607,8 +607,9 @@ SETTINGS_HELP = {
     "Learn my words": "Remembers which words you use (on this computer only, never sent "
                       "anywhere) so they're suggested sooner. Words next to numbers or symbols, "
                       "like emails and passwords, are never learned. Forget erases it all.",
-    "Custom words": "Your own words and phrases (names, slang, work terms). They're suggested "
-                    "first, with the capitals you gave them.",
+    "Custom words": "Your own words and phrases (names, slang, work terms). Tap + Add, type "
+                    "the word on the keyboard's keys, then tap ✓ Save. From then on, typing its "
+                    "first letters suggests it first, with the capitals you gave it.",
     "Macros": "Short triggers that expand into longer text. Type the trigger and pick it from "
               "the suggestions; {date} and {time} fill in today's date and the time.",
     "Custom themes": "Make your own colour scheme, step by step, with a live preview.",
@@ -650,7 +651,7 @@ if IS_WINDOWS:
 else:
     FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 
 GITHUB_REPO_URL     = "https://github.com/Gitties67/Onscreen-keyboard"
 FEEDBACK_REVIEW_URL = GITHUB_REPO_URL + "/issues/new?template=review.yml"
@@ -780,6 +781,14 @@ WIZARD_STEPS = [
     ("Accent colour  (active keys / suggestions)", "accent"),
     ("Close button colour",                        "danger"),
 ]
+# Theme-maker palette: 12 bright colours, then 12 deep shades / greys.
+WIZARD_PALETTE = [
+    "#e81123", "#ff8c00", "#fff100", "#16c60c", "#00b294", "#00bcf2",
+    "#0078d4", "#5c2d91", "#b4009e", "#e3008c", "#ffffff", "#000000",
+    "#7a1f2b", "#8a4b08", "#6b6a0e", "#1e5d24", "#0b4f4a", "#0b4a6b",
+    "#1a2b4c", "#2e1a47", "#4a1942", "#2d2d2d", "#808080", "#c8c8c8",
+]
+
 WIZARD_DEFAULTS = {
     "bg": "#1c1c1c", "key_bg": "#2d2d2d", "key_fg": "#f0f0f0",
     "border": "#404040", "accent": "#0078d4", "danger": "#ff6b6b",
@@ -826,6 +835,11 @@ window {{ background-color: {c['bg']}; }}
 .suggestion-btn {{ color: {c['sugg_fg']}; background-color: transparent;
                    font-size: {font_size}px; }}
 .suggestion-btn:hover {{ background-color: {c['sugg_hover']}; }}
+.palette-swatch {{ border: 1px solid {c['key_border']}; padding: 0; box-shadow: none;
+                   min-width: 32px; min-height: 32px; }}
+.palette-swatch.selected, .palette-swatch.current {{ border: 3px solid {c['key_fg']}; }}
+.suggestion-btn.ci-save {{ background-color: {c['active_bg']}; color: {c['active_fg']}; }}
+.suggestion-btn.ci-save:disabled {{ background-color: transparent; color: {c['sublabel_fg']}; }}
 .suggestion-btn + .suggestion-btn {{ border-left-color: {c['sugg_divider']}; }}
 #search-label {{ color: {c['search_fg']}; font-size: {font_size}px; }}
 .key-btn {{ background-color: {c['key_bg']}; color: {c['key_fg']};
@@ -1545,7 +1559,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._wizard_page_ready: bool        = False
         self._wizard_step_label:     Gtk.Label | None       = None
         self._wizard_question_label: Gtk.Label | None       = None
-        self._wizard_color_btn:      Gtk.ColorButton | None = None
+        self._wizard_current:        Gtk.Button | None = None     # big "current colour" swatch
         self._wizard_next_btn:       Gtk.Button | None      = None
         self._wizard_name_display:   Gtk.Label | None       = None
         self._wizard_preview_swatches: list[Gtk.EventBox]   = []
@@ -3262,13 +3276,16 @@ class OnScreenKeyboard(Gtk.Window):
         if keep != "app" and self._app_mode:
             self._close_app_mode()
         if keep != "custom_input" and self._custom_input_mode:
-            self._close_custom_input_mode()
+            self._custom_input_return_to_settings = False
+            self._close_custom_input_mode(back_to_settings=False)
         if self._fuzzy_timer is not None:
             GLib.source_remove(self._fuzzy_timer)
             self._fuzzy_timer = None
 
     def _open_custom_input_mode(self, target: str = "word"):
         """Switch to key grid and capture typing into the custom word buffer."""
+        if self._settings_mode:
+            self._custom_input_return_to_settings = True
         self._close_other_panels("custom_input")
         self._custom_input_mode_target = target
         self._custom_input_mode = True
@@ -3277,9 +3294,11 @@ class OnScreenKeyboard(Gtk.Window):
             self._key_stack.set_visible_child_name("keys")
         self._update_custom_input_display()
 
-    def _close_custom_input_mode(self):
+    def _close_custom_input_mode(self, back_to_settings: bool = True):
         target = self._custom_input_mode_target
         self._custom_input_mode = False
+        for btn in self._suggestion_btns:
+            btn.get_style_context().remove_class("ci-save")
         self._custom_input_text = ""
         self._custom_input_mode_target = "word"
         if target in ("macro_trigger", "macro_expansion"):
@@ -3287,6 +3306,17 @@ class OnScreenKeyboard(Gtk.Window):
         if self._search_label:
             self._search_label.hide()
         self._refresh_suggestions()
+        # Started from Settings (custom word / macro)? Go back there so the
+        # user sees the result.  The theme wizard continues on its own page.
+        if (back_to_settings and target != "theme_name"
+                and getattr(self, "_custom_input_return_to_settings", False)):
+            self._custom_input_return_to_settings = False
+            if not self._settings_mode:
+                self._toggle_settings()
+            anchor = (getattr(self, "_custom_words_header", None) if target == "word"
+                      else getattr(self, "_macros_header", None))
+            if anchor is not None:
+                GLib.idle_add(self._scroll_settings_to, anchor)
 
     def _confirm_custom_word(self):
         word = self._custom_input_text.strip()
@@ -3301,7 +3331,9 @@ class OnScreenKeyboard(Gtk.Window):
         elif self._custom_input_mode_target == "macro_trigger":
             if word:
                 self._macro_draft["trigger"] = word
-                self._open_custom_input_mode(target="macro_expansion")
+                self._custom_input_mode_target = "macro_expansion"
+                self._custom_input_text = ""
+                self._update_custom_input_display()
             else:
                 self._close_custom_input_mode()
         elif self._custom_input_mode_target == "macro_expansion":
@@ -3313,26 +3345,64 @@ class OnScreenKeyboard(Gtk.Window):
             if word:
                 self._add_custom_word(word)
             self._close_custom_input_mode()
+            if word:
+                self._flash_custom_words_status(f"✓ Added “{word}”")
+
+    # Slots in the suggestion bar used as buttons while typing a custom entry
+    CI_SAVE_SLOT, CI_CANCEL_SLOT = 3, 4
 
     def _update_custom_input_display(self):
+        target = self._custom_input_mode_target
+        txt = self._custom_input_text
+        title, save = {
+            "theme_name":      ("Name your theme:", "Next ▶"),
+            "macro_trigger":   ("Macro shortcut (what you'll type):", "Next ▶"),
+            "macro_expansion": (f"Text that “{self._macro_draft.get('trigger', '')}” becomes:", "✓ Save"),
+        }.get(target, ("New custom word:", "✓ Save"))
         if self._search_label:
-            txt = self._custom_input_text
-            if self._custom_input_mode_target == "theme_name":
-                prompt = "🎨 Type theme name, ↵ to confirm"
-                self._search_label.set_text(f"🎨 {txt}▏" if txt else prompt)
-            elif self._custom_input_mode_target == "macro_trigger":
-                prompt = "🔤 Macro shortcut: type trigger, ↵"
-                self._search_label.set_text(f"🔤 {txt}▏" if txt else prompt)
-            elif self._custom_input_mode_target == "macro_expansion":
-                trigger = self._macro_draft.get("trigger", "")
-                prompt = f"↪ Expansion for '{trigger}': type text, ↵"
-                self._search_label.set_text(f"↪ {txt}▏" if txt else prompt)
-            else:
-                self._search_label.set_text(f"+ {txt}▏" if txt else "+ type word/phrase, ↵ to save")
+            esc = GLib.markup_escape_text
+            shown = (f"<span weight='bold'>{esc(txt)}</span>▏" if txt
+                     else "<i>type it on the keys below</i>")
+            self._search_label.set_markup(f"{esc(title)}  {shown}")
             self._search_label.show()
-        for btn in self._suggestion_btns:
-            btn.set_label("")
-            btn.set_sensitive(False)
+        for i, btn in enumerate(self._suggestion_btns):
+            ctx = btn.get_style_context()
+            ctx.remove_class("ci-save")
+            if i == self.CI_SAVE_SLOT:
+                btn.set_label(save)
+                btn.set_sensitive(bool(txt.strip()))
+                ctx.add_class("ci-save")
+            elif i == self.CI_CANCEL_SLOT:
+                btn.set_label("✕ Cancel")
+                btn.set_sensitive(True)
+            else:
+                btn.set_label("")
+                btn.set_sensitive(False)
+
+    def _scroll_settings_to(self, widget) -> bool:
+        """Scroll the settings page so `widget` is near the top."""
+        sw = getattr(self, "_settings_scroll", None)
+        child = sw.get_child() if sw else None
+        if child is None:
+            return False
+        pos = widget.translate_coordinates(child, 0, 0)
+        if pos:
+            adj = sw.get_vadjustment()
+            adj.set_value(min(max(0, pos[1] - 12), adj.get_upper() - adj.get_page_size()))
+        return False
+
+    def _flash_custom_words_status(self, text: str):
+        """Briefly show a confirmation beside the Custom words heading."""
+        lbl = self._custom_words_count
+        if lbl is None:
+            return
+        lbl.set_text(text)
+
+        def _restore():
+            n = len(self._custom_words)
+            lbl.set_text(f"{n} word{'s' if n != 1 else ''}")
+            return False
+        GLib.timeout_add_seconds(4, _restore)
 
     def _add_custom_word(self, word: str):
         if word not in self._custom_words:
@@ -3789,25 +3859,60 @@ class OnScreenKeyboard(Gtk.Window):
         self._wizard_question_label.set_xalign(0.0)
         page.pack_start(self._wizard_question_label, False, False, 0)
 
-        # ── Colour picker button ───────────────────────────────────────────
-        picker_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-
-        self._wizard_color_btn = Gtk.ColorButton()
-        self._wizard_color_btn.set_use_alpha(False)
-        self._wizard_color_btn.set_size_request(160, 52)
-        self._wizard_color_btn.connect("color-set", self._on_wizard_color_set)
-        picker_row.pack_start(self._wizard_color_btn, False, False, 0)
-
-        # Colour swatches: one box per wizard step, filled in as user proceeds
+        # Progress swatches: one per wizard step, filled in as the user goes
+        # (in the top row, beside the step counter).
         swatch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         swatch_box.set_valign(Gtk.Align.CENTER)
         self._wizard_preview_swatches = []
         for _i in range(len(WIZARD_STEPS)):
             eb = Gtk.EventBox()
-            eb.set_size_request(28, 28)
+            eb.set_size_request(22, 22)
             swatch_box.pack_start(eb, False, False, 0)
             self._wizard_preview_swatches.append(eb)
-        picker_row.pack_start(swatch_box, True, True, 0)
+        top_row.pack_end(swatch_box, False, False, 12)
+
+        # ── Colour picker: built into the page ─────────────────────────────
+        # (A GtkColorButton opens a separate dialog window, which ends up
+        # BEHIND the always-on-top keyboard; an inline palette can't.)
+        picker_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+
+        # A (do-nothing) button rather than an EventBox so it gets the swatch
+        # border: when picking the background colour it matches the page.
+        self._wizard_current = Gtk.Button()
+        self._wizard_current.get_style_context().add_class("palette-swatch")
+        self._wizard_current.get_style_context().add_class("current")
+        self._wizard_current.set_can_focus(False)
+        self._wizard_current.get_accessible().set_name("Chosen colour")
+        self._wizard_current.set_size_request(72, 72)
+        self._wizard_current.set_valign(Gtk.Align.CENTER)
+        picker_row.pack_start(self._wizard_current, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_row_spacing(6)
+        grid.set_column_spacing(6)
+        grid.set_valign(Gtk.Align.CENTER)
+        self._wizard_palette_btns = {}
+        for i, hex_c in enumerate(WIZARD_PALETTE):
+            b = Gtk.Button()
+            b.get_style_context().add_class("palette-swatch")
+            b.set_size_request(32, 32)
+            b.set_tooltip_text(hex_c)
+            b.get_accessible().set_name(f"Colour {hex_c}")
+            self._set_swatch_color(b, hex_c)
+            b.connect("clicked", lambda _b, h=hex_c: self._wizard_pick(h))
+            grid.attach(b, i % 12, i // 12, 1, 1)
+            self._wizard_palette_btns[hex_c] = b
+        picker_row.pack_start(grid, False, False, 0)
+
+        tune = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        tune.set_valign(Gtk.Align.CENTER)
+        for text, toward in (("☀ Lighter", "#ffffff"), ("☾ Darker", "#000000")):
+            b = Gtk.Button(label=text)
+            b.get_style_context().add_class("settings-choice")
+            b.set_size_request(100, -1)
+            b.connect("clicked", lambda _b, t=toward: self._wizard_nudge(t))
+            tune.pack_start(b, False, False, 0)
+        picker_row.pack_start(tune, False, False, 0)
         page.pack_start(picker_row, False, False, 0)
 
         # ── Theme name display ─────────────────────────────────────────────
@@ -3851,9 +3956,7 @@ class OnScreenKeyboard(Gtk.Window):
         if self._wizard_question_label:
             self._wizard_question_label.set_text(question)
 
-        if self._wizard_color_btn:
-            self._wizard_color_btn.set_rgba(
-                _hex_to_gdk_rgba(self._wizard_colors.get(color_key, "#888888")))
+        self._wizard_show_current(self._wizard_colors.get(color_key, "#888888"))
 
         if self._wizard_next_btn:
             self._wizard_next_btn.set_label(
@@ -3874,19 +3977,40 @@ class OnScreenKeyboard(Gtk.Window):
                 else:
                     self._set_swatch_color(eb, _mix(hex_c, "#888888", 0.7))
 
-    def _set_swatch_color(self, eb: Gtk.EventBox, hex_c: str):
-        """Apply a background colour to an EventBox via an inline CSS provider."""
-        provider = Gtk.CssProvider()
+    def _set_swatch_color(self, widget: Gtk.Widget, hex_c: str):
+        """Give a widget a solid background colour (one CSS provider per
+        widget, reused on every change)."""
+        provider = getattr(widget, "_osk_swatch_provider", None)
+        if provider is None:
+            provider = Gtk.CssProvider()
+            widget._osk_swatch_provider = provider
+            widget.get_style_context().add_provider(
+                provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 10)
         provider.load_from_data(
-            f"* {{ background-color: {hex_c}; border-radius: 4px; }}".encode()
-        )
-        eb.get_style_context().add_provider(
-            provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 10)
+            f"* {{ background-color: {hex_c}; background-image: none; "
+            f"border-radius: 6px; }}".encode())
 
-    def _on_wizard_color_set(self, btn: Gtk.ColorButton):
-        """User confirmed a colour in the picker — store it and preview live."""
+    def _wizard_show_current(self, hex_c: str):
+        """Big preview swatch + highlight the matching palette colour."""
+        if getattr(self, "_wizard_current", None) is not None:
+            self._set_swatch_color(self._wizard_current, hex_c)
+        for h, b in getattr(self, "_wizard_palette_btns", {}).items():
+            ctx = b.get_style_context()
+            if h.lower() == hex_c.lower():
+                ctx.add_class("selected")
+            else:
+                ctx.remove_class("selected")
+
+    def _wizard_nudge(self, toward: str):
+        """Lighter / Darker: move the current colour 15% toward white/black."""
         _, color_key = WIZARD_STEPS[self._wizard_step - 1]
-        self._wizard_colors[color_key] = _gdk_rgba_to_hex(btn.get_rgba())
+        self._wizard_pick(_mix(self._wizard_colors.get(color_key, "#888888"), toward, 0.15))
+
+    def _wizard_pick(self, hex_c: str):
+        """A colour was chosen for the current step: store it and preview live."""
+        _, color_key = WIZARD_STEPS[self._wizard_step - 1]
+        self._wizard_colors[color_key] = hex_c
+        self._wizard_show_current(hex_c)
         # Update the swatch for this step immediately
         if (self._wizard_step - 1) < len(self._wizard_preview_swatches):
             self._set_swatch_color(
@@ -4359,6 +4483,7 @@ class OnScreenKeyboard(Gtk.Window):
         scroll_outer.set_vexpand(True)
         scroll_outer.set_overlay_scrolling(False)   # a real gutter, never on top of rows
         scroll_outer.set_name("settings-scroll")
+        self._settings_scroll = scroll_outer
 
         inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         inner.set_name("settings-inner")   # CSS padding: gap before the scrollbar
@@ -4705,6 +4830,7 @@ class OnScreenKeyboard(Gtk.Window):
         inner.pack_start(self._settings_section_header("Your words and shortcuts"), False, False, 0)
         dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         dict_header.pack_start(self._settings_row_label("Custom words"), False, False, 0)
+        self._custom_words_header = dict_header
 
         n = len(self._custom_words)
         self._custom_words_count = Gtk.Label(
@@ -4734,6 +4860,7 @@ class OnScreenKeyboard(Gtk.Window):
         # ── 12. Macros section ─────────────────────────────────────────────
         macros_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         macros_header.set_margin_top(8)
+        self._macros_header = macros_header
         macros_header.pack_start(self._settings_row_label("Macros"), False, False, 0)
 
         nm = len(self._macros)
@@ -6260,6 +6387,35 @@ class OnScreenKeyboard(Gtk.Window):
 
         return False  # don't repeat
 
+    # Windows: a posted backspace only becomes a "delete" when the target app's
+    # TranslateMessage turns it into WM_CHAR(0x08) — which is queued BEHIND the
+    # characters we already posted.  So erase first, then type after a pause.
+    BACKSPACE_SETTLE_MS = 90
+
+    def _replace_typed_word(self, text: str, typed: str):
+        """Turn what was typed (`typed`) into `text` (+ the optional space).
+
+        Keeps the part that already matches exactly (typed "Ga" → "Gattatron"
+        only types "ttatron", no backspace at all) and erases only the rest."""
+        keep = 0
+        while keep < min(len(typed), len(text)) and typed[keep] == text[keep]:
+            keep += 1
+        erase = len(typed) - keep
+        rest = text[keep:]
+
+        def _type_rest():
+            for ch in rest:
+                self.typer.type_char(ch)
+            self._suggestion_space()
+            return False
+
+        for _ in range(erase):
+            self.typer.send_special("backspace")
+        if erase and IS_WINDOWS:
+            GLib.timeout_add(self.BACKSPACE_SETTLE_MS, _type_rest)
+        else:
+            _type_rest()
+
     def _suggestion_space(self):
         """Space after an accepted suggestion, unless turned off in Settings."""
         if self.settings.get("space_after_suggestion", True):
@@ -6268,6 +6424,13 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_suggestion_clicked(self, btn: Gtk.Button, idx: int = 0):
         label = btn.get_label()
         if not label:
+            return
+
+        if self._custom_input_mode:
+            if idx == self.CI_SAVE_SLOT:
+                self._confirm_custom_word()
+            elif idx == self.CI_CANCEL_SLOT:
+                self._close_custom_input_mode()
             return
 
         if self._app_mode:
@@ -6286,11 +6449,7 @@ class OnScreenKeyboard(Gtk.Window):
             expanded = self._expand_macro(expansion)[:500]  # cap to prevent UI freeze
             # current_word equals the trigger at this point (exact match required for
             # macro to surface), so unconditionally erase it before typing the expansion
-            for _ in range(len(self.current_word)):
-                self.typer.send_special("backspace")
-            for ch in expanded:
-                self.typer.type_char(ch)
-            self._suggestion_space()
+            self._replace_typed_word(expanded, typed=self._typed_prefix())
             self.current_word = ""
             self._ctx_reset()      # a macro can expand to anything
             self._refresh_suggestions()
@@ -6306,12 +6465,7 @@ class OnScreenKeyboard(Gtk.Window):
         # Custom word/phrase — backspace the partial prefix then type full entry
         # with its original casing (e.g. "Dinglebob" even if user typed "din")
         if idx < len(self._suggestion_is_custom) and self._suggestion_is_custom[idx]:
-            if label.lower().startswith(self.current_word.lower()):
-                for _ in range(len(self.current_word)):
-                    self.typer.send_special("backspace")
-            for ch in label:
-                self.typer.type_char(ch)
-            self._suggestion_space()
+            self._replace_typed_word(label, typed=self._typed_prefix())
             self.current_word = ""
             self._ctx_commit(label)
             self._refresh_suggestions()
@@ -6319,11 +6473,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Fuzzy spell-check suggestion — always replace in full (prefix never matches)
         if idx < len(self._suggestion_is_fuzzy) and self._suggestion_is_fuzzy[idx]:
-            for _ in range(len(self.current_word)):
-                self.typer.send_special("backspace")
-            for ch in label:
-                self.typer.type_char(ch)
-            self._suggestion_space()
+            self._replace_typed_word(self._case_word(label), typed=self._typed_prefix())
             self.current_word = ""
             self._ctx_commit(label)
             self._refresh_suggestions()
@@ -6331,17 +6481,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Normal dictionary word-completion
         cased = self._case_word(label)
-        if not cased.startswith(self._typed_prefix()):
-            # Retype the whole word with casing (backspace the partial prefix first)
-            for _ in range(len(self.current_word)):
-                self.typer.send_special("backspace")
-            for ch in cased:
-                self.typer.type_char(ch)
-        else:
-            # Fast path: just type the remaining suffix
-            for ch in cased[len(self.current_word):]:
-                self.typer.type_char(ch)
-        self._suggestion_space()
+        self._replace_typed_word(cased, typed=self._typed_prefix())
         self.current_word = ""
         self._ctx_commit(label)
         self._refresh_suggestions()
