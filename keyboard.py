@@ -429,7 +429,7 @@ if not IS_WINDOWS:
         if not XLIB_OK and not PYNPUT_OK:
             print(f"[keyboard] AT-SPI2 also unavailable ({_e}) — typing disabled.")
 
-from predictor import WordPredictor
+from predictor import WordPredictor, UserModel
 from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
 
 
@@ -503,6 +503,7 @@ CONFIG_FILE       = os.path.join(CONFIG_DIR, "settings.json")
 CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
 MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
+LEARNED_WORDS_FILE = os.path.join(CONFIG_DIR, "learned_words.json")
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
 BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 
@@ -522,6 +523,7 @@ DEFAULT_SETTINGS: dict = {
     "font_family":          DEFAULT_FONT, # key label font family
     "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
     "update_check_enabled": True,
+    "learn_words":          True,     # learn word usage from what you type (local only)
 }
 
 DEFAULT_MACROS = [
@@ -1228,7 +1230,12 @@ class OnScreenKeyboard(Gtk.Window):
         self.predictor    = WordPredictor(_resolve_dict_path())
         self.typer        = KeyTyper()
         self.current_word = ""
-        self._last_word   = ""   # last fully typed word, for next-word prediction
+        self._last_word   = ""   # last committed word of this sentence ("" = none)
+        self._ctx: list[str] = []      # last <=2 committed words of the current sentence
+        self._ctx_stem    = ""         # "don'" while typing don't (apostrophe pending)
+        self._learn_save_timer = None  # debounce timer for UserModel.save()
+        self._forget_timer = None      # confirm-window timer for "Forget learned words"
+        self._forget_armed = False
         self.shift_active = False
         self.caps_lock    = False
         self._custom_words: list[str] = []
@@ -1386,6 +1393,10 @@ class OnScreenKeyboard(Gtk.Window):
 
         self._custom_words = self._load_custom_words()
         self.predictor.set_custom_words(self._custom_words)
+
+        # Learned-words model (local JSON; boosts words you actually use)
+        self._user_model = UserModel(LEARNED_WORDS_FILE, self.predictor.is_known)
+        self._apply_learn_setting()
 
         self._custom_themes = self._load_custom_themes()
         for _name, _colors in self._custom_themes.items():
@@ -2568,6 +2579,14 @@ class OnScreenKeyboard(Gtk.Window):
         if self._fuzzy_timer is not None:
             GLib.source_remove(self._fuzzy_timer)
             self._fuzzy_timer = None
+        # Persist learned words (called on every exit path)
+        if self._learn_save_timer is not None:
+            GLib.source_remove(self._learn_save_timer)
+            self._learn_save_timer = None
+        if self._forget_timer is not None:
+            GLib.source_remove(self._forget_timer)
+            self._forget_timer = None
+        self._user_model.save()
 
     def _quit(self):
         self._cancel_all_timers()
@@ -2729,27 +2748,34 @@ class OnScreenKeyboard(Gtk.Window):
             self.typer.send_special("backspace", mods)
             if not mods and self.current_word:
                 self.current_word = self.current_word[:-1]
-            elif mods:
+            else:
+                # Deleting past the word start (or Ctrl+Backspace): the words
+                # before the caret are no longer what we think they are.
                 self.current_word = ""
+                self._ctx_reset()
             self._refresh_suggestions()
 
         elif action == "return":
             self.typer.send_special("return", mods)
-            if self.current_word:
-                self._last_word = self.current_word
+            # Enter ends the sentence: learn the final word, then start fresh
+            self._ctx_commit(self.current_word)
+            self._ctx_reset()
             self.current_word = ""
             self._refresh_suggestions()
 
         elif action == "space":
             self.typer.send_special("space", mods)
-            if self.current_word:
-                self._last_word = self.current_word
+            if mods:
+                self._ctx_reset()
+            else:
+                self._ctx_commit(self.current_word)
             self.current_word = ""
             self._refresh_suggestions()
 
         elif action == "tab":
             self.typer.send_special("tab", mods)
             self.current_word = ""
+            self._ctx_reset()
             self._refresh_suggestions()
 
         elif action == "prtscn":
@@ -2761,6 +2787,7 @@ class OnScreenKeyboard(Gtk.Window):
                         "f7", "f8", "f9", "f10", "f11", "f12"):
             self.typer.send_special(action, mods)
             self.current_word = ""
+            self._ctx_reset()      # caret moved - sentence context is unknown
             self._refresh_suggestions()
 
         else:
@@ -2784,6 +2811,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _close_other_panels(self, keep: str):
         """Close every open panel/mode except `keep` using its own close routine,
         and cancel any pending fuzzy update (it must not repaint over a panel)."""
+        self._ctx_reset()
         if keep != "settings" and self._settings_mode:
             self._toggle_settings()
         if keep != "emoji" and self._emoji_mode:
@@ -4041,6 +4069,32 @@ class OnScreenKeyboard(Gtk.Window):
 
         inner.pack_start(self._settings_section_header("Data"), False, False, 0)
 
+        # -- Learned words ---------------------------------------------------
+        learn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        learn_lbl = Gtk.Label(label="Learn my words")
+        learn_lbl.set_name("settings-label")
+        learn_lbl.set_xalign(0.0)
+        learn_lbl.set_hexpand(True)
+        learn_row.pack_start(learn_lbl, True, True, 0)
+
+        learn_on = bool(self.settings.get("learn_words", True))
+        learn_toggle = Gtk.ToggleButton(label="On" if learn_on else "Off")
+        learn_toggle.set_name("settings-toggle")
+        learn_toggle.set_size_request(60, -1)
+        learn_toggle.set_active(learn_on)
+        learn_toggle.connect("toggled", self._on_learn_toggled)
+        learn_toggle.get_accessible().set_description(
+            "Remember which words you use, locally, to improve suggestions")
+        learn_row.pack_end(learn_toggle, False, False, 0)
+        inner.pack_start(learn_row, False, False, 0)
+
+        self._forget_btn = Gtk.Button(label="Forget learned words")
+        self._forget_btn.get_style_context().add_class("settings-choice")
+        self._forget_btn.connect("clicked", self._on_forget_clicked)
+        self._forget_btn.get_accessible().set_description(
+            "Erase the words and phrases the keyboard has learned from your typing")
+        inner.pack_start(self._forget_btn, False, False, 0)
+
         # ── 11. Custom dictionary section ──────────────────────────────────
         dict_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         dict_lbl = Gtk.Label(label="Custom dictionary")
@@ -4235,6 +4289,40 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _on_theme_clicked(self, _btn, theme: str):
         self._apply_theme(theme)
+
+    def _on_learn_toggled(self, toggle: Gtk.ToggleButton):
+        on = toggle.get_active()
+        toggle.set_label("On" if on else "Off")
+        self.settings["learn_words"] = on
+        self._apply_learn_setting()
+        self._ctx_reset()
+        self._save_settings()
+        self._refresh_suggestions()
+
+    def _on_forget_clicked(self, btn: Gtk.Button):
+        """Two-step: first click arms (3 s window), second click erases."""
+        if self._forget_timer is not None:
+            GLib.source_remove(self._forget_timer)
+        if not self._forget_armed:
+            self._forget_armed = True
+            btn.set_label("Click again to confirm")
+        else:
+            self._forget_armed = False
+            self._user_model.forget()
+            if self._learn_save_timer is not None:
+                GLib.source_remove(self._learn_save_timer)
+                self._learn_save_timer = None
+            btn.set_label("Learned words erased")
+            self._refresh_suggestions()
+        self._forget_timer = GLib.timeout_add_seconds(3, self._disarm_forget)
+
+    def _disarm_forget(self) -> bool:
+        self._forget_timer = None
+        self._forget_armed = False
+        btn = getattr(self, "_forget_btn", None)
+        if btn is not None:
+            btn.set_label("Forget learned words")
+        return False
 
     def _on_dwell_toggled(self, toggle: Gtk.ToggleButton, label_btn):
         enabled = toggle.get_active()
@@ -5038,7 +5126,23 @@ class OnScreenKeyboard(Gtk.Window):
 
         if char.isalpha() and not mods:
             self.current_word += char.lower()
+        elif mods:
+            self.current_word = ""
+            self._ctx_reset()      # shortcuts (paste, select-all...) change the text
+        elif char == "'" and self.current_word:
+            # Mid-contraction (don't, I'm): hold the stem so the committed
+            # token is "don't", not "don" + "t".
+            self._ctx_stem = self.current_word + "'"
+            self.current_word = ""
         else:
+            # Punctuation / digits end the word. . ! ? end the sentence too.
+            if char in ".!?":
+                self._ctx_commit(self.current_word)
+                self._ctx_reset()
+            elif char.isdigit():
+                self._ctx_reset()
+            else:
+                self._ctx_commit(self.current_word)
             self.current_word = ""
 
         self._refresh_suggestions()
@@ -5048,6 +5152,44 @@ class OnScreenKeyboard(Gtk.Window):
             self._update_modifier_visuals()
 
     # ── Suggestion bar ────────────────────────────────��───────────────────────
+
+    # -- Sentence context + learning -----------------------------------------
+
+    def _ctx_commit(self, word: str):
+        """A word was finished (space, punctuation, Enter, suggestion click):
+        push it onto the sentence context and let the user model learn it."""
+        word = (word or "").lower()
+        if self._ctx_stem:
+            word = self._ctx_stem + word if word else ""
+            self._ctx_stem = ""
+        if not word:
+            return
+        if self.settings.get("learn_words", True):
+            # observe() ignores anything that isn't a known alphabetic word
+            if self._user_model.observe(word, self._ctx):
+                self._schedule_learn_save()
+        self._ctx = (self._ctx + [word])[-2:]
+        self._last_word = word
+
+    def _ctx_reset(self):
+        """Sentence boundary or unknown caret position: forget the context."""
+        self._ctx = []
+        self._ctx_stem = ""
+        self._last_word = ""
+
+    def _apply_learn_setting(self):
+        """Learning off also stops the learned data from influencing suggestions."""
+        on = self.settings.get("learn_words", True)
+        self.predictor.set_user_model(self._user_model if on else None)
+
+    def _schedule_learn_save(self):
+        if self._learn_save_timer is None:
+            self._learn_save_timer = GLib.timeout_add_seconds(5, self._flush_learned)
+
+    def _flush_learned(self) -> bool:
+        self._learn_save_timer = None
+        self._user_model.save()
+        return False
 
     def _refresh_suggestions(self):
         w = self.current_word
@@ -5084,11 +5226,12 @@ class OnScreenKeyboard(Gtk.Window):
         # Exact-prefix dictionary words — or next-word prediction when no prefix
         n_word_slots = 4 - len(slots)   # fill up to 4 word slots total
         if w:
-            exact_sugg = [x for x in self.predictor.predict(w, n=n_word_slots + 2)
+            exact_sugg = [x for x in self.predictor.predict(
+                              w, n=n_word_slots + 2, context=self._ctx)
                           if x not in custom_lower]
         else:
-            # After a space: predict based on the previous word
-            exact_sugg = self.predictor.predict_next(self._last_word, n=n_word_slots + 2)
+            # After a space: predict from the sentence so far
+            exact_sugg = self.predictor.predict_next(self._ctx, n=n_word_slots + 2)
 
         seen_words = {s[0].lower() for s in slots}
         for v in exact_sugg:
@@ -5181,7 +5324,8 @@ class OnScreenKeyboard(Gtk.Window):
         # Count macro slots first so we can correctly budget the exact-word query
         n_macro      = sum(1 for m in self._suggestion_is_macro[:4] if m)
         # Word slots are 0–3; find which are already filled with exact matches
-        exact_sugg   = [x for x in self.predictor.predict(w, n=max(1, 4 - n_macro))
+        exact_sugg   = [x for x in self.predictor.predict(
+                            w, n=max(1, 4 - n_macro), context=self._ctx)
                         if x not in custom_lower]
         # Slots already occupied by custom + exact words + any macro slot
         n_filled     = len(custom_sugg) + len(exact_sugg) + n_macro
@@ -5236,6 +5380,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self.typer.type_char(ch)
             self.typer.send_special("space")
             self.current_word = ""
+            self._ctx_reset()      # a macro can expand to anything
             self._refresh_suggestions()
             return
 
@@ -5256,6 +5401,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self.typer.type_char(ch)
             self.typer.send_special("space")
             self.current_word = ""
+            self._ctx_commit(label)
             self._refresh_suggestions()
             return
 
@@ -5267,6 +5413,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self.typer.type_char(ch)
             self.typer.send_special("space")
             self.current_word = ""
+            self._ctx_commit(label)
             self._refresh_suggestions()
             return
 
@@ -5283,8 +5430,8 @@ class OnScreenKeyboard(Gtk.Window):
             for ch in cased[len(self.current_word):]:
                 self.typer.type_char(ch)
         self.typer.send_special("space")
-        self._last_word   = label
         self.current_word = ""
+        self._ctx_commit(label)
         self._refresh_suggestions()
 
     # ── Modifier visuals ────────────��─────────────────────────���───────────────
