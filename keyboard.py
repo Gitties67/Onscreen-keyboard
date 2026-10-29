@@ -612,7 +612,8 @@ SETTINGS_HELP = {
                     "first letters suggests it first, with the capitals you gave it.",
     "Macros": "Short triggers that expand into longer text. Type the trigger and pick it from "
               "the suggestions; {date} and {time} fill in today's date and the time.",
-    "Custom themes": "Make your own colour scheme, step by step, with a live preview.",
+    "Custom themes": "Make your own colour scheme, step by step, with a live preview. "
+                     "Tap a saved theme to use it, ✎ to change its colours, × to delete it.",
     "Rate or comment": "Opens GitHub in your browser so you can leave a star rating or a "
                        "note. It's the best way to tell me what to fix next.",
 }
@@ -781,6 +782,22 @@ WIZARD_STEPS = [
     ("Accent colour  (active keys / suggestions)", "accent"),
     ("Close button colour",                        "danger"),
 ]
+# What each theme-maker colour paints (shown by the (i) beside the question).
+WIZARD_HELP = {
+    "bg":     "The colour behind everything: the gaps between keys, the "
+              "suggestion bar and the settings page.",
+    "key_bg": "The face of the letter and number keys. Function keys (Tab, Shift, "
+              "Esc...) use a blend of this and the background.",
+    "key_fg": "The letters and symbols printed on the keys, and most text in "
+              "Settings. Pick something that stands out from the key colour.",
+    "border": "The thin outline around each key and button, plus the divider "
+              "lines in the suggestion bar.",
+    "accent": "The highlight colour: suggested words, latched keys like Shift or "
+              "Ctrl when they're on, and selected options in Settings.",
+    "danger": "The close (×) button in the top corner, so it's easy to spot "
+              "and hard to hit by accident.",
+}
+
 # Theme-maker palette: 12 bright colours, then 12 deep shades / greys.
 WIZARD_PALETTE = [
     "#e81123", "#ff8c00", "#fff100", "#16c60c", "#00b294", "#00bcf2",
@@ -3308,9 +3325,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._refresh_suggestions()
         # Started from Settings (custom word / macro)? Go back there so the
         # user sees the result.  The theme wizard continues on its own page.
-        if (back_to_settings and target != "theme_name"
-                and getattr(self, "_custom_input_return_to_settings", False)):
-            self._custom_input_return_to_settings = False
+        return_to = getattr(self, "_custom_input_return_to_settings", False)
+        self._custom_input_return_to_settings = False
+        if back_to_settings and target != "theme_name" and return_to:
             if not self._settings_mode:
                 self._toggle_settings()
             anchor = (getattr(self, "_custom_words_header", None) if target == "word"
@@ -3808,8 +3825,19 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── DIY theme wizard ──────────────────────────────────────────────────────
 
+    def _edit_custom_theme(self, name: str):
+        """Reopen the wizard on a saved theme, starting from its colours."""
+        saved = self._custom_themes.get(name, {})
+        self._wizard_editing = True
+        self._wizard_name    = name
+        self._wizard_step    = 1
+        self._wizard_colors  = {k: saved.get(k, v) for k, v in WIZARD_DEFAULTS.items()}
+        self._close_other_panels("theme_wizard")
+        self._open_wizard_color_step()
+
     def _open_theme_wizard(self):
         """Start the theme wizard: collect name via keyboard, then 6 colour steps."""
+        self._wizard_editing = False
         self._wizard_name   = ""
         self._wizard_step   = 0
         self._wizard_colors = dict(WIZARD_DEFAULTS)
@@ -3854,10 +3882,18 @@ class OnScreenKeyboard(Gtk.Window):
         page.pack_start(top_row, False, False, 0)
 
         # ── Question label ─────────────────────────────────────────────────
+        q_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         self._wizard_question_label = Gtk.Label(label="")
         self._wizard_question_label.set_name("settings-label")
         self._wizard_question_label.set_xalign(0.0)
-        page.pack_start(self._wizard_question_label, False, False, 0)
+        q_row.pack_start(self._wizard_question_label, False, False, 0)
+        self._wizard_info_btn = Gtk.Button(label="i")
+        self._wizard_info_btn.get_style_context().add_class("info-btn")
+        self._wizard_info_btn.set_relief(Gtk.ReliefStyle.NONE)
+        self._wizard_info_btn.set_valign(Gtk.Align.CENTER)
+        self._wizard_info_btn.connect("clicked", self._on_wizard_info)
+        q_row.pack_start(self._wizard_info_btn, False, False, 0)
+        page.pack_start(q_row, False, False, 0)
 
         # Progress swatches: one per wizard step, filled in as the user goes
         # (in the top row, beside the step counter).
@@ -3955,6 +3991,11 @@ class OnScreenKeyboard(Gtk.Window):
         question, color_key = WIZARD_STEPS[step - 1]
         if self._wizard_question_label:
             self._wizard_question_label.set_text(question)
+        info = getattr(self, "_wizard_info_btn", None)
+        if info is not None:
+            info.set_tooltip_text(WIZARD_HELP.get(color_key, ""))
+            info.get_accessible().set_name(f"About {question}")
+        self._wizard_close_help()   # don't leave the previous step's explanation up
 
         self._wizard_show_current(self._wizard_colors.get(color_key, "#888888"))
 
@@ -3963,7 +4004,8 @@ class OnScreenKeyboard(Gtk.Window):
                 "Save ✓" if step == total else "Next ▶")
 
         if hasattr(self, "_wizard_name_display") and self._wizard_name_display:
-            self._wizard_name_display.set_text(f"Theme: {self._wizard_name}")
+            verb = "Editing" if getattr(self, "_wizard_editing", False) else "Theme"
+            self._wizard_name_display.set_text(f"{verb}: {self._wizard_name}")
 
         # Update swatches
         for i, (_, ck) in enumerate(WIZARD_STEPS):
@@ -3989,6 +4031,15 @@ class OnScreenKeyboard(Gtk.Window):
         provider.load_from_data(
             f"* {{ background-color: {hex_c}; background-image: none; "
             f"border-radius: 6px; }}".encode())
+
+    def _wizard_close_help(self):
+        pop = getattr(self, "_help_pop", None)
+        if pop is not None and pop.get_visible():
+            pop.hide()        # immediate; popdown() can leave it up mid-animation
+
+    def _on_wizard_info(self, btn: Gtk.Button):
+        question, color_key = WIZARD_STEPS[self._wizard_step - 1]
+        self._toggle_setting_help(btn, question.split("  (")[0], WIZARD_HELP.get(color_key, ""))
 
     def _wizard_show_current(self, hex_c: str):
         """Big preview swatch + highlight the matching palette colour."""
@@ -4063,6 +4114,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._rebuild_custom_theme_buttons()
 
         # Return to settings panel
+        self._wizard_close_help()
         self._wizard_page_ready = False
         if self._key_stack:
             # Remove the stale wizard page so it gets rebuilt fresh next time
@@ -4074,6 +4126,7 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _cancel_theme_wizard(self):
         """Discard wizard changes and return to the settings panel."""
+        self._wizard_close_help()
         self._wizard_page_ready = False
         if self._key_stack:
             wizard_page = self._key_stack.get_child_by_name("theme-wizard")
@@ -4159,6 +4212,14 @@ class OnScreenKeyboard(Gtk.Window):
                 sel_btn.get_style_context().add_class("active")
             wrap.pack_start(sel_btn, True, True, 0)
             self._custom_theme_btns[name] = sel_btn
+
+            edit_btn = Gtk.Button(label="✎")
+            edit_btn.get_style_context().add_class("settings-choice")
+            edit_btn.set_size_request(28, -1)
+            edit_btn.set_tooltip_text(f"Edit the colours of {name}")
+            edit_btn.get_accessible().set_name(f"Edit theme {name}")
+            edit_btn.connect("clicked", lambda _b, n=name: self._edit_custom_theme(n))
+            wrap.pack_start(edit_btn, False, False, 0)
 
             del_btn = Gtk.Button(label="×")
             del_btn.get_style_context().add_class("settings-choice")

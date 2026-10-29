@@ -107,7 +107,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Clipboard history** — 📋 shows last 20 clipboard entries; click any to type it
 - **Clear key feedback** — the key you press briefly flashes a softly inverted colour, so you can see what registered
 - **Sticky modifiers** — Ctrl, Alt latch on click; configurable auto-release or persistent toggle
-- **DIY theme builder** — 6-step colour wizard with a built-in palette (plus lighter/darker) and live preview
+- **DIY theme builder** — 6-step colour wizard with a built-in palette (plus lighter/darker), an ⓘ explaining what each colour paints, and live preview. Saved themes can be re-edited with ✎
 - **4 built-in themes** — Dark, Light, Midnight, High Contrast
 - **Dwell click** — hover-to-click accessibility mode with adjustable delay (0.3–2.0 s)
 - **Key sound** — soft click by default; switch to a beep or turn it off in Settings
