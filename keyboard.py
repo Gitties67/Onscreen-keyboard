@@ -524,7 +524,7 @@ DEFAULT_SETTINGS: dict = {
     "layout":               "qwerty", # keyboard layout: qwerty | azerty | qwertz
     "update_check_enabled": True,
     "learn_words":          True,     # learn word usage from what you type (local only)
-    "tutorial_done":        False,    # first-run tour shown (also False for pre-tour settings files)
+    "tutorial_done":        False,    # first-run tour shown (fresh installs only; see _load_settings)
 }
 
 DEFAULT_MACROS = [
@@ -3933,6 +3933,10 @@ class OnScreenKeyboard(Gtk.Window):
         try:
             with open(CONFIG_FILE, "r") as f:
                 data = json.load(f)
+            # Existing users (settings file from before the tour) skip the
+            # first-run tutorial; only fresh installs see it automatically.
+            if isinstance(data, dict) and "tutorial_done" not in data:
+                data["tutorial_done"] = True
             # Fill in any missing keys with defaults
             merged = {**DEFAULT_SETTINGS, **data}
             if merged.get("click_style") not in ("click", "beep"):
@@ -4276,13 +4280,13 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 10b. Tour row ──────────────────────────────────────────────────
         tour_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_tour = Gtk.Label(label="Quick tour")
+        lbl_tour = Gtk.Label(label="Tutorial")
         lbl_tour.set_name("settings-label")
         lbl_tour.set_xalign(0.0)
         lbl_tour.set_size_request(90, -1)
         tour_row.pack_start(lbl_tour, False, False, 0)
 
-        tour_btn = Gtk.Button(label="Show tour again")
+        tour_btn = Gtk.Button(label="Show tutorial")
         tour_btn.get_style_context().add_class("settings-choice")
         tour_btn.set_size_request(140, 44)
         tour_btn.connect("clicked", lambda _b: self._start_tour())
@@ -5161,7 +5165,7 @@ class OnScreenKeyboard(Gtk.Window):
         return False
 
     def _start_tour(self):
-        """Show step 1 of the tour (also used by Settings → Show tour again)."""
+        """Show step 1 of the tour (also used by Settings → Show tutorial)."""
         self._close_other_panels("tour")
         if self._collapsed:
             self._expand()
