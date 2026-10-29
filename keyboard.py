@@ -45,6 +45,9 @@ IS_WINDOWS = platform.system() == "Windows"
 # so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
 _win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 50ms poll
 _win_our_pid: int = os.getpid()    # cached once; used to detect when OSK owns the foreground
+# True only while the window is minimized to the taskbar: lets the WNDPROC
+# subclass and WH_CBT hook pass activation through so a taskbar click can restore us.
+_win_allow_activate: list[bool] = [False]
 
 def _win_focus_restore() -> None:
     """Restore focus to the last target window — but ONLY if the OSK itself currently
@@ -492,6 +495,7 @@ CUSTOM_WORDS_FILE  = os.path.join(CONFIG_DIR, "custom_words.json")
 CUSTOM_THEMES_FILE = os.path.join(CONFIG_DIR, "custom_themes.json")
 MACROS_FILE        = os.path.join(CONFIG_DIR, "macros.json")
 CLICK_WAV          = os.path.join(CONFIG_DIR, "click.wav")
+BEEP_WAV           = os.path.join(CONFIG_DIR, "beep.wav")
 
 DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
 
@@ -500,7 +504,8 @@ DEFAULT_SETTINGS: dict = {
     "font_size":            14,       # key label font size in px (10–22)
     "dwell_enabled":        False,
     "dwell_delay":          0.8,      # seconds (0.3 – 2.0)
-    "click_sound":          False,
+    "click_sound":          True,
+    "click_style":          "click",  # click (soft tick) | beep (tone)
     "modifier_auto_release": True,    # release Ctrl/Alt automatically after next keypress
     "shift_sticky":          False,   # False = one-shot (release after keypress), True = sticky like Ctrl
     "opacity":              1.0,      # window opacity (0.3 – 1.0)
@@ -549,7 +554,7 @@ THEME_COLORS: dict[str, dict] = {
         "settings_border": "#404040", "settings_bot": "#111111",
         "choice_bg": "#2d2d2d", "choice_fg": "#d0d0d0",
         "choice_border": "#404040", "choice_bot": "#111111",
-        "toggle_fg": "#888888",
+        "toggle_fg": "#bdbdbd",
         "sublabel_fg": "#999999",
         "active_bg": "#0078d4", "active_fg": "#ffffff",
         "active_border": "#005a9e", "active_bot": "#003c6a",
@@ -573,7 +578,7 @@ THEME_COLORS: dict[str, dict] = {
         "settings_border": "#bbbbbb", "settings_bot": "#999999",
         "choice_bg": "#ffffff", "choice_fg": "#333333",
         "choice_border": "#c0c0c0", "choice_bot": "#999999",
-        "toggle_fg": "#5a5a5a",
+        "toggle_fg": "#3a3a3a",
         "sublabel_fg": "#767676",
         "active_bg": "#0063b1", "active_fg": "#ffffff",
         "active_border": "#004f8e", "active_bot": "#003570",
@@ -597,7 +602,7 @@ THEME_COLORS: dict[str, dict] = {
         "settings_border": "#30404d", "settings_bot": "#060a0f",
         "choice_bg": "#1a2332", "choice_fg": "#c9d1d9",
         "choice_border": "#30404d", "choice_bot": "#060a0f",
-        "toggle_fg": "#7a9ab8",
+        "toggle_fg": "#a9c2dc",
         "sublabel_fg": "#8899bb",
         "active_bg": "#1f6fbd", "active_fg": "#ffffff",
         "active_border": "#155090", "active_bot": "#0d3868",
@@ -769,7 +774,7 @@ def _build_custom_theme(bg: str, key_bg: str, key_fg: str,
     accent_darker = _adjust(accent, 0.55)
     danger_light  = _mix(danger, bg, 0.78)
     sugg_hover    = _mix(bg, key_bg, 0.5)
-    toggle_fg     = _mix(key_fg, bg, 0.40)
+    toggle_fg     = _mix(key_fg, bg, 0.20)
     sublabel      = _mix(key_fg, bg, 0.55)
     # Title bar mirrors the suggestion bar: slightly darker than the background,
     # body text colour for the label, accent border for the bottom edge.
@@ -997,7 +1002,12 @@ class KeyTyper:
     """
 
     def __init__(self):
-        self._disp = xdisplay.Display() if XLIB_OK else None
+        self._disp = None
+        if XLIB_OK:
+            try:
+                self._disp = xdisplay.Display()
+            except Exception as exc:   # no/invalid DISPLAY (e.g. Wayland) — use fallbacks
+                print(f"[typer] XTEST unavailable ({exc}); using fallback typing")
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -1338,6 +1348,12 @@ class OnScreenKeyboard(Gtk.Window):
         self._bottom_strip:   Gtk.EventBox | None = None
         self._collapsed       = False
         self._pre_collapse_h  = 0
+        self._expand_btn:     Gtk.Button | None  = None
+        # Real minimize (to taskbar / window list) state
+        self._minimized       = False
+        self._min_watch_id    = 0     # GLib timer: detects restore / WM refusal
+        self._min_started     = 0.0
+        self._min_saw_iconic  = False
         # Height of the collapsed strip: title bar + suggestion bar + top resize
         # strip + chrome.  The collapsed state now keeps the title bar AND
         # suggestion bar visible; the title bar is the only way to expand again.
@@ -1372,6 +1388,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._apply_key_scale(self.settings.get("key_scale", 1.0))
         self.set_opacity(self.settings.get("opacity", 1.0))
         self._init_click_sound()
+        GLib.idle_add(lambda: self._refresh_suggestions() and False)  # fill bar at startup
         if IS_WINDOWS:
             self._set_window_icon()
         self.show_all()
@@ -1444,6 +1461,159 @@ class OnScreenKeyboard(Gtk.Window):
         self.connect("button-press-event",   self._on_window_button_press)
         self.connect("motion-notify-event",  self._on_resize_motion)
         self.connect("button-release-event", self._on_resize_release)
+        self.connect("window-state-event",   self._on_window_state)
+
+    # ── Real minimize (taskbar / window list) ────────────────────────────────
+
+    def _minimize_window(self):
+        """Minimize to the taskbar.  The OSK normally has no taskbar entry, so
+        we temporarily give it one and revert after restore (_finish_restore)."""
+        if self._minimized:
+            return
+        # Persist geometry NOW: while iconic, get_position() is bogus (-32000).
+        self._save_geometry()
+        self._cancel_all_timers()
+        self._moving = False
+        self._resizing = False
+        self._resize_did_move = False
+        self._resize_edge = ""
+        self._minimized = True
+        self._min_started = time.monotonic()
+        self._min_saw_iconic = False
+        _win_log(f"minimize: start (windows={IS_WINDOWS}, collapsed={self._collapsed})")
+        ok = False
+        try:
+            ok = self._win_minimize() if IS_WINDOWS else self._linux_minimize()
+        except Exception as exc:
+            _win_log(f"minimize: error ({exc})")
+        if not ok:
+            _win_log("minimize: failed — aborting, window stays visible")
+            self._finish_restore("minimize-failed")
+            return
+        self._min_watch_id = GLib.timeout_add(150, self._minimize_watch)
+
+    def _win_minimize(self) -> bool:
+        import ctypes
+        user32 = ctypes.windll.user32
+        hwnd = getattr(self, "_win_hwnd", None) or self._win_get_hwnd()
+        if not hwnd:
+            return False
+        self._win_hwnd = hwnd
+        GWL_EXSTYLE, WS_EX_TOOLWINDOW, WS_EX_APPWINDOW = -20, 0x80, 0x40000
+        SW_HIDE, SW_SHOWMINNOACTIVE = 0, 7
+        _win_allow_activate[0] = True
+        # Style change only reaches the taskbar across a hide/show cycle.
+        user32.ShowWindow(hwnd, SW_HIDE)
+        ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
+                              (ex & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW)
+        user32.ShowWindow(hwnd, SW_SHOWMINNOACTIVE)
+        _win_log(f"minimize: APPWINDOW set, SW_SHOWMINNOACTIVE; iconic="
+                 f"{bool(user32.IsIconic(hwnd))}")
+        return bool(user32.IsIconic(hwnd))
+
+    def _linux_minimize(self) -> bool:
+        # DOCK windows can't be iconified and never appear in the window list.
+        # The WM re-reads _NET_WM_WINDOW_TYPE only on (re)map, so: hide,
+        # switch to NORMAL + taskbar-visible, show, iconify.  _minimize_watch
+        # reverts to DOCK if the WM refuses.
+        self.hide()
+        self.set_type_hint(Gdk.WindowTypeHint.NORMAL)
+        self.set_skip_taskbar_hint(False)
+        self.set_skip_pager_hint(False)
+        self.show()
+        self.iconify()
+        _win_log("minimize: linux hide/NORMAL/show/iconify issued")
+        return True
+
+    def _is_iconic(self) -> bool:
+        if IS_WINDOWS:
+            import ctypes
+            hwnd = getattr(self, "_win_hwnd", None)
+            return bool(hwnd and ctypes.windll.user32.IsIconic(hwnd))
+        gw = self.get_window()
+        return bool(gw and gw.get_state() & Gdk.WindowState.ICONIFIED)
+
+    def _on_window_state(self, _w, event):
+        if not self._minimized:
+            return False
+        # Only react to iconify changes — other state events (above, sticky,
+        # focus) must not be mistaken for a restore.
+        if not (event.changed_mask & Gdk.WindowState.ICONIFIED):
+            return False
+        if event.new_window_state & Gdk.WindowState.ICONIFIED:
+            self._min_saw_iconic = True
+        elif self._min_saw_iconic:
+            _win_log("minimize: window-state ICONIFIED cleared")
+            # Defer: restoring hides/re-styles this window, which shouldn't
+            # happen inside GDK's own state-change dispatch.
+            GLib.idle_add(lambda: self._finish_restore("window-state") and False)
+        return False
+
+    def _minimize_watch(self):
+        """Poll for restore (taskbar click) or WM refusal.  Never leave the
+        keyboard invisible: if it never became iconic, revert."""
+        if not self._minimized:
+            self._min_watch_id = 0
+            return False
+        if self._is_iconic():
+            self._min_saw_iconic = True
+            return True
+        if self._min_saw_iconic:
+            self._min_watch_id = 0
+            self._finish_restore("poll")
+            return False
+        if time.monotonic() - self._min_started > 1.0:   # slow/remote sessions
+            _win_log("minimize: WM never iconified within 1s — reverting")
+            self._min_watch_id = 0
+            self._finish_restore("refused")
+            return False
+        return True
+
+    def _finish_restore(self, why: str):
+        """Return to the normal no-taskbar / no-focus-steal configuration."""
+        if not self._minimized:
+            return
+        self._minimized = False
+        if self._min_watch_id:
+            GLib.source_remove(self._min_watch_id)
+            self._min_watch_id = 0
+        _win_log(f"restore: finishing ({why})")
+        _win_allow_activate[0] = False  # also covers failure paths
+        try:
+            if IS_WINDOWS:
+                self._win_finish_restore()
+            else:
+                self.hide()
+                self.set_type_hint(Gdk.WindowTypeHint.DOCK)
+                self.set_skip_taskbar_hint(True)
+                self.set_skip_pager_hint(True)
+                self.show()
+        except Exception as exc:
+            _win_log(f"restore: error ({exc})")
+        # Put geometry back exactly (hide/show may let the WM re-place us).
+        x, y = self.settings.get("win_x"), self.settings.get("win_y")
+        if x is not None and y is not None:
+            self.move(int(x), int(y))
+        _win_log("restore: done")
+
+    def _win_finish_restore(self):
+        import ctypes
+        user32 = ctypes.windll.user32
+        hwnd = self._win_hwnd
+        GWL_EXSTYLE, WS_EX_TOOLWINDOW, WS_EX_APPWINDOW = -20, 0x80, 0x40000
+        SW_HIDE, SW_SHOWNOACTIVATE, SW_RESTORE = 0, 4, 9
+        if user32.IsIconic(hwnd):
+            user32.ShowWindow(hwnd, SW_RESTORE)   # refused/abort path
+        user32.ShowWindow(hwnd, SW_HIDE)
+        # Re-block activation BEFORE re-showing so the show can't take focus.
+        _win_allow_activate[0] = False
+        self._win_apply_styles(hwnd)              # adds NOACTIVATE|TOOLWINDOW
+        ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_APPWINDOW)
+        user32.ShowWindow(hwnd, SW_SHOWNOACTIVATE)
+        # Taskbar click activated us briefly: hand foreground back to the app.
+        _win_focus_restore()
 
     def _win_get_hwnd(self):
         """Return this window's native Win32 HWND, or None.
@@ -1584,6 +1754,9 @@ class OnScreenKeyboard(Gtk.Window):
         )
 
         def _wndproc(hwnd_, msg, wparam, lparam):
+            if _win_allow_activate[0]:
+                # Minimized to the taskbar: let the taskbar restore/activate us.
+                return original_wndproc(hwnd_, msg, wparam, lparam)
             if msg == WM_MOUSEACTIVATE:
                 return MA_NOACTIVATE
             if msg == WM_SETFOCUS:
@@ -1634,6 +1807,11 @@ class OnScreenKeyboard(Gtk.Window):
         WS_EX_NOACTIVATE.  We always re-apply here so the styles survive.
         Also serves as a second-chance HWND acquisition if realize was too early."""
         if not IS_WINDOWS:
+            return
+        if self._minimized:
+            # Minimized-to-taskbar styles (APPWINDOW, no TOOLWINDOW) are
+            # managed by _win_minimize / _finish_restore; don't clobber them.
+            _win_log("map: skipped style re-apply (minimized)")
             return
         # Ensure HWND is obtained (no-op if already found at realize time).
         self._win_setup_hwnd_dependent("map")
@@ -1731,7 +1909,8 @@ class OnScreenKeyboard(Gtk.Window):
             )
 
             def _cbt_proc(nCode, wParam, lParam):
-                if nCode == HCBT_SETFOCUS and wParam:
+                if (nCode == HCBT_SETFOCUS and wParam
+                        and not _win_allow_activate[0]):
                     pid = ctypes.c_ulong()
                     user32.GetWindowThreadProcessId(wParam, ctypes.byref(pid))
                     if pid.value == _win_our_pid:
@@ -1999,15 +2178,25 @@ class OnScreenKeyboard(Gtk.Window):
         self._close_btn.get_accessible().set_name("Close keyboard")
         hbox.pack_end(self._close_btn, False, False, 4)
 
-        # Minimize / collapse button — directly left of the close button.
-        # Shows ▼ when expanded (click to collapse), ▲ when collapsed.
+        # Minimize button (real minimize to taskbar) — left of the close button.
         self._minimize_btn = Gtk.Button(label="▼")
         self._minimize_btn.set_name("minimize-btn")
-        self._minimize_btn.set_tooltip_text("Collapse / expand keyboard")
+        self._minimize_btn.set_tooltip_text("Minimize")
         self._minimize_btn.set_size_request(40, TITLEBAR_H)
-        self._minimize_btn.connect("clicked", lambda _: self._toggle_collapse())
-        self._minimize_btn.get_accessible().set_name("Collapse or expand keyboard")
+        self._minimize_btn.connect("clicked", lambda _: self._minimize_window())
+        self._minimize_btn.get_accessible().set_name("Minimize keyboard")
         hbox.pack_end(self._minimize_btn, False, False, 2)
+
+        # Expand button — only visible while the key grid is collapsed
+        # (double-click the title bar to collapse).
+        self._expand_btn = Gtk.Button(label="▲")
+        self._expand_btn.set_name("minimize-btn")
+        self._expand_btn.set_tooltip_text("Expand keys")
+        self._expand_btn.set_size_request(40, TITLEBAR_H)
+        self._expand_btn.set_no_show_all(True)
+        self._expand_btn.connect("clicked", lambda _: self._expand())
+        self._expand_btn.get_accessible().set_name("Expand keyboard keys")
+        hbox.pack_end(self._expand_btn, False, False, 2)
 
         return bar
 
@@ -2309,6 +2498,8 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _save_geometry(self):
         """Persist current window position and size to settings."""
+        if self._minimized:
+            return  # iconic position/size are bogus; geometry was saved on minimize
         x, y = self.get_position()
         w, h = self.get_size()
         # If collapsed, persist the expanded height so we don't relaunch stuck
@@ -2667,6 +2858,8 @@ class OnScreenKeyboard(Gtk.Window):
             return
         # Remove all existing rows
         for row in lb.get_children():
+            if not isinstance(row, Gtk.ListBoxRow):
+                continue   # keep the "empty list" placeholder
             lb.remove(row)
         # Re-add
         for word in self._custom_words:
@@ -2749,6 +2942,8 @@ class OnScreenKeyboard(Gtk.Window):
         if lb is None:
             return
         for row in lb.get_children():
+            if not isinstance(row, Gtk.ListBoxRow):
+                continue   # keep the "empty list" placeholder
             lb.remove(row)
         for macro in self._macros:
             lb.add(self._make_macro_row(macro))
@@ -2856,17 +3051,30 @@ class OnScreenKeyboard(Gtk.Window):
         self._clipboard_listbox = Gtk.ListBox()
         self._clipboard_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self._clipboard_listbox.set_name("settings-panel")
+        self._clipboard_listbox.set_placeholder(self._empty_list_label(
+            "Nothing copied yet — text you copy appears here"))
         self._rebuild_clipboard_list()
 
         scroll.add(self._clipboard_listbox)
         panel.pack_start(scroll, True, True, 0)
         return panel
 
+    @staticmethod
+    def _empty_list_label(text: str) -> Gtk.Label:
+        lbl = Gtk.Label(label=text)
+        lbl.set_name("settings-label")
+        lbl.set_margin_top(8)
+        lbl.set_margin_bottom(8)
+        lbl.show()
+        return lbl
+
     def _rebuild_clipboard_list(self):
         lb = self._clipboard_listbox
         if lb is None:
             return
         for row in lb.get_children():
+            if not isinstance(row, Gtk.ListBoxRow):
+                continue   # keep the "empty list" placeholder
             lb.remove(row)
         for item in self._clipboard_history:
             row = Gtk.ListBoxRow()
@@ -3356,8 +3564,8 @@ class OnScreenKeyboard(Gtk.Window):
         if self._bottom_strip:
             self._bottom_strip.hide()
 
-        if self._minimize_btn:
-            self._minimize_btn.set_label("▲")   # chevron-up: click to expand
+        if self._expand_btn:
+            self._expand_btn.show()             # ▲ Expand affordance
 
         # Cancel timers tied to now-hidden keys so they can't fire on hidden widgets
         self._cancel_all_timers()
@@ -3375,8 +3583,8 @@ class OnScreenKeyboard(Gtk.Window):
         if self._bottom_strip:
             self._bottom_strip.show()
 
-        if self._minimize_btn:
-            self._minimize_btn.set_label("▼")   # chevron-down: click to collapse
+        if self._expand_btn:
+            self._expand_btn.hide()
 
         target_h = self._pre_collapse_h or (
             int(BASE_KEY_H * 6 * self.settings.get("key_scale", 1.0))
@@ -3452,7 +3660,10 @@ class OnScreenKeyboard(Gtk.Window):
             with open(CONFIG_FILE, "r") as f:
                 data = json.load(f)
             # Fill in any missing keys with defaults
-            return {**DEFAULT_SETTINGS, **data}
+            merged = {**DEFAULT_SETTINGS, **data}
+            if merged.get("click_style") not in ("click", "beep"):
+                merged["click_style"] = "click"
+            return merged
         except Exception:
             return dict(DEFAULT_SETTINGS)
 
@@ -3691,20 +3902,23 @@ class OnScreenKeyboard(Gtk.Window):
 
         # ── 8. Sound row ───────────────────────────────────────────────────
         sound_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl4 = Gtk.Label(label="Click sound")
+        lbl4 = Gtk.Label(label="Key sound")
         lbl4.set_name("settings-label")
         lbl4.set_xalign(0.0)
         lbl4.set_size_request(90, -1)
         sound_row.pack_start(lbl4, False, False, 0)
 
-        sound_toggle = Gtk.ToggleButton(
-            label="On" if self.settings["click_sound"] else "Off")
-        sound_toggle.set_name("settings-toggle")
-        sound_toggle.set_size_request(60, -1)
-        sound_toggle.set_active(self.settings["click_sound"])
-        sound_toggle.connect("toggled", self._on_sound_toggled, sound_toggle)
-        sound_toggle.get_accessible().set_description("Play a click sound on each key press")
-        sound_row.pack_start(sound_toggle, False, False, 0)
+        self._sound_btns: dict[str, Gtk.Button] = {}
+        for key, desc in (("off",   "No sound on key press"),
+                          ("click", "Soft click on each key press"),
+                          ("beep",  "Beep tone on each key press")):
+            btn = Gtk.Button(label=key.capitalize())
+            btn.get_style_context().add_class("settings-choice")
+            btn.connect("clicked", lambda _b, k=key: self._set_key_sound(k))
+            btn.get_accessible().set_description(desc)
+            sound_row.pack_start(btn, True, True, 0)
+            self._sound_btns[key] = btn
+        self._refresh_sound_buttons()
 
         inner.pack_start(sound_row, False, False, 0)
 
@@ -3805,11 +4019,13 @@ class OnScreenKeyboard(Gtk.Window):
 
         scroll_words = Gtk.ScrolledWindow()
         scroll_words.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll_words.set_size_request(-1, 80)
+        scroll_words.set_propagate_natural_height(True)   # grow with rows…
+        scroll_words.set_max_content_height(240)          # …then scroll
 
         self._custom_words_listbox = Gtk.ListBox()
         self._custom_words_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self._custom_words_listbox.set_name("settings-panel")
+        self._custom_words_listbox.set_placeholder(self._empty_list_label("No custom words yet"))
 
         for word in self._custom_words:
             self._custom_words_listbox.add(self._make_custom_word_row(word))
@@ -3839,11 +4055,13 @@ class OnScreenKeyboard(Gtk.Window):
 
         scroll_macros = Gtk.ScrolledWindow()
         scroll_macros.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll_macros.set_size_request(-1, 80)
+        scroll_macros.set_propagate_natural_height(True)   # grow with rows…
+        scroll_macros.set_max_content_height(240)          # …then scroll
 
         self._macros_listbox = Gtk.ListBox()
         self._macros_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self._macros_listbox.set_name("settings-panel")
+        self._macros_listbox.set_placeholder(self._empty_list_label("No macros yet"))
 
         for macro in self._macros:
             self._macros_listbox.add(self._make_macro_row(macro))
@@ -3988,11 +4206,23 @@ class OnScreenKeyboard(Gtk.Window):
             self._dwell_label.set_label(f"{delay:.1f}s")
         self._save_settings()
 
-    def _on_sound_toggled(self, toggle: Gtk.ToggleButton, label_btn):
-        enabled = toggle.get_active()
-        label_btn.set_label("On" if enabled else "Off")
-        self.settings["click_sound"] = enabled
+    def _set_key_sound(self, choice: str):
+        self.settings["click_sound"] = choice != "off"
+        if choice != "off":
+            self.settings["click_style"] = choice
+        self._refresh_sound_buttons()
         self._save_settings()
+        self._play_click_sound()   # preview the new choice
+
+    def _refresh_sound_buttons(self):
+        current = (self.settings.get("click_style", "click")
+                   if self.settings.get("click_sound") else "off")
+        for key, btn in self._sound_btns.items():
+            ctx = btn.get_style_context()
+            if key == current:
+                ctx.add_class("active")
+            else:
+                ctx.remove_class("active")
 
     def _on_mod_release_toggled(self, toggle: Gtk.ToggleButton, label_btn):
         enabled = toggle.get_active()
@@ -4549,42 +4779,55 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Click sound ───────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _write_wav(path: str, rate: int, samples) -> None:
+        with wave.open(path, "w") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(rate)
+            wf.writeframes(b"".join(struct.pack("<h", int(v)) for v in samples))
+
     def _init_click_sound(self):
-        """Generate a short click WAV to the config directory (always regenerated)."""
+        """Generate the key-sound WAVs in the config directory (always regenerated)."""
+        import random
         try:
             os.makedirs(CONFIG_DIR, exist_ok=True)
-            rate, dur = 22050, 0.04
-            n = int(rate * dur)
-            with wave.open(CLICK_WAV, "w") as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(rate)
-                frames = bytearray()
-                for i in range(n):
-                    t = i / rate
-                    amp = 28000 * math.exp(-t * 140) * \
-                          math.sin(2 * math.pi * 1100 * t)
-                    frames += struct.pack("<h", int(amp))
-                wf.writeframes(bytes(frames))
+
+            # Soft click: ~6 ms of low-passed noise with a fast decay — a quiet
+            # tick like a laptop key rather than a tone.
+            rate = 44100
+            rng = random.Random(7)
+            lp, click = 0.0, []
+            for i in range(int(rate * 0.006)):
+                lp += 0.35 * (rng.uniform(-1, 1) - lp)
+                click.append(9000 * math.exp(-i / rate * 900) * lp)
+            self._write_wav(CLICK_WAV, rate, click)
+
+            # Beep: the original 1100 Hz tone
+            rate = 22050
+            self._write_wav(BEEP_WAV, rate, (
+                28000 * math.exp(-i / rate * 140) * math.sin(2 * math.pi * 1100 * i / rate)
+                for i in range(int(rate * 0.04))))
         except Exception as exc:
-            print(f"[sound] Could not generate click WAV: {exc}")
+            print(f"[sound] Could not generate key sounds: {exc}")
 
     def _play_click_sound(self):
         if not self.settings.get("click_sound"):
             return
-        if not os.path.exists(CLICK_WAV):
+        wav = BEEP_WAV if self.settings.get("click_style") == "beep" else CLICK_WAV
+        if not os.path.exists(wav):
             return
         if IS_WINDOWS:
             try:
                 import winsound
-                winsound.PlaySound(CLICK_WAV, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+                winsound.PlaySound(wav, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
             except Exception:
                 pass
             return
         for player in ("paplay", "aplay"):
             try:
                 subprocess.Popen(
-                    [player, CLICK_WAV],
+                    [player, wav],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     start_new_session=True)  # start_new_session detaches; init reaps
                 return
@@ -4826,7 +5069,9 @@ class OnScreenKeyboard(Gtk.Window):
         # Slot 4: emoji if any of the 4 word slots has an emoji match,
         # otherwise pad with a 5th word
         emoji_slot: tuple[str, bool, bool, bool, bool, str, bool] | None = None
-        check_words = [s[0] for s in slots[:4] if not s[1]]  # word labels only
+        # word labels only; skip when nothing is typed — an emoji for "the"/"to"
+        # is just noise
+        check_words = [s[0] for s in slots[:4] if s is not None and not s[1]] if w else []
         for word in check_words:
             hits = emoji_suggest(word, n=1)
             if hits:

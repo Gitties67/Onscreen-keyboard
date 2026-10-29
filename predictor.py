@@ -2,7 +2,8 @@
 """
 Dictionary-based word predictor using bisect for fast prefix lookups.
 Loads /usr/share/dict/american-english and returns top-N suggestions
-for a given prefix, sorted by word length (shorter = shown first).
+for a given prefix, ranked by real-world word frequency (word_freq.txt),
+then by length for words outside the frequency list.
 """
 
 import bisect
@@ -10,15 +11,41 @@ import sys as _sys
 import os as _os
 
 
-def _default_dict_path() -> str:
+def _data_path(name: str) -> str | None:
+    """Locate a bundled data file (PyInstaller bundle first, then next to this file)."""
     if getattr(_sys, "frozen", False):
-        p = _os.path.join(_sys._MEIPASS, "words.txt")
+        p = _os.path.join(_sys._MEIPASS, name)
         if _os.path.exists(p):
             return p
-    local = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "words.txt")
-    if _os.path.exists(local):
-        return local
-    return "/usr/share/dict/american-english"
+    local = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), name)
+    return local if _os.path.exists(local) else None
+
+
+def _default_dict_path() -> str:
+    return _data_path("words.txt") or "/usr/share/dict/american-english"
+
+
+def _load_freq_ranks() -> dict[str, int]:
+    """word → rank (0 = most common) from word_freq.txt; empty if missing."""
+    path = _data_path("word_freq.txt")
+    if not path:
+        print("[predictor] word_freq.txt not found — ranking by length only")
+        return {}
+    ranks: dict[str, int] = {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                w = line.strip()
+                if w and not w.startswith("#") and w not in ranks:
+                    ranks[w] = len(ranks)
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"[predictor] Could not read word_freq.txt: {exc}")
+        return {}
+    return ranks
+
+
+# Rank given to words outside the frequency list (sorts after every ranked word)
+_UNRANKED = 1 << 30
 
 
 def _osa_distance(s: str, t: str, max_dist: int) -> int:
@@ -239,6 +266,7 @@ class WordPredictor:
     def __init__(self, dict_path: str = None):
         self._words: list[str] = []
         self._common: set[str] = COMMON_WORDS
+        self._rank: dict[str, int] = _load_freq_ranks()
         self._custom: list[str] = []   # user-defined words/phrases (original casing)
         self._by_first: dict[str, list[str]] = {}  # first-char → word list (for fuzzy)
         self.dict_missing: bool = False
@@ -302,12 +330,19 @@ class WordPredictor:
         if not candidates:
             return []
 
-        # Sort: common words first, then by length, then alphabetically
+        # Sort: most frequent first; unranked words fall back to common-set,
+        # then length, then alphabetical.
         def sort_key(w: str) -> tuple:
-            return (0 if w in self._common else 1, len(w), w)
+            return (self._word_rank(w), len(w), w)
 
         candidates.sort(key=sort_key)
         return candidates[:n]
+
+    def _word_rank(self, w: str) -> int:
+        r = self._rank.get(w)
+        if r is not None:
+            return r
+        return _UNRANKED if w in self._common else _UNRANKED + 1
 
     def predict_padded(self, prefix: str, n: int = 5) -> list[str]:
         """Like predict() but always returns exactly n results, padding with
@@ -379,7 +414,7 @@ class WordPredictor:
                     if ca != cb:
                         break
                     shared += 1
-                scored.append((dist, 0 if word in self._common else 1,
+                scored.append((dist, self._word_rank(word),
                                 -shared, wlen, word))
 
         scored.sort()

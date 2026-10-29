@@ -84,7 +84,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **DIY theme builder** — 6-step colour wizard with live preview
 - **4 built-in themes** — Dark, Light, Midnight, High Contrast
 - **Dwell click** — hover-to-click accessibility mode with adjustable delay (0.3–2.0 s)
-- **Click sound** — audible feedback on each keypress
+- **Key sound** — soft click by default; switch to a beep or turn it off in Settings
 - **Adjustable key size, font, opacity** — all live, all remembered on restart
 - **Free resize** — drag any edge or corner; keys scale to fit
 - **App launcher** — Win/⊞ button opens built-in app search (Linux) or Start menu (Windows)
@@ -105,7 +105,7 @@ Click **⚙** in the suggestion bar to open settings.
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
 | **Dwell click** | Hover-to-click with adjustable delay |
-| **Click sound** | Audible key feedback |
+| **Key sound** | Off / Click (default, soft tick) / Beep |
 | **Modifier keys** | Auto-release or sticky |
 | **Shift key** | One-shot or sticky |
 | **Taskbar** | Pin to Cinnamon panel + autostart (Linux) |
@@ -164,6 +164,7 @@ onscreen_keyboard/
 ├── emojis.py            # Emoji data, search, and suggestion ranking
 ├── style.css            # GTK CSS (layout, themes, transitions)
 ├── words.txt            # Bundled English dictionary (used by Windows exe)
+├── word_freq.txt        # Word frequency ranking (CC BY-SA 4.0, see Credits)
 ├── VERSION              # Current version string (read by update checker)
 ├── launch.sh            # Linux: env setup + launch
 ├── launch.bat           # Windows: run from source via MSYS2 (developers)
@@ -237,3 +238,7 @@ Run `python tools/gen_version_info.py` locally to check the two versions agree.
 ## License
 
 MIT
+
+## Credits
+
+Word suggestions are ranked using [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018 English list). That data is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); the derived `word_freq.txt` is distributed under the same license. Regenerate it with `tools/build_word_freq.py`.

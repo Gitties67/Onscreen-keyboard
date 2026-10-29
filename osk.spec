@@ -40,6 +40,7 @@ def _here(name):
 datas = [
     (_here("style.css"), "."),
     (_here("words.txt"), "."),
+    (_here("word_freq.txt"), "."),
     (_here("VERSION"), "."),
     (_here("osk.png"), "."),   # runtime GTK window icon
     (_here("osk.ico"), "."),
