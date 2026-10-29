@@ -41,6 +41,7 @@ datas = [
     (_here("style.css"), "."),
     (_here("words.txt"), "."),
     (_here("word_freq.txt"), "."),
+    (_here("ngrams.txt"), "."),      # phrase model for context-aware prediction
     (_here("VERSION"), "."),
     (_here("osk.png"), "."),   # runtime GTK window icon
     (_here("osk.ico"), "."),
