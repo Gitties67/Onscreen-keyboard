@@ -45,9 +45,9 @@ IS_WINDOWS = platform.system() == "Windows"
 # so KeyTyper can redirect keystrokes to it even if GTK stole focus on click.
 _win_last_target: list[int] = [0]  # last non-OSK foreground HWND, updated by 50ms poll
 _win_our_pid: int = os.getpid()    # cached once; used to detect when OSK owns the foreground
-# True only while the window is minimized to the taskbar: lets the WNDPROC
-# subclass and WH_CBT hook pass activation through so a taskbar click can restore us.
-_win_allow_activate: list[bool] = [False]
+# Registered window message id for "OSK_SHOW_v1" (second launch asks the running
+# instance to show itself).  0 until _win_single_instance_or_exit() registers it.
+_win_show_msg: list[int] = [0]
 
 def _win_focus_restore() -> None:
     """Restore focus to the last target window — but ONLY if the OSK itself currently
@@ -97,6 +97,9 @@ def _win_focus_restore() -> None:
 # AttachThreadInput+GetFocus / GetGUIThreadInfo — NOT the top-level window.
 
 # Diagnostics are off unless OSK_DEBUG=1 and never record typed characters.
+# --debug == OSK_DEBUG=1 (must be decided here: the log path is computed at import).
+if "--debug" in sys.argv[1:]:
+    os.environ["OSK_DEBUG"] = "1"
 _WIN_DEBUG = os.environ.get("OSK_DEBUG") == "1"
 _WIN_DEBUG_LOG = ""
 if IS_WINDOWS and _WIN_DEBUG:
@@ -1361,7 +1364,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._min_watch_id    = 0     # GLib timer: detects restore / WM refusal
         self._min_started     = 0.0
         self._min_saw_iconic  = False
-        self._restore_timer_id = 0    # GLib timer: post-restore activation settle
+        self._restore_timer_id = 0    # GLib timer: post-restore settle
+        self._proxy: Gtk.Window | None = None   # invisible taskbar proxy window
+        self._force_id        = 0     # GLib timer: deferred deiconify of the OSK
         # Height of the collapsed strip: title bar + suggestion bar + top resize
         # strip + chrome.  The collapsed state now keeps the title bar AND
         # suggestion bar visible; the title bar is the only way to expand again.
@@ -1474,19 +1479,19 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Real minimize (taskbar / window list) ────────────────────────────────
 
     def _minimize_window(self):
-        """Minimize to the taskbar, entirely through GDK.
+        """Minimize to the taskbar via a PROXY window.
 
-        Design (see the v0.1.x freeze): we NEVER call ShowWindow / SetWindowLong
-        on GDK's HWND here.  GDK owns the window's mapped/iconified bookkeeping;
-        hiding or re-styling the HWND behind its back (while the taskbar click
-        that activated us was still in flight) desynced it and could block the
-        main thread.  Instead: drop the skip-taskbar hint so GDK gives the window
-        a taskbar button, then ask GDK to iconify.  Restore is detected from the
-        'window-state-event' (see _on_window_state) and finished by a settle
-        timer (_finish_restore)."""
+        GDK3 Win32 ignores set_skip_taskbar_hint and the OSK is a NOACTIVATE
+        tool window, so iconifying the OSK's own HWND either freezes (raw
+        Win32) or leaves it with no taskbar button (GDK).  Instead the OSK is
+        simply hidden (GTK-level) and a tiny, invisible, ordinary window — the
+        proxy — is shown and iconified: THAT window owns the taskbar button.
+        Restoring the proxy (taskbar click) brings the OSK back.  The OSK HWND
+        is never iconified, and the focus-block (WNDPROC/CBT) is never relaxed.
+        """
         if self._minimized:
             return
-        # Persist geometry NOW: while iconic, get_position() is bogus (-32000).
+        # Persist geometry NOW: a hidden/iconic window reports bogus positions.
         self._save_geometry()
         self._cancel_all_timers()
         self._moving = False
@@ -1497,64 +1502,91 @@ class OnScreenKeyboard(Gtk.Window):
         self._min_started = time.monotonic()
         self._min_saw_iconic = False
         _win_log(f"minimize: start (windows={IS_WINDOWS}, collapsed={self._collapsed})")
-        ok = False
         try:
-            ok = self._win_minimize() if IS_WINDOWS else self._linux_minimize()
+            proxy = self._ensure_proxy()
+            _win_log("minimize: step osk.hide")
+            self.hide()
+            _win_log("minimize: step proxy.show")
+            proxy.show()
+            _win_log("minimize: step proxy.iconify")
+            proxy.iconify()
+            _win_log("minimize: step proxy.iconify returned")
         except Exception as exc:
             _win_log(f"minimize: error ({exc})")
-        if not ok:
-            _win_log("minimize: failed — aborting, window stays visible")
             self._finish_restore("minimize-failed")
             return
-        # Slow safety net only (1 s): refusal detection + missed state event.
-        # It never makes Win32 calls; the state event is the primary path.
-        self._min_watch_id = GLib.timeout_add(1000, self._minimize_watch)
+        # Safety net: 500 ms ticks, GDK-state reads only, no Win32 calls.
+        self._min_watch_id = GLib.timeout_add(500, self._minimize_watch)
 
-    def _win_minimize(self) -> bool:
-        # Let the taskbar click activate/restore us (WNDPROC + CBT pass-through).
-        _win_allow_activate[0] = True
-        _win_log("minimize: step set_skip_taskbar_hint(False)")
-        self.set_skip_taskbar_hint(False)
-        _win_log("minimize: step iconify")
-        self.iconify()
-        _win_log("minimize: step iconify returned")
-        return True
+    def _ensure_proxy(self) -> Gtk.Window:
+        """Create (once) the invisible taskbar proxy window."""
+        if self._proxy is not None:
+            return self._proxy
+        p = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
+        p.set_title("On-Screen Keyboard")
+        p.set_default_size(1, 1)
+        p.set_accept_focus(False)
+        p.set_focus_on_map(False)
+        p.set_skip_taskbar_hint(False)
+        p.set_skip_pager_hint(False)
+        p.set_type_hint(Gdk.WindowTypeHint.NORMAL)
+        p.set_opacity(0.0)
+        p.move(-10000, -10000)
+        try:
+            base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+            png = os.path.join(base, "osk.png")
+            if os.path.isfile(png):
+                p.set_icon_from_file(png)
+        except Exception as exc:
+            _win_log(f"proxy: icon error ({exc})")
+        p.connect("window-state-event", self._on_proxy_state)
+        p.connect("delete-event", self._on_proxy_delete)
+        self._proxy = p
+        _win_log("proxy: created")
+        return p
 
-    def _linux_minimize(self) -> bool:
-        # DOCK windows can't be iconified and never appear in the window list.
-        # The WM re-reads _NET_WM_WINDOW_TYPE only on (re)map, so: hide,
-        # switch to NORMAL + taskbar-visible, show, iconify.  This runs from the
-        # button handler (not from a window-state handler).  _minimize_watch
-        # reverts to DOCK if the WM refuses.
-        self.hide()
-        self.set_type_hint(Gdk.WindowTypeHint.NORMAL)
-        self.set_skip_taskbar_hint(False)
-        self.set_skip_pager_hint(False)
-        self.show()
-        self.iconify()
-        _win_log("minimize: linux hide/NORMAL/show/iconify issued")
-        return True
-
-    def _is_iconic(self) -> bool:
-        """GDK's own view of the iconified state (no Win32 calls)."""
-        gw = self.get_window()
+    @staticmethod
+    def _iconic(win) -> bool:
+        """GDK's own view of a window's iconified state (no Win32 calls)."""
+        gw = win.get_window() if win is not None else None
         return bool(gw and gw.get_state() & Gdk.WindowState.ICONIFIED)
 
-    def _on_window_state(self, _w, event):
+    def _on_proxy_state(self, _w, event):
         if not self._minimized:
             return False
-        # Only react to iconify changes — other state events (above, sticky,
-        # focus) must not be mistaken for a restore.
         if not (event.changed_mask & Gdk.WindowState.ICONIFIED):
             return False
         if event.new_window_state & Gdk.WindowState.ICONIFIED:
             self._min_saw_iconic = True
-            # Re-minimized during the settle window: abandon the pending restore.
-            self._cancel_restore_timer()
+            self._cancel_restore_timer()     # re-minimized during settle
         elif self._min_saw_iconic:
-            _win_log("minimize: window-state ICONIFIED cleared")
-            # Do NOTHING else inside GDK's dispatch: just arm the settle timer.
-            self._schedule_restore("window-state")
+            _win_log("minimize: proxy ICONIFIED cleared")
+            # Do nothing inside GDK's dispatch except arm the timer.
+            self._schedule_restore("proxy-state")
+        return False
+
+    def _on_proxy_delete(self, _w, _event):
+        """Taskbar 'Close' on the proxy: bring the keyboard back, don't quit."""
+        _win_log("proxy: delete-event -> restore OSK")
+        GLib.idle_add(lambda: self._finish_restore("proxy-closed") and False)
+        return True    # keep the proxy alive
+
+    def _on_window_state(self, _w, event):
+        """OSK itself: an ICONIFIED we did not ask for (Win+M, Show-desktop)."""
+        if self._minimized or self._force_id:
+            return False
+        if not (event.changed_mask & Gdk.WindowState.ICONIFIED):
+            return False
+        if event.new_window_state & Gdk.WindowState.ICONIFIED:
+            _win_log("osk: unexpected ICONIFIED — scheduling deiconify")
+            self._force_id = GLib.timeout_add(150, self._deferred_deiconify)
+        return False
+
+    def _deferred_deiconify(self):
+        self._force_id = 0
+        if not self._minimized and self._iconic(self):
+            _win_log("osk: step deiconify")
+            self.deiconify()
         return False
 
     def _cancel_restore_timer(self):
@@ -1563,94 +1595,83 @@ class OnScreenKeyboard(Gtk.Window):
             self._restore_timer_id = 0
 
     def _schedule_restore(self, why: str):
-        """Finish the restore after activation has settled (~250 ms)."""
+        """Finish the restore after activation has settled (~150 ms)."""
         if self._restore_timer_id:
             return
         def _go():
             self._restore_timer_id = 0
             self._finish_restore(why)
             return False
-        self._restore_timer_id = GLib.timeout_add(250, _go)
+        self._restore_timer_id = GLib.timeout_add(150, _go)
 
     def _minimize_watch(self):
-        """Slow (1 s) safety net: WM refusal, or a missed state event.  Reads
-        GDK state only; never calls Win32."""
+        """Safety net.  Never leave both windows hidden: if the proxy does not
+        become ICONIFIED within 1.5 s, put the OSK back.  Also catches a missed
+        restore state-event.  Reads GDK state only."""
         if not self._minimized:
             self._min_watch_id = 0
             return False
-        if self._is_iconic():
+        if self._iconic(self._proxy):
             self._min_saw_iconic = True
             return True
         if self._min_saw_iconic:
-            _win_log("minimize: watch saw restore (state event missed)")
+            _win_log("minimize: watch saw proxy restore (state event missed)")
             self._schedule_restore("watch")      # no-op if already armed
             return True
-        if time.monotonic() - self._min_started > 0.95:
-            _win_log("minimize: WM never iconified within 1s — reverting")
+        if time.monotonic() - self._min_started > 1.5:
+            _win_log("minimize: proxy never iconified within 1.5s — reverting")
             self._min_watch_id = 0
             self._finish_restore("refused")
             return False
         return True
 
     def _finish_restore(self, why: str):
-        """Return to the normal no-taskbar / no-focus-steal configuration."""
+        """Hide the proxy, show the OSK at its saved geometry."""
         if not self._minimized:
             return
         self._minimized = False
+        self._restore_osk(why)
+
+    def _restore_osk(self, why: str):
         self._cancel_restore_timer()
         if self._min_watch_id:
             GLib.source_remove(self._min_watch_id)
             self._min_watch_id = 0
         _win_log(f"restore: finishing ({why})")
         try:
+            if self._proxy is not None:
+                _win_log("restore: step proxy.hide")
+                self._proxy.hide()
+            _win_log("restore: step osk.show")
+            if self._iconic(self):
+                self.deiconify()
+            self.show()          # not show_all: keeps collapsed children hidden
+            x, y = self.settings.get("win_x"), self.settings.get("win_y")
+            if x is not None and y is not None:
+                _win_log("restore: step move")
+                self.move(int(x), int(y))
             if IS_WINDOWS:
-                self._win_finish_restore()
-            else:
-                _win_allow_activate[0] = False
-                self.hide()
-                self.set_type_hint(Gdk.WindowTypeHint.DOCK)
-                self.set_skip_taskbar_hint(True)
-                self.set_skip_pager_hint(True)
-                self.show()
+                _win_log("restore: step handback_foreground")
+                self._win_handback_foreground()
+                _win_log("restore: step handback_foreground returned")
         except Exception as exc:
             _win_log(f"restore: error ({exc})")
-        _win_allow_activate[0] = False   # also covers failure paths
-        # Put geometry back exactly (the WM may re-place us).
-        x, y = self.settings.get("win_x"), self.settings.get("win_y")
-        if x is not None and y is not None:
-            self.move(int(x), int(y))
         _win_log("restore: done")
 
-    def _win_finish_restore(self):
-        """Runs ~250 ms after GDK reported ICONIFIED cleared.  No ShowWindow, no
-        SetWindowLong (beyond the read-first NOACTIVATE check), no sleep."""
-        import ctypes
-        user32 = ctypes.windll.user32
-        hwnd = getattr(self, "_win_hwnd", None)
-        _win_log(f"restore: step begin fg={(user32.GetForegroundWindow() or 0):#x} "
-                 f"ours={(hwnd or 0):#x} collapsed={self._collapsed}")
-        _win_log("restore: step set_skip_taskbar_hint(True)")
-        self.set_skip_taskbar_hint(True)
-        # Re-block activation now that the taskbar click has settled.
-        _win_allow_activate[0] = False
-        if hwnd:
-            _win_log("restore: step ensure_noactivate")
-            self._win_ensure_noactivate(hwnd)
-        _win_log("restore: step handback_foreground")
-        self._win_handback_foreground()
-        _win_log("restore: step handback_foreground returned")
-
-    def _win_ensure_noactivate(self, hwnd):
-        """GDK's skip-taskbar handling may rewrite the extended style.  Re-add
-        WS_EX_NOACTIVATE only if it is actually missing (style bits only: no
-        show/hide, so the taskbar and GDK's mapped state are untouched)."""
-        import ctypes
-        user32 = ctypes.windll.user32
-        GWL_EXSTYLE, WS_EX_NOACTIVATE = -20, 0x08000000
-        ex = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        if not ex & WS_EX_NOACTIVATE:
-            _win_log(f"restore: NOACTIVATE missing (ex={ex:#x}) — re-adding")
-            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex | WS_EX_NOACTIVATE)
+    def _force_restore(self):
+        """Escape hatch (second launch / OSK_SHOW message): unconditionally get
+        the keyboard visible again.  Runs from GLib.idle_add."""
+        _win_log("force_restore: begin")
+        needs = (self._minimized or not self.get_visible() or self._iconic(self))
+        self._minimized = False
+        if self._force_id:
+            GLib.source_remove(self._force_id)
+            self._force_id = 0
+        if needs:
+            self._restore_osk("force")
+        else:
+            _win_log("force_restore: already visible")
+        return False
 
     def _win_handback_foreground(self):
         """Give foreground back to the previously tracked target IF we hold it.
@@ -1742,7 +1763,7 @@ class OnScreenKeyboard(Gtk.Window):
             return None
 
     def _win_apply_styles(self, hwnd):
-        """Apply WS_EX_NOACTIVATE and install the WNDPROC
+        """Apply WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW and install the WNDPROC
         subclass on hwnd.  Idempotent: a second call (e.g. from the 'map'
         handler after realize failed to get the HWND) re-applies the style but
         re-subclasses only if we haven't already, so we never chain our own
@@ -1750,19 +1771,22 @@ class OnScreenKeyboard(Gtk.Window):
         import ctypes
         user32 = ctypes.windll.user32
 
-        # ── 2. Set WS_EX_NOACTIVATE ────────────────────────────────────
-        # WS_EX_TOOLWINDOW is deliberately NOT set here: "no taskbar button" is
-        # GDK's job (set_skip_taskbar_hint), so minimize/restore can flip it
-        # through GDK instead of re-styling the HWND behind GDK's back.
+        # ── 2. Set WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW ─────────────────
+        # TOOLWINDOW is what keeps the OSK off the taskbar / Alt+Tab (GDK3
+        # Win32's set_skip_taskbar_hint is a no-op).  Minimize uses a separate
+        # proxy window, so the OSK's own styles never change after this.
         GWL_EXSTYLE      = -20
         WS_EX_NOACTIVATE = 0x08000000
+        WS_EX_TOOLWINDOW = 0x00000080
+        want = WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
 
         cur_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        if cur_style & WS_EX_NOACTIVATE:
-            _win_log(f"styles: WS_EX_NOACTIVATE already set ({cur_style:#x})")
+        if cur_style & want == want:
+            _win_log(f"styles: NOACTIVATE|TOOLWINDOW already set ({cur_style:#x})")
         else:
-            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, cur_style | WS_EX_NOACTIVATE)
-            _win_log(f"styles: WS_EX_NOACTIVATE applied (was {cur_style:#x})")
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, cur_style | want)
+            _win_log(f"styles: WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW applied "
+                     f"(was {cur_style:#x})")
 
         if getattr(self, "_win_wndproc", None) is not None:
             _win_log("styles: WNDPROC already subclassed — skipping re-subclass")
@@ -1808,9 +1832,11 @@ class OnScreenKeyboard(Gtk.Window):
         )
 
         def _wndproc(hwnd_, msg, wparam, lparam):
-            if _win_allow_activate[0]:
-                # Minimized to the taskbar: let the taskbar restore/activate us.
-                return original_wndproc(hwnd_, msg, wparam, lparam)
+            if msg and msg == _win_show_msg[0]:
+                # Second launch / escape hatch.  ONLY queue work: no GDK or
+                # Win32 calls from inside the window procedure.
+                GLib.idle_add(self._force_restore)
+                return 0
             if msg == WM_MOUSEACTIVATE:
                 return MA_NOACTIVATE
             if msg == WM_SETFOCUS:
@@ -1863,8 +1889,7 @@ class OnScreenKeyboard(Gtk.Window):
         if not IS_WINDOWS:
             return
         if self._minimized:
-            # Minimized state is managed via GDK in _win_minimize /
-            # _finish_restore; don't touch the window while it is in flux.
+            # Minimized: the OSK is hidden behind the proxy window; leave it.
             _win_log("map: skipped style re-apply (minimized)")
             return
         # Ensure HWND is obtained (no-op if already found at realize time).
@@ -1890,7 +1915,7 @@ class OnScreenKeyboard(Gtk.Window):
                the HWND can't be obtained.  _win_last_target[0] is the linchpin
                of PostMessage typing; if the poll never starts, every keystroke
                falls through to pynput and lands in the OSK itself.
-          1.   WS_EX_NOACTIVATE (taskbar-skip is GDK's set_skip_taskbar_hint) — best-effort: don't activate
+          1.   WS_EX_NOACTIVATE — best-effort: don't activate
                on click.  Needs the HWND.
           2.   WM_MOUSEACTIVATE / WM_SETFOCUS subclass — best-effort focus-steal
                suppression.  Needs the HWND.
@@ -1965,8 +1990,7 @@ class OnScreenKeyboard(Gtk.Window):
             )
 
             def _cbt_proc(nCode, wParam, lParam):
-                if (nCode == HCBT_SETFOCUS and wParam
-                        and not _win_allow_activate[0]):
+                if nCode == HCBT_SETFOCUS and wParam:
                     pid = ctypes.c_ulong()
                     user32.GetWindowThreadProcessId(wParam, ctypes.byref(pid))
                     if pid.value == _win_our_pid:
@@ -5469,6 +5493,84 @@ def _start_hang_watchdog() -> None:
     _win_log("watchdog: started")
 
 
+_instance_keepalive: list = []   # mutex handle / listening socket, process lifetime
+
+
+def _win_single_instance_or_exit() -> None:
+    """Windows: named mutex; if another instance owns it, broadcast OSK_SHOW_v1
+    (its WNDPROC re-shows the keyboard) and exit."""
+    import ctypes
+    from ctypes import wintypes
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    u32 = ctypes.WinDLL("user32", use_last_error=True)
+    k32.CreateMutexW.restype = wintypes.HANDLE
+    k32.CreateMutexW.argtypes = [ctypes.c_void_p, wintypes.BOOL, wintypes.LPCWSTR]
+    u32.RegisterWindowMessageW.restype = wintypes.UINT
+    u32.RegisterWindowMessageW.argtypes = [wintypes.LPCWSTR]
+    u32.PostMessageW.restype = wintypes.BOOL
+    u32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT,
+                                 ctypes.c_size_t, ctypes.c_ssize_t]
+    msg = u32.RegisterWindowMessageW("OSK_SHOW_v1")
+    _win_show_msg[0] = msg
+    handle = k32.CreateMutexW(None, False, "Local\\OnScreenKeyboard.Instance")
+    err = ctypes.get_last_error()
+    if handle and err == 183:   # ERROR_ALREADY_EXISTS
+        _win_log("single-instance: already running — asking it to show, exiting")
+        u32.PostMessageW(0xFFFF, msg, 0, 0)   # HWND_BROADCAST
+        sys.exit(0)
+    _instance_keepalive.append(handle)
+
+
+def _linux_single_instance_or_exit():
+    """Linux: UNIX socket in $XDG_RUNTIME_DIR.  A live listener means another
+    instance runs: tell it to show itself and exit.  Otherwise (no socket or a
+    stale one) become the listener.  Returns the listening socket."""
+    import socket
+    import tempfile
+    path = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir(),
+                        f"osk-{os.getuid()}.sock")
+    c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    c.settimeout(1.0)
+    try:
+        c.connect(path)
+        c.sendall(b"show\n")
+        c.close()
+        print("[keyboard] already running — asked it to show itself")
+        sys.exit(0)
+    except OSError:
+        pass          # nobody listening (or stale socket): we take over
+    finally:
+        c.close()
+    try:
+        os.unlink(path)
+    except OSError:
+        pass
+    srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    srv.bind(path)
+    srv.listen(4)
+    srv.setblocking(False)
+    import atexit
+    atexit.register(lambda: os.path.exists(path) and os.unlink(path))
+    _instance_keepalive.append(srv)
+    return srv
+
+
+def _linux_watch_show_requests(srv, win) -> None:
+    def _on_conn(_fd, _cond):
+        try:
+            conn, _ = srv.accept()
+            conn.settimeout(0.2)
+            try:
+                if conn.recv(16).startswith(b"show"):
+                    win._force_restore()
+            finally:
+                conn.close()
+        except OSError:
+            pass
+        return True
+    GLib.io_add_watch(srv.fileno(), GLib.PRIORITY_DEFAULT, GLib.IOCondition.IN, _on_conn)
+
+
 def main():
     if "--selftest" in sys.argv[1:]:
         code = _run_selftest()
@@ -5481,7 +5583,23 @@ def main():
                 pass
         os._exit(code)
 
-    ok, _ = Gtk.init_check(sys.argv)
+    srv = None
+    if IS_WINDOWS:
+        try:
+            _win_single_instance_or_exit()
+        except SystemExit:
+            raise
+        except Exception as exc:
+            _win_log(f"single-instance check failed ({exc}) — continuing")
+    else:
+        try:
+            srv = _linux_single_instance_or_exit()
+        except SystemExit:
+            raise
+        except Exception as exc:
+            print(f"[keyboard] single-instance check failed ({exc}) — continuing")
+
+    ok, _ = Gtk.init_check([a for a in sys.argv if a != "--debug"])
     if not ok:
         print("ERROR: Could not connect to a display.")
         print(f"  DISPLAY    = {os.environ.get('DISPLAY', '(not set)')}")
@@ -5491,6 +5609,8 @@ def main():
 
     _start_hang_watchdog()
     win = OnScreenKeyboard()
+    if srv is not None:
+        _linux_watch_show_requests(srv, win)
     Gtk.main()
 
 

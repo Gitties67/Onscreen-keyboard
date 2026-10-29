@@ -52,6 +52,9 @@ Source: "..\dist\OnScreenKeyboard\*"; DestDir: "{app}"; Flags: ignoreversion rec
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+; Debug launch (writes %LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log).  The app is single-instance:
+; QUIT the running keyboard first, otherwise this just re-shows it and logs nothing new.
+Name: "{autoprograms}\{#AppName} (debug mode)"; Filename: "{app}\{#AppExe}"; Parameters: "--debug"
 
 [Registry]
 ; Per-user autostart; removed again on uninstall.

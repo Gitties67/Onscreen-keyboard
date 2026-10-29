@@ -31,7 +31,7 @@ No Python, GTK or other dependencies are needed.
 
 **Updates:** *Settings → Check for updates* downloads the new installer, verifies its SHA-256 against the release's `SHA256SUMS.txt`, installs silently and restarts the keyboard.
 
-**Debug log:** to troubleshoot typing problems, set the environment variable `OSK_DEBUG=1` before launching (e.g. `set OSK_DEBUG=1` then run the exe from Command Prompt). The log is written to `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`; typed characters are never recorded.
+**Debug log:** to troubleshoot typing problems, set the environment variable `OSK_DEBUG=1` before launching (e.g. `set OSK_DEBUG=1` then run the exe from Command Prompt). The log is written to `%LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log`; typed characters are never recorded. Alternatively use the Start-menu shortcut "On-Screen Keyboard (debug mode)" (passes `--debug`). The app is single-instance: quit the running keyboard first, otherwise launching again just re-shows it.
 
 ---
 
