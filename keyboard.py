@@ -652,7 +652,7 @@ if IS_WINDOWS:
 else:
     FONT_FAMILIES = ["Ubuntu", "Noto Sans", "DejaVu Sans", "Roboto", "Arial", "Courier New"]
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 
 GITHUB_REPO_URL     = "https://github.com/Gitties67/Onscreen-keyboard"
 FEEDBACK_REVIEW_URL = GITHUB_REPO_URL + "/issues/new?template=review.yml"
