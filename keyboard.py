@@ -1102,6 +1102,7 @@ popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
            border-color: {c['active_border']}; border-bottom-color: {c['active_bot']}; }}
 .active:hover  {{ background-color: {c['active_hover']}; background-image: none; }}
 .active:active {{ background-color: {c['active_border']}; background-image: none; }}
+#settings-btn.update-ready {{ box-shadow: inset 0 -3px 0 {c['active_bg']}; }}
 #settings-btn.active {{ background-color: {c['active_bg']}; color: {c['active_fg']};
                         border-color: {c['active_border']}; background-image: none; }}
 .settings-choice.active {{ background-color: {c['active_bg']}; color: {c['active_fg']};
@@ -1319,6 +1320,7 @@ KEY_ROWS = [
         ("6", "6",  52, []), ("7", "7",  52, []), ("8", "8",  52, []),
         ("9", "9",  52, []), ("0", "0",  52, []), ("-", "-",  52, []),
         ("=", "=",  52, []), ("⌫", "backspace", 95, ["special"]),
+        ("PrtScn", "prtscn", 64, ["special"]),
     ],
     # Row 1 — QWERTY
     [
@@ -1328,6 +1330,7 @@ KEY_ROWS = [
         ("u", "u", 52, []), ("i", "i", 52, []), ("o", "o", 52, []),
         ("p", "p", 52, []), ("[", "[", 52, []), ("]", "]", 52, []),
         ("\\", "\\", 63, []), ("Del", "delete", 64, ["special"]),
+        ("Home", "home", 64, ["special"]),
     ],
     # Row 2 — ASDF
     [
@@ -1337,6 +1340,7 @@ KEY_ROWS = [
         ("j", "j", 52, []), ("k", "k", 52, []), ("l", "l", 52, []),
         (";", ";", 52, []), ("'", "'", 52, []),
         ("↵", "return", 167, ["special"]),
+        ("End", "end", 64, ["special"]),
     ],
     # Row 3 — ZXCV
     [
@@ -1345,16 +1349,16 @@ KEY_ROWS = [
         ("v", "v", 52, []), ("b", "b", 52, []), ("n", "n", 52, []),
         ("m", "m", 52, []), (",", ",", 52, []), (".", ".", 52, []),
         ("/", "/", 52, []),
-        ("⇧", "shift", 183, ["special"]),
+        ("⇧", "shift", 247, ["special"]),
     ],
     # Row 4 — bottom (Fn latches like Ctrl: digits → F1–F12, arrows → Home/
-    # End/PgUp/PgDn, Del → PrtScn for the next key)
+    # End/PgUp/PgDn for the next key)
     [
         ("Fn",   "fn",   52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("⊞",   "win",  52, ["special"]),
         ("Alt",  "alt",  52, ["special"]),
-        ("",     "space", 295, ["space"]),
+        ("",     "space", 359, ["space"]),
         ("Alt",  "alt",  52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("←", "left",  52, ["special"]),
@@ -1376,16 +1380,17 @@ LAYOUT_ROWS: dict[str, list] = {
          ("a","a",52,[]),("z","z",52,[]),("e","e",52,[]),("r","r",52,[]),
          ("t","t",52,[]),("y","y",52,[]),("u","u",52,[]),("i","i",52,[]),
          ("o","o",52,[]),("p","p",52,[]),
-         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"])],
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"]),
+         ("Home","home",64,["special"])],
         [("Caps","caps",92,["special"]),
          ("q","q",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
          ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
          ("l","l",52,[]),("m","m",52,[]),("'","'",52,[]),
-         ("↵","return",167,["special"])],
+         ("↵","return",167,["special"]),("End","end",64,["special"])],
         [("⇧","shift",128,["special"]),
          ("w","w",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),(",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",183,["special"])],
+         ("⇧","shift",299,["special"])],
         _BOT_ROW,
     ],
     "qwertz": [
@@ -1394,17 +1399,18 @@ LAYOUT_ROWS: dict[str, list] = {
          ("q","q",52,[]),("w","w",52,[]),("e","e",52,[]),("r","r",52,[]),
          ("t","t",52,[]),("z","z",52,[]),("u","u",52,[]),("i","i",52,[]),
          ("o","o",52,[]),("p","p",52,[]),
-         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"])],
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"]),
+         ("Home","home",64,["special"])],
         [("Caps","caps",92,["special"]),
          ("a","a",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
          ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
          ("l","l",52,[]),(";",";",52,[]),("'","'",52,[]),
-         ("↵","return",167,["special"])],
+         ("↵","return",167,["special"]),("End","end",64,["special"])],
         [("⇧","shift",128,["special"]),
          ("y","y",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),("m","m",52,[]),
          (",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",183,["special"])],
+         ("⇧","shift",247,["special"])],
         _BOT_ROW,
     ],
 }
@@ -1414,13 +1420,12 @@ FN_MAP = {
     "1": "f1", "2": "f2", "3": "f3", "4": "f4", "5": "f5", "6": "f6",
     "7": "f7", "8": "f8", "9": "f9", "0": "f10", "-": "f11", "=": "f12",
     "left": "home", "right": "end", "up": "pgup", "down": "pgdn",
-    "delete": "prtscn",
 }
 FN_LABELS = {"home": "Home", "end": "End", "pgup": "PgUp", "pgdn": "PgDn",
              "prtscn": "PrtScn"}
 
-# Widest row natural width: 831 px of keys + 14 gaps×3px
-BASE_KB_W = 873
+# Widest row natural width: 895 px of keys + 15 gaps
+BASE_KB_W = 895 + 15 * KEY_GAP
 # Rows of keys (number row, three letter rows, bottom row) — no F-key row:
 # F1–F12 live on the Fn layer, as on the Windows on-screen keyboard
 KB_ROWS   = 5
@@ -1796,6 +1801,8 @@ class OnScreenKeyboard(Gtk.Window):
         self._close_btn:      Gtk.Button | None  = None
         self._update_status_label: Gtk.Label | None  = None
         self._update_btn:          Gtk.Button | None = None
+        self._update_banner:       Gtk.Button | None = None
+        self._update_found = False
         self._update_etag:         str | None        = None  # ETag for conditional requests
         self._titlebar:       Gtk.EventBox | None = None
         self._suggestion_bar: Gtk.Box | None     = None
@@ -1954,6 +1961,7 @@ class OnScreenKeyboard(Gtk.Window):
         self.connect("motion-notify-event",  self._on_resize_motion)
         self.connect("button-release-event", self._on_resize_release)
         self.connect("window-state-event",   self._on_window_state)
+        self.connect("size-allocate",        self._on_size_allocate)
 
     # ── Real minimize (taskbar / window list) ────────────────────────────────
 
@@ -2943,7 +2951,7 @@ class OnScreenKeyboard(Gtk.Window):
         # Clipboard button
         self._clipboard_btn = Gtk.Button(label="📋")
         self._clipboard_btn.set_name("settings-btn")
-        self._clipboard_btn.set_size_request(36, SUGGESTION_H)
+        self._clipboard_btn.set_size_request(_px(36), SUGGESTION_H)
         self._clipboard_btn.connect("clicked", lambda _: self._toggle_clipboard_mode())
         self._clipboard_btn.get_accessible().set_name("Open clipboard history")
         bar.pack_end(self._clipboard_btn, False, False, 2)
@@ -2951,7 +2959,7 @@ class OnScreenKeyboard(Gtk.Window):
         # Emoji toggle button
         self._emoji_btn = Gtk.Button(label="😊")
         self._emoji_btn.set_name("settings-btn")   # reuse settings-btn style
-        self._emoji_btn.set_size_request(36, SUGGESTION_H)
+        self._emoji_btn.set_size_request(_px(36), SUGGESTION_H)
         self._emoji_btn.connect("clicked", lambda _: self._toggle_emoji_mode())
         self._emoji_btn.get_accessible().set_name("Open emoji panel")
         bar.pack_end(self._emoji_btn, False, False, 2)
@@ -2959,7 +2967,7 @@ class OnScreenKeyboard(Gtk.Window):
         # Settings (gear) button
         self._settings_btn = Gtk.Button(label="⚙")
         self._settings_btn.set_name("settings-btn")
-        self._settings_btn.set_size_request(36, SUGGESTION_H)
+        self._settings_btn.set_size_request(_px(36), SUGGESTION_H)
         self._settings_btn.connect("clicked", lambda _: self._toggle_settings())
         self._settings_btn.get_accessible().set_name("Open settings panel")
         bar.pack_end(self._settings_btn, False, False, 2)
@@ -4120,6 +4128,17 @@ class OnScreenKeyboard(Gtk.Window):
             colors, self.settings.get("font_size", DEFAULT_FONT_SIZE),
             self.settings.get("font_family", DEFAULT_FONT), fit).encode())
 
+    def _on_size_allocate(self, _widget, alloc):
+        """Refit key widths when the window's width changes by any means other
+        than our own edge drag (first map, maximise, a restored saved size).
+        Without this the widths fitted before the window had its real size
+        stick, and every key comes out the same width."""
+        if self._resizing or alloc.width == getattr(self, "_fitted_w", 0):
+            return
+        self._fitted_w = alloc.width
+        GLib.idle_add(lambda: self._apply_key_scale(
+            self.settings.get("key_scale", 1.0), resize=False) and False)
+
     def _apply_key_scale(self, scale: float, reposition: bool = False, resize: bool = True):
         if getattr(self, "_theme_provider", None) is not None:
             self._set_key_text_fit(scale)
@@ -4961,6 +4980,15 @@ class OnScreenKeyboard(Gtk.Window):
         inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         inner.set_name("settings-inner")   # CSS padding: gap before the scrollbar
 
+        # "Update available" bar at the very top, hidden until a check finds one
+        self._update_banner = Gtk.Button(label="")
+        for cls in ("settings-choice", "active"):
+            self._update_banner.get_style_context().add_class(cls)
+        self._update_banner.set_no_show_all(True)
+        self._update_banner.set_margin_bottom(_px(6))
+        self._update_banner.connect("clicked", self._on_update_banner)
+        inner.pack_start(self._update_banner, False, False, 0)
+
         inner.pack_start(self._settings_section_header("Appearance", is_first=True), False, False, 0)
 
         # ── 1. Theme row ───────────────────────────────────────────────────
@@ -5652,6 +5680,44 @@ class OnScreenKeyboard(Gtk.Window):
         self._apply_key_scale(scale, reposition=True)
         self._save_settings()
 
+    UPDATE_RECHECK_S = 6 * 3600   # background re-check interval
+
+    def _start_auto_update_check(self):
+        """Check for a new release in the background, soon after start and
+        every few hours, so Settings can say when one is out.  Installed
+        Windows builds only: a git checkout is updated with git."""
+        if not getattr(sys, "frozen", False):
+            return
+        GLib.timeout_add_seconds(15, self._auto_update_check)
+        GLib.timeout_add_seconds(self.UPDATE_RECHECK_S, self._auto_update_check, True)
+
+    def _auto_update_check(self, repeat: bool = False) -> bool:
+        if self.settings.get("update_check_enabled", True) and not self._update_found:
+            import threading
+            threading.Thread(target=self._do_update_check_exe_mode,
+                             kwargs={"quiet": True}, daemon=True).start()
+        return repeat and not self._update_found
+
+    def _show_update_available(self, latest_tag: str):
+        """Point the user at an update: the bar on top of Settings, and a mark
+        on the ⚙ button."""
+        self._update_found = True
+        if self._update_banner:
+            how = "tap to install" if self._is_installed_build() else "download it from GitHub"
+            self._update_banner.set_label(f"⬆  Update available: {latest_tag} — {how}")
+            self._update_banner.get_accessible().set_name(f"Update available, version {latest_tag}")
+            self._update_banner.show()
+        if self._settings_btn:
+            self._settings_btn.get_style_context().add_class("update-ready")
+            self._settings_btn.set_tooltip_text(f"Settings — update {latest_tag} available")
+
+    def _on_update_banner(self, _btn):
+        """Run the Updates button (install / download), and show its progress."""
+        if self._update_btn:
+            self._scroll_settings_to(self._update_btn)
+            if self._update_btn.get_label() != "Check for updates":
+                self._update_btn.clicked()
+
     def _on_check_for_updates(self, _btn):
         if self._update_status_label:
             self._update_status_label.set_text("Checking…")
@@ -5741,7 +5807,8 @@ class OnScreenKeyboard(Gtk.Window):
     _RELEASES_URL = "https://api.github.com/repos/Gitties67/Onscreen-keyboard/releases/latest"
     _ASSET_URL_PREFIX = "https://github.com/Gitties67/Onscreen-keyboard/releases/download/"
 
-    def _do_update_check_exe_mode(self):
+    def _do_update_check_exe_mode(self, quiet: bool = False):
+        """quiet: a background check — only says anything if an update is out."""
         import fnmatch
         import urllib.request, urllib.error, json as _json
 
@@ -5777,7 +5844,8 @@ class OnScreenKeyboard(Gtk.Window):
                 if not _version_newer(latest_tag, local_ver):
                     status = "You're on the latest version."
                 elif setup and sums:
-                    info = {"url": setup.get("browser_download_url", ""),
+                    info = {"tag": latest_tag,
+                            "url": setup.get("browser_download_url", ""),
                             "name": setup.get("name", ""),
                             "sums_url": sums.get("browser_download_url", "")}
                     status = (f"Update available! You have {local_ver}, latest is {latest_tag}.\n"
@@ -5803,6 +5871,10 @@ class OnScreenKeyboard(Gtk.Window):
 
         def _apply(status=status, info=info, etag=new_etag):
             self._update_etag = etag
+            if quiet and (info is None or self._update_found):
+                return
+            if info:
+                self._show_update_available(info["tag"])
             if self._update_status_label:
                 self._update_status_label.set_text(status)
             if self._update_btn:
@@ -7334,6 +7406,7 @@ def main():
 
     _start_hang_watchdog()
     win = OnScreenKeyboard()
+    win._start_auto_update_check()
     if getattr(sys, "frozen", False):
         # After a self-update the installer that relaunched us may still be
         # exiting, so wait a minute before clearing old downloads.
