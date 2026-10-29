@@ -95,7 +95,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Reliable typing** — XTEST on Linux, direct input injection on Windows; never steals focus from the app you're typing into
 - **Behaves like a normal Windows app** — taskbar button, real minimise and restore, Windows-style title-bar buttons, resize cursors on every edge
 - **First-run tour** — four quick tips on first launch; skip it, or replay it any time from Settings → Help
-- **Full key layout** — F1–F12, Esc, Del, Home, End, PrtScn, arrows, QWERTY/AZERTY/QWERTZ
+- **Full key layout** — five big rows like the Windows on-screen keyboard; F1–F12, Home, End, PgUp, PgDn and PrtScn on the **Fn** key; QWERTY/AZERTY/QWERTZ
 - **Word prediction** — 5 suggestions from the dictionary, your custom words and a phrase model, keeping the capitals you type ("A" → *Alex*, "i" → *I'm*)
 - **Your language** — English (Australian, UK or US spelling), Deutsch, Français, Español, Italiano, Português, Nederlands, Bahasa Indonesia, Bahasa Melayu, Filipino, Tiếng Việt or 한국어 (Korean). It starts on your PC's language (and the matching layout: QWERTZ for German, AZERTY for French), changeable in Settings
 - **No accent hunting** — type *uber* and pick *über*, *cafe* → *café*, *manana* → *mañana*. Or hold a letter for its accents (hold **e** → é è ê ë); keys with accents have a small dot. Vietnamese works the same way: type *nguoi* → *người*
@@ -171,19 +171,23 @@ Custom words are stored in `custom_words.json` in the settings folder (`~/.confi
 ## Key layout
 
 ```
-Esc  F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12  Del  Home  End  PrtScn
-`  1  2  3  4  5  6  7  8  9  0  -  =  ⌫
-Tab  q  w  e  r  t  y  u  i  o  p  [  ]  \
+Esc  `  1  2  3  4  5  6  7  8  9  0  -  =  ⌫
+Tab  q  w  e  r  t  y  u  i  o  p  [  ]  \  Del
 Caps  a  s  d  f  g  h  j  k  l  ;  '  ↵
 ⇧  z  x  c  v  b  n  m  ,  .  /  ⇧
-Ctrl  ⊞  Alt  [         Space         ]  Alt  Ctrl  ←  ↑  ↓  →
+Fn  Ctrl  ⊞  Alt  [       Space       ]  Alt  Ctrl  ←  ↑  ↓  →
+
+With Fn:   1–0 - = → F1–F12    ← → Home/End    ↑ ↓ → PgUp/PgDn    Del → PrtScn
 ```
+
+Five rows like the Windows on-screen keyboard, so every key is bigger. The function keys sit on the **Fn** layer instead of taking a row of their own.
 
 | Key | Behaviour |
 |---|---|
 | **⇧ Shift** | One-shot — capitalises next keypress then auto-releases (configurable) |
 | **Caps** | Persistent uppercase toggle |
 | **Ctrl / Alt** | Sticky — latch on click; release set by Modifier keys setting |
+| **Fn** | One-shot: the keys show their Fn meaning (F1–F12, Home, End, PgUp, PgDn, PrtScn) until the next key press |
 | **⊞ Win** | App launcher (Linux) / opens Start menu (Windows) |
 | **😊** | Emoji panel |
 | **PrtScn** | Screenshot tool (Linux) |

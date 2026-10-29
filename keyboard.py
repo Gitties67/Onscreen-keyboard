@@ -191,6 +191,7 @@ def _win_setup_protos() -> None:
 _WIN_VK = {
     "backspace": 0x08, "tab": 0x09, "return": 0x0D, "escape": 0x1B,
     "space": 0x20, "delete": 0x2E, "home": 0x24, "end": 0x23,
+    "pgup": 0x21, "pgdn": 0x22,
     "left": 0x25, "up": 0x26, "right": 0x27, "down": 0x28,
     "prtscn": 0x2C,
     "f1": 0x70, "f2": 0x71, "f3": 0x72, "f4": 0x73, "f5": 0x74, "f6": 0x75,
@@ -386,6 +387,7 @@ try:
         "tab":       _PKey.tab,       "space":  _PKey.space,
         "escape":    _PKey.esc,       "delete": _PKey.delete,
         "home":      _PKey.home,      "end":    _PKey.end,
+        "pgup":      _PKey.page_up,   "pgdn":   _PKey.page_down,
         "left":      _PKey.left,      "right":  _PKey.right,
         "up":        _PKey.up,        "down":   _PKey.down,
         "f1":  _PKey.f1,  "f2":  _PKey.f2,  "f3":  _PKey.f3,  "f4":  _PKey.f4,
@@ -886,6 +888,8 @@ def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: st
         print(f"[theme] Unknown font_family {font_family!r}, falling back to {DEFAULT_FONT}")
         font_family = DEFAULT_FONT
     special_size  = max(9,  font_size - 3)   # modifier/nav labels slightly smaller
+    char_size     = font_size + 5            # letters/digits/symbols: big, like Windows' OSK
+    settings_size = max(14, font_size - 2)   # Settings text follows Font size too
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
     tour_size     = max(14, font_size)       # tour text never smaller than 14px
 
@@ -930,6 +934,10 @@ window {{ background-color: {c['bg']}; }}
 .key-btn {{ background-color: {c['key_bg']}; color: {c['key_fg']};
             border: 1px solid {c['key_border']}; border-bottom: 2px solid {c['key_bot']};
             font-size: {font_size}px; }}
+.key-btn.char-key {{ font-size: {char_size}px; }}
+#settings-label, .settings-choice, #settings-toggle {{ font-size: {settings_size}px; }}
+#settings-hint {{ font-size: {settings_size - 1}px; }}
+.settings-section {{ font-size: {settings_size + 2}px; }}
 .key-btn:hover {{ background-color: {c['key_hover']}; border-color: {c['key_hover_border']};
                   border-bottom-color: {c['key_bot']}; }}
 .key-btn:active {{ background-color: {c['key_bg']}; border-color: {c['key_border']}; }}
@@ -1133,6 +1141,8 @@ KEYSYMS = {
     # Navigation
     "home":   0xFF50,
     "end":    0xFF57,
+    "pgup":   0xFF55,
+    "pgdn":   0xFF56,
     "prtscn": 0xFF61,  # fallback if no snipping tool found
 }
 
@@ -1143,6 +1153,7 @@ ACCESSIBLE_KEY_NAMES = {
     "space": "Space bar", "delete": "Delete", "home": "Home", "end": "End",
     "left": "Left arrow", "right": "Right arrow",
     "up": "Up arrow", "down": "Down arrow", "prtscn": "Print Screen",
+    "pgup": "Page Up", "pgdn": "Page Down", "fn": "Function key",
 }
 
 SHIFT_MAP = {
@@ -1201,66 +1212,56 @@ TOUR_DWELL_MOVE_PX = 24   # pointer must move this far after a step appears befo
 REPEAT_DELAY_MS    = 400   # delay before repeat starts (ms)
 REPEAT_INTERVAL_MS = 50    # interval between repeated keypresses (ms)
 # Actions that should never repeat (they're toggles, not typeable keys)
-NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win", "hanyeong"}
+NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win", "hanyeong", "fn"}
 
 # ── Key layout ────────────────────────────────────────────────────────────���───
 # Each entry: (display_label, action, base_width, extra_css_classes)
 KEY_ROWS = [
-    # Row 0 — function keys + navigation
+    # Row 0 — number row (Esc on the left, like the Windows on-screen keyboard;
+    # with Fn latched the digits are F1–F12)
     [
-        ("Esc",    "escape", 52, ["special"]),
-        ("F1",     "f1",     52, ["special"]), ("F2",  "f2",  52, ["special"]),
-        ("F3",     "f3",     52, ["special"]), ("F4",  "f4",  52, ["special"]),
-        ("F5",     "f5",     52, ["special"]), ("F6",  "f6",  52, ["special"]),
-        ("F7",     "f7",     52, ["special"]), ("F8",  "f8",  52, ["special"]),
-        ("F9",     "f9",     52, ["special"]), ("F10", "f10", 52, ["special"]),
-        ("F11",    "f11",    52, ["special"]), ("F12", "f12", 52, ["special"]),
-        ("Del",    "delete", 52, ["special"]),
-        ("Home",   "home",   52, ["special"]),
-        ("End",    "end",    52, ["special"]),
-        ("PrtScn", "prtscn", 64, ["special"]),
-    ],
-    # Row 1 — number row
-    [
+        ("Esc", "escape", 60, ["special"]),
         ("`", "`",  52, []), ("1", "1",  52, []), ("2", "2",  52, []),
         ("3", "3",  52, []), ("4", "4",  52, []), ("5", "5",  52, []),
         ("6", "6",  52, []), ("7", "7",  52, []), ("8", "8",  52, []),
         ("9", "9",  52, []), ("0", "0",  52, []), ("-", "-",  52, []),
         ("=", "=",  52, []), ("⌫", "backspace", 95, ["special"]),
     ],
-    # Row 2 — QWERTY
+    # Row 1 — QWERTY
     [
         ("Tab", "tab", 80, ["special"]),
         ("q", "q", 52, []), ("w", "w", 52, []), ("e", "e", 52, []),
         ("r", "r", 52, []), ("t", "t", 52, []), ("y", "y", 52, []),
         ("u", "u", 52, []), ("i", "i", 52, []), ("o", "o", 52, []),
         ("p", "p", 52, []), ("[", "[", 52, []), ("]", "]", 52, []),
-        ("\\", "\\", 63, []),
+        ("\\", "\\", 63, []), ("Del", "delete", 64, ["special"]),
     ],
-    # Row 3 — ASDF
+    # Row 2 — ASDF
     [
         ("Caps", "caps", 92, ["special"]),
         ("a", "a", 52, []), ("s", "s", 52, []), ("d", "d", 52, []),
         ("f", "f", 52, []), ("g", "g", 52, []), ("h", "h", 52, []),
         ("j", "j", 52, []), ("k", "k", 52, []), ("l", "l", 52, []),
         (";", ";", 52, []), ("'", "'", 52, []),
-        ("↵", "return", 111, ["special"]),
+        ("↵", "return", 167, ["special"]),
     ],
-    # Row 4 — ZXCV
+    # Row 3 — ZXCV
     [
         ("⇧", "shift", 128, ["special"]),
         ("z", "z", 52, []), ("x", "x", 52, []), ("c", "c", 52, []),
         ("v", "v", 52, []), ("b", "b", 52, []), ("n", "n", 52, []),
         ("m", "m", 52, []), (",", ",", 52, []), (".", ".", 52, []),
         ("/", "/", 52, []),
-        ("⇧", "shift", 128, ["special"]),
+        ("⇧", "shift", 183, ["special"]),
     ],
-    # Row 5 — bottom
+    # Row 4 — bottom (Fn latches like Ctrl: digits → F1–F12, arrows → Home/
+    # End/PgUp/PgDn, Del → PrtScn for the next key)
     [
+        ("Fn",   "fn",   52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("⊞",   "win",  52, ["special"]),
         ("Alt",  "alt",  52, ["special"]),
-        ("",     "space", 330, ["space"]),
+        ("",     "space", 295, ["space"]),
         ("Alt",  "alt",  52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("←", "left",  52, ["special"]),
@@ -1271,55 +1272,66 @@ KEY_ROWS = [
 ]
 
 # ── Alternative layouts ───────────────────────────────────────────────────────
-_FN_ROW  = KEY_ROWS[0]   # function keys — same for all layouts
-_NUM_ROW = KEY_ROWS[1]   # number row — same for all layouts
-_BOT_ROW = KEY_ROWS[5]   # bottom row — same for all layouts
+_NUM_ROW = KEY_ROWS[0]   # number row — same for all layouts
+_BOT_ROW = KEY_ROWS[4]   # bottom row — same for all layouts
 
 LAYOUT_ROWS: dict[str, list] = {
     "qwerty": KEY_ROWS,
     "azerty": [
-        _FN_ROW, _NUM_ROW,
+        _NUM_ROW,
         [("Tab","tab",80,["special"]),
          ("a","a",52,[]),("z","z",52,[]),("e","e",52,[]),("r","r",52,[]),
          ("t","t",52,[]),("y","y",52,[]),("u","u",52,[]),("i","i",52,[]),
          ("o","o",52,[]),("p","p",52,[]),
-         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[])],
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"])],
         [("Caps","caps",92,["special"]),
          ("q","q",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
          ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
          ("l","l",52,[]),("m","m",52,[]),("'","'",52,[]),
-         ("↵","return",111,["special"])],
+         ("↵","return",167,["special"])],
         [("⇧","shift",128,["special"]),
          ("w","w",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),(",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",128,["special"])],
+         ("⇧","shift",183,["special"])],
         _BOT_ROW,
     ],
     "qwertz": [
-        _FN_ROW, _NUM_ROW,
+        _NUM_ROW,
         [("Tab","tab",80,["special"]),
          ("q","q",52,[]),("w","w",52,[]),("e","e",52,[]),("r","r",52,[]),
          ("t","t",52,[]),("z","z",52,[]),("u","u",52,[]),("i","i",52,[]),
          ("o","o",52,[]),("p","p",52,[]),
-         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[])],
+         ("[","[",52,[]),("]","]",52,[]),("\\","\\",63,[]),("Del","delete",64,["special"])],
         [("Caps","caps",92,["special"]),
          ("a","a",52,[]),("s","s",52,[]),("d","d",52,[]),("f","f",52,[]),
          ("g","g",52,[]),("h","h",52,[]),("j","j",52,[]),("k","k",52,[]),
          ("l","l",52,[]),(";",";",52,[]),("'","'",52,[]),
-         ("↵","return",111,["special"])],
+         ("↵","return",167,["special"])],
         [("⇧","shift",128,["special"]),
          ("y","y",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),("m","m",52,[]),
          (",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",128,["special"])],
+         ("⇧","shift",183,["special"])],
         _BOT_ROW,
     ],
 }
 
-# Widest row natural width (row 1): 13×52 + 95 + 13 gaps×3px = 810
-BASE_KB_W = 810
-# 6 rows × base key height (5 typing rows + 1 function key row)
-BASE_KB_H = BASE_KEY_H * 6
+# Fn layer: what a key does (and shows) while Fn is latched
+FN_MAP = {
+    "1": "f1", "2": "f2", "3": "f3", "4": "f4", "5": "f5", "6": "f6",
+    "7": "f7", "8": "f8", "9": "f9", "0": "f10", "-": "f11", "=": "f12",
+    "left": "home", "right": "end", "up": "pgup", "down": "pgdn",
+    "delete": "prtscn",
+}
+FN_LABELS = {"home": "Home", "end": "End", "pgup": "PgUp", "pgdn": "PgDn",
+             "prtscn": "PrtScn"}
+
+# Widest row natural width: 831 px of keys + 14 gaps×3px
+BASE_KB_W = 873
+# Rows of keys (number row, three letter rows, bottom row) — no F-key row:
+# F1–F12 live on the Fn layer, as on the Windows on-screen keyboard
+KB_ROWS   = 5
+BASE_KB_H = BASE_KEY_H * KB_ROWS
 
 
 # ── Key typer ────────────────────────────────────────────────────────────────
@@ -1577,8 +1589,10 @@ class OnScreenKeyboard(Gtk.Window):
         self._caps_btn:        Gtk.Button | None       = None
         self._suggestion_btns: list[Gtk.Button]       = []
         self._modifier_btns:   dict[str, list[Gtk.Button]] = {
-            "ctrl": [], "alt": [], "win": []
+            "ctrl": [], "alt": [], "win": [], "fn": []
         }
+        # Plain keys that change label on the Fn layer: action → (button, label)
+        self._fn_btns:         dict[str, tuple[Gtk.Button, str]] = {}
         self._search_label:    Gtk.Label | None        = None
         self._settings_btn:    Gtk.Button | None       = None
         self._key_stack:       Gtk.Stack | None        = None
@@ -1660,6 +1674,7 @@ class OnScreenKeyboard(Gtk.Window):
         self.ctrl_active = False
         self.alt_active  = False
         self.win_active  = False
+        self.fn_active   = False   # Fn latched: next key uses its Fn-layer meaning
 
         # Manual resize state (used because override_redirect disables WM resize)
         self._resizing        = False
@@ -1810,7 +1825,7 @@ class OnScreenKeyboard(Gtk.Window):
         geo     = monitor.get_geometry()
         sw, sh  = geo.width, geo.height
 
-        kb_h = BASE_KEY_H * 6 + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
+        kb_h = BASE_KEY_H * KB_ROWS + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
         # Restore saved position/size, or default to full-width bar at screen bottom
         saved_x = self.settings.get("win_x", 0)
         saved_y = self.settings.get("win_y", sh - kb_h)
@@ -2889,6 +2904,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         ctx = btn.get_style_context()
         ctx.add_class("key-btn")
+        if not is_special:
+            ctx.add_class("char-key")        # typed characters get the big label
         for cls in extra_classes:
             ctx.add_class(cls)
 
@@ -2918,8 +2935,10 @@ class OnScreenKeyboard(Gtk.Window):
             self._shift_btns.append(btn)
         elif action == "caps":
             self._caps_btn = btn
-        elif action in ("ctrl", "alt", "win"):
+        elif action in ("ctrl", "alt", "win", "fn"):
             self._modifier_btns[action].append(btn)
+        if action in FN_MAP and not shift_sym:
+            self._fn_btns[action] = (btn, label)
 
         return btn
 
@@ -2997,7 +3016,7 @@ class OnScreenKeyboard(Gtk.Window):
         start_wx = self._resize_start_wx
         start_wy = self._resize_start_wy
 
-        min_h = max(int(BASE_KEY_H * 6 * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12,
+        min_h = max(int(BASE_KEY_H * KB_ROWS * 0.3) + TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12,
                     getattr(self, "_resize_min_h", 0))
         min_w = getattr(self, "_resize_min_w", MIN_W)
         # Never let a measured minimum above the starting size shift the window
@@ -3071,7 +3090,7 @@ class OnScreenKeyboard(Gtk.Window):
                 _, new_h = self.get_size()
                 overhead = TITLEBAR_H + SUGGESTION_H + STRIP_H * 4 + 12
                 scale = round(
-                    max(0.3, min(1.5, (new_h - overhead) / (BASE_KEY_H * 6))), 2
+                    max(0.3, min(1.5, (new_h - overhead) / (BASE_KEY_H * KB_ROWS))), 2
                 )
                 self.settings["key_scale"] = scale
                 self._save_settings()
@@ -3159,6 +3178,8 @@ class OnScreenKeyboard(Gtk.Window):
         letter with accented forms, the hold-for-accents timer)."""
         if event.button != 1 or action in NON_REPEAT_ACTIONS:
             return False
+        if self.fn_active and action in FN_MAP:
+            return False          # an Fn-layer key (F5, PgDn...) fires once
         if self._accent_variants(action):
             self._longpress_cancel()
             self._longpress_timer = GLib.timeout_add(
@@ -3354,6 +3375,11 @@ class OnScreenKeyboard(Gtk.Window):
             self._toggle_modifier(action)
             return
 
+        if action == "fn":
+            self.fn_active = not self.fn_active
+            self._update_modifier_visuals()
+            return
+
         if action == "win":
             self._toggle_app_mode()
             return
@@ -3453,6 +3479,11 @@ class OnScreenKeyboard(Gtk.Window):
             return
 
         # ── Normal typing ────────────────────────────────────────────────────
+        if self.fn_active:
+            # One-shot, like Shift: 1 → F1, ← → Home ... then back to normal
+            self.fn_active = False
+            action = FN_MAP.get(action, action)
+            self._update_modifier_visuals()
         if self._korean_active() and self._korean_key(action):
             return
         mods = self._active_sticky_modifiers()
@@ -3495,7 +3526,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._launch_snipping_tool()
 
         elif action in ("left", "right", "up", "down", "escape", "delete",
-                        "home", "end",
+                        "home", "end", "pgup", "pgdn",
                         "f1", "f2", "f3", "f4", "f5", "f6",
                         "f7", "f8", "f9", "f10", "f11", "f12"):
             self.typer.send_special(action, mods)
@@ -3982,7 +4013,7 @@ class OnScreenKeyboard(Gtk.Window):
             btn.set_size_request(int(base_w * wscale), h)
         if not resize:
             return
-        keys_h = int(BASE_KEY_H * 6 * scale)
+        keys_h = int(BASE_KEY_H * KB_ROWS * scale)
         total_h = keys_h + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
         self.resize(w, total_h)
         if reposition:
@@ -4002,7 +4033,8 @@ class OnScreenKeyboard(Gtk.Window):
         self._ko_btn        = None
         self._shift_btns    = []
         self._caps_btn      = None
-        self._modifier_btns = {"ctrl": [], "alt": [], "win": []}
+        self._modifier_btns = {"ctrl": [], "alt": [], "win": [], "fn": []}
+        self._fn_btns       = {}
         self._symbol_btns   = {}
         self._all_key_btns  = []
 
@@ -4598,7 +4630,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._expand_btn.hide()
 
         target_h = self._pre_collapse_h or (
-            int(BASE_KEY_H * 6 * self.settings.get("key_scale", 1.0))
+            int(BASE_KEY_H * KB_ROWS * self.settings.get("key_scale", 1.0))
             + TITLEBAR_H + SUGGESTION_H + 7 * 4 + 12
         )
         self.resize(w, target_h)
@@ -6897,7 +6929,10 @@ class OnScreenKeyboard(Gtk.Window):
         # Symbol keys: show shifted label as main when shift is active,
         # otherwise show base char and restore the dim shift-hint sub-label.
         for action, (main_lbl, sub_lbl) in self._symbol_btns.items():
-            if self.shift_active:
+            if self.fn_active and action in FN_MAP:
+                main_lbl.set_text(FN_MAP[action].upper())     # 1 → F1
+                sub_lbl.set_visible(False)
+            elif self.shift_active:
                 main_lbl.set_text(SHIFT_MAP[action])
                 sub_lbl.set_visible(False)
             else:
@@ -6921,6 +6956,9 @@ class OnScreenKeyboard(Gtk.Window):
         _set_active(self._modifier_btns["ctrl"], self.ctrl_active)
         _set_active(self._modifier_btns["alt"],  self.alt_active)
         _set_active(self._modifier_btns["win"],  self.win_active)
+        _set_active(self._modifier_btns["fn"],   self.fn_active)
+        for action, (btn, label) in self._fn_btns.items():
+            btn.set_label(FN_LABELS.get(FN_MAP[action], label) if self.fn_active else label)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
