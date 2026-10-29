@@ -105,6 +105,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Custom dictionary** — add names, slang, abbreviations; they appear first in suggestions
 - **Macros** — trigger → expansion pairs with `{date}` / `{time}` tokens
 - **Clipboard history** — 📋 shows last 20 clipboard entries; click any to type it
+- **Clear key feedback** — the key you press briefly flashes a softly inverted colour, so you can see what registered
 - **Sticky modifiers** — Ctrl, Alt latch on click; configurable auto-release or persistent toggle
 - **DIY theme builder** — 6-step colour wizard with live preview
 - **4 built-in themes** — Dark, Light, Midnight, High Contrast
@@ -130,6 +131,7 @@ Click **⚙** in the suggestion bar to open settings. Not sure what a setting do
 | **Key size** | 0.3× – 1.5×, live (or drag a window edge) |
 | **Opacity** | 30% – 100% |
 | **Dictionary** | English (Australia) / English (UK) / English (US); defaults to your system region |
+| **Auto space** | On (default) / Off — type a space after a picked suggestion |
 | **Dwell click** | Hover-to-click with adjustable delay |
 | **Key sound** | Off / Click (default, soft tick) / Beep |
 | **Modifier keys** | Auto-release or sticky |

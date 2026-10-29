@@ -560,6 +560,9 @@ SETTINGS_HELP = {
     "Dictionary": "Which English spelling word suggestions and spell-check use: Australian "
                   "and UK English say 'colour' and 'organise', US English says 'color' and "
                   "'organize'. It starts on the one for your region.",
+    "Auto space": "When you pick a suggested word, a space is typed after it so you can go "
+                  "straight on to the next word. Turn it off if you'd rather add punctuation "
+                  "or the space yourself.",
     "Dwell click": "Hover over a key without clicking and it presses itself after the delay. "
                    "Useful if clicking is hard or tiring, e.g. with a head mouse or eye tracker.",
     "Key sound": "A sound on every key press, so you know it registered. Click is soft, Beep "
@@ -601,6 +604,7 @@ DEFAULT_SETTINGS: dict = {
     "tutorial_done":        False,    # first-run tour shown (fresh installs only; see _load_settings)
     "font_version":         FONT_SETTINGS_VERSION,
     "language":             _detect_language(),  # en_AU | en_GB | en_US (word suggestions)
+    "space_after_suggestion": True,   # type a space after an accepted suggestion
 }
 
 DEFAULT_MACROS = [
@@ -765,6 +769,13 @@ def _make_theme_css(c: dict, font_size: int = DEFAULT_FONT_SIZE, font_family: st
         except (ValueError, TypeError):
             return fallback
 
+    # Key-press flash: a soft inversion (background halfway to the label
+    # colour, label in the key colour) rather than a full black/white swap.
+    flash_bg    = _safe_mix(c['key_bg'], c['key_fg'], 0.5, c['key_hover'])
+    flash_fg    = c['key_bg']
+    flash_sp_bg = _safe_mix(c['special_bg'], c['special_fg'], 0.5, c['special_hover'])
+    flash_sp_fg = c['special_bg']
+
     # Windows-style caption buttons: ~10% / ~18% overlay of the title-bar text
     # colour on the title-bar background (themes may override explicitly).
     tb_bg, tb_fg = c['titlebar_bg'], c['titlebar_fg']
@@ -797,6 +808,8 @@ window {{ background-color: {c['bg']}; }}
 .special:hover {{ background-color: {c['special_hover']}; }}
 .special:active {{ background-color: {c['special_bg']}; }}
 .space {{ background-color: {c['key_bg']}; border-color: {c['key_border']}; }}
+.key-btn.key-flash {{ background-color: {flash_bg}; color: {flash_fg}; transition: none; }}
+.key-btn.special.key-flash {{ background-color: {flash_sp_bg}; color: {flash_sp_fg}; }}
 .caption-btn {{ background-color: transparent; background-image: none; color: {tb_fg};
                 border: 1px solid {cap_border}; border-radius: 0; box-shadow: none;
                 text-shadow: none; }}
@@ -1412,6 +1425,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._learn_save_timer = None  # debounce timer for UserModel.save()
         self._forget_timer = None      # confirm-window timer for "Forget learned words"
         self._forget_armed = False
+        self._flash_timers: dict = {}  # key button → timer removing its .key-flash
         self._word_title = False       # first letter of current_word typed upper-case
         self._word_upper = False       # every letter of current_word typed upper-case
         self.shift_active = False
@@ -2933,6 +2947,10 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _cancel_all_timers(self):
         """Cancel all pending GLib timers to prevent callbacks firing on torn-down widgets."""
+        for btn, tid in list(self._flash_timers.items()):
+            GLib.source_remove(tid)
+            btn.get_style_context().remove_class("key-flash")
+        self._flash_timers.clear()
         for tid in list(self._repeat_timers.values()):
             GLib.source_remove(tid)
         self._repeat_timers.clear()
@@ -3001,12 +3019,32 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(tid)
         self._repeat_active.discard(action)
 
-    def _on_key_clicked(self, _btn, action: str):
+    def _on_key_clicked(self, btn, action: str):
         # When the repeat is active for this key, the GTK 'clicked' signal fires
         # on release — ignore it since repeat is already handling the key.
         if action in self._repeat_active:
             return
+        self._flash_key(btn)
         self._handle_key(action)
+
+    KEY_FLASH_MS = 160
+
+    def _flash_key(self, btn):
+        """Briefly show the key inverted so it's clear which one was pressed
+        (a quick tap or a dwell click is too fast for the :active state)."""
+        if btn is None:
+            return
+        ctx = btn.get_style_context()
+        old = self._flash_timers.pop(btn, None)
+        if old:
+            GLib.source_remove(old)
+        ctx.add_class("key-flash")
+
+        def _off():
+            self._flash_timers.pop(btn, None)
+            ctx.remove_class("key-flash")
+            return False
+        self._flash_timers[btn] = GLib.timeout_add(self.KEY_FLASH_MS, _off)
 
     def _handle_key(self, action: str):
         self._play_click_sound()
@@ -4167,7 +4205,8 @@ class OnScreenKeyboard(Gtk.Window):
                 merged["click_style"] = "click"
             if merged.get("language") not in DICTIONARIES:
                 merged["language"] = DEFAULT_SETTINGS["language"]
-            for key in ("learn_words", "tutorial_done", "click_sound", "dwell_enabled"):
+            for key in ("learn_words", "tutorial_done", "click_sound", "dwell_enabled",
+                        "space_after_suggestion"):
                 if not isinstance(merged.get(key), bool):
                     merged[key] = DEFAULT_SETTINGS[key]
             return merged
@@ -4410,6 +4449,24 @@ class OnScreenKeyboard(Gtk.Window):
             self._language_btns[code] = btn
         inner.pack_start(lang_row, False, False, 0)
         self._refresh_language_buttons()
+
+        # ── Space after a suggestion ───────────────────────────────────────
+        space_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        space_row.pack_start(self._settings_row_label("Auto space"), False, False, 0)
+        space_on = bool(self.settings.get("space_after_suggestion", True))
+        space_toggle = Gtk.ToggleButton(label="On" if space_on else "Off")
+        space_toggle.set_name("settings-toggle")
+        space_toggle.set_size_request(100, -1)
+        space_toggle.set_active(space_on)
+        space_toggle.connect("toggled", self._on_space_after_toggled)
+        space_toggle.get_accessible().set_description(
+            "Type a space after a suggested word is picked")
+        space_row.pack_start(space_toggle, False, False, 0)
+        space_hint = Gtk.Label(label="adds a space after a picked suggestion")
+        space_hint.set_name("settings-hint")
+        space_hint.set_xalign(0.0)
+        space_row.pack_start(space_hint, False, False, 4)
+        inner.pack_start(space_row, False, False, 0)
 
         # ── 7. Dwell row ───────────────────────────────────────────────────
         dwell_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -4781,6 +4838,12 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _on_theme_clicked(self, _btn, theme: str):
         self._apply_theme(theme)
+
+    def _on_space_after_toggled(self, toggle: Gtk.ToggleButton):
+        on = toggle.get_active()
+        toggle.set_label("On" if on else "Off")
+        self.settings["space_after_suggestion"] = on
+        self._save_settings()
 
     def _on_learn_toggled(self, toggle: Gtk.ToggleButton):
         on = toggle.get_active()
@@ -6062,6 +6125,11 @@ class OnScreenKeyboard(Gtk.Window):
 
         return False  # don't repeat
 
+    def _suggestion_space(self):
+        """Space after an accepted suggestion, unless turned off in Settings."""
+        if self.settings.get("space_after_suggestion", True):
+            self.typer.send_special("space")
+
     def _on_suggestion_clicked(self, btn: Gtk.Button, idx: int = 0):
         label = btn.get_label()
         if not label:
@@ -6087,7 +6155,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self.typer.send_special("backspace")
             for ch in expanded:
                 self.typer.type_char(ch)
-            self.typer.send_special("space")
+            self._suggestion_space()
             self.current_word = ""
             self._ctx_reset()      # a macro can expand to anything
             self._refresh_suggestions()
@@ -6108,7 +6176,7 @@ class OnScreenKeyboard(Gtk.Window):
                     self.typer.send_special("backspace")
             for ch in label:
                 self.typer.type_char(ch)
-            self.typer.send_special("space")
+            self._suggestion_space()
             self.current_word = ""
             self._ctx_commit(label)
             self._refresh_suggestions()
@@ -6120,7 +6188,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self.typer.send_special("backspace")
             for ch in label:
                 self.typer.type_char(ch)
-            self.typer.send_special("space")
+            self._suggestion_space()
             self.current_word = ""
             self._ctx_commit(label)
             self._refresh_suggestions()
@@ -6138,7 +6206,7 @@ class OnScreenKeyboard(Gtk.Window):
             # Fast path: just type the remaining suffix
             for ch in cased[len(self.current_word):]:
                 self.typer.type_char(ch)
-        self.typer.send_special("space")
+        self._suggestion_space()
         self.current_word = ""
         self._ctx_commit(label)
         self._refresh_suggestions()
