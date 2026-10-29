@@ -6486,6 +6486,7 @@ class OnScreenKeyboard(Gtk.Window):
         label = btn.get_label()
         if not label:
             return
+        self._play_click_sound()
 
         if self._custom_input_mode:
             if idx == self.CI_SAVE_SLOT:
