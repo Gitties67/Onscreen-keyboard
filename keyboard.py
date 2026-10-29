@@ -2777,7 +2777,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._learn_save_timer = None
         if self._forget_timer is not None:
             GLib.source_remove(self._forget_timer)
-            self._forget_timer = None
+            self._disarm_forget()   # also un-arm, so a later click can't erase
         self._user_model.save()
 
     def _quit(self):
@@ -3004,6 +3004,7 @@ class OnScreenKeyboard(Gtk.Window):
         """Close every open panel/mode except `keep` using its own close routine,
         and cancel any pending fuzzy update (it must not repaint over a panel)."""
         self._ctx_reset()
+        self.current_word = ""
         if keep != "settings" and self._settings_mode:
             self._toggle_settings()
         if keep != "emoji" and self._emoji_mode:
@@ -3927,6 +3928,9 @@ class OnScreenKeyboard(Gtk.Window):
             merged = {**DEFAULT_SETTINGS, **data}
             if merged.get("click_style") not in ("click", "beep"):
                 merged["click_style"] = "click"
+            for key in ("learn_words", "tutorial_done", "click_sound", "dwell_enabled"):
+                if not isinstance(merged.get(key), bool):
+                    merged[key] = DEFAULT_SETTINGS[key]
             return merged
         except Exception:
             return dict(DEFAULT_SETTINGS)
@@ -5556,10 +5560,12 @@ class OnScreenKeyboard(Gtk.Window):
             if char in ".!?":
                 self._ctx_commit(self.current_word)
                 self._ctx_reset()
-            elif char.isdigit():
-                self._ctx_reset()
-            else:
+            elif char in ',;:"()':
                 self._ctx_commit(self.current_word)
+            else:
+                # Digits and symbols (@ / _ - # ...) usually mean an address,
+                # username or password: don't learn the word or chain context.
+                self._ctx_reset()
             self.current_word = ""
 
         self._refresh_suggestions()
@@ -6140,6 +6146,11 @@ def main():
     if srv is not None:
         _linux_watch_show_requests(srv, win)
     Gtk.main()
+    # Every Gtk.main_quit path (quit, update installer, destroy) ends here
+    try:
+        win._user_model.save()
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

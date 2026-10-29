@@ -90,7 +90,9 @@ def _load_ngrams(path: str | None = None) -> tuple[dict, dict]:
                     parts = line.split("\t")
                     if len(parts) == 3:
                         try:
-                            table[parts[0]] = (int(parts[1]), parts[2])
+                            total = int(parts[1])
+                            if total > 0:   # guard against a corrupt/hand-edited file
+                                table[parts[0]] = (total, parts[2])
                         except ValueError:
                             pass
     except (OSError, UnicodeDecodeError) as exc:
