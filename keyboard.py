@@ -734,6 +734,8 @@ popover.tour-popover .tour-count {{ color: {c['sublabel_fg']}; }}
 .tour-skip:hover {{ background-color: {c['key_hover']}; }}
 .tour-btn.dwell-pending {{ background-color: {c['active_hover']}; color: {c['active_fg']};
                            border: 2px solid {c['key_fg']}; }}
+.key-btn.dwell-pending {{ background-color: {c['active_hover']}; color: {c['active_fg']};
+                          border-color: {c['active_border']}; }}
 #settings-btn {{ background-color: {c['settings_bg']}; color: {c['settings_fg']};
                  border: 1px solid {c['settings_border']}; border-bottom: 2px solid {c['settings_bot']}; }}
 #settings-btn:hover {{ color: {c['key_fg']}; background-color: {c['key_hover']}; }}
@@ -930,7 +932,7 @@ RESIZE_CURSORS = {
 # Windows caption glyphs: (Segoe MDL2 / Fluent Icons code point, Unicode fallback)
 CAPTION_GLYPHS = {
     "minimize": ("\uE921", "\u2014"),   # ChromeMinimize  / em dash
-    "close":    ("\uE8BB", "\u2715"),   # ChromeClose     / multiplication x
+    "close":    ("\uE8BB", "\u00D7"),   # ChromeClose     / multiplication x
     "expand":   ("\uE70E", "\u25B2"),   # ChevronUp       / up triangle
 }
 CAPTION_ICON_FONTS = ("Segoe Fluent Icons", "Segoe MDL2 Assets")
@@ -3810,6 +3812,9 @@ class OnScreenKeyboard(Gtk.Window):
     def _collapse(self):
         """Shrink to the title bar + suggestion bar; hide only the key grid.
 
+        Collapsing during the first-run tour ends it (the bubble can't fit, and
+        step 4 is what teaches the double-click in the first place).
+
         The title bar (with its ─/✕ controls) and the suggestion bar both stay
         visible — the title bar is the only way to expand again, and keeping the
         suggestion bar lets word prediction / panel toggles remain reachable in
@@ -3817,6 +3822,9 @@ class OnScreenKeyboard(Gtk.Window):
         """
         if self._collapsed:
             return
+        if getattr(self, "_tour_step", -1) >= 0:
+            self._end_tour()
+        self._reset_resize_cursors()
         w, h = self.get_size()
         self._pre_collapse_h = h
         self._collapsed = True
@@ -3841,6 +3849,7 @@ class OnScreenKeyboard(Gtk.Window):
         if not self._collapsed:
             return
         self._collapsed = False
+        self._reset_resize_cursors()
         w, _ = self.get_size()
 
         if self._key_stack:
@@ -5146,7 +5155,8 @@ class OnScreenKeyboard(Gtk.Window):
         if "--selftest" in sys.argv[1:] or self.settings.get("tutorial_done", False):
             return False
         if not self.get_mapped() or self._minimized:
-            return True   # try again on the next tick
+            self._tour_start_tries = getattr(self, "_tour_start_tries", 0) + 1
+            return self._tour_start_tries < 30   # retry ~24 s, then wait for next launch
         self._start_tour()
         return False
 
@@ -5275,6 +5285,8 @@ class OnScreenKeyboard(Gtk.Window):
         self._tour_anchor_xy = self._pointer_root_xy()
 
         widget, rect = self._tour_target(key)
+        if not widget.get_mapped():        # e.g. a panel replaced the suggestions
+            widget, rect = self._titlebar, None
         pop = self._tour_popover
         pop.hide()                 # re-anchor without animating from the old spot
         pop.set_relative_to(widget)
