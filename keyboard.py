@@ -38,7 +38,8 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gio", "2.0")
 gi.require_version("Pango", "1.0")
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
 
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -352,6 +353,22 @@ def _win_inject_char(char: str, mods: list[str]) -> bool:
     return ok
 
 
+def _win_log_shortcut_target(mods: list[str]) -> None:
+    """Debug log: where a Ctrl/Alt shortcut is about to go.  Shortcuts use
+    SendInput, which goes to the foreground window — not the tracked target
+    that plain typing posts to — so a mismatch here means the shortcut is lost."""
+    if not _WIN_DEBUG_LOG:
+        return
+    try:
+        import ctypes
+        fg = ctypes.windll.user32.GetForegroundWindow() or 0
+        target = _win_last_target[0] or 0
+        _win_log(f"shortcut mods={mods} foreground={fg:#x} target={target:#x} "
+                 f"{'same' if fg == target else 'DIFFERENT'}")
+    except Exception as exc:
+        _win_log(f"shortcut log error: {exc}")
+
+
 def _win_inject_special(name: str, mods: list[str]) -> bool:
     """Try to deliver a named special key via PostMessage WM_KEYDOWN/UP.
 
@@ -437,7 +454,9 @@ if not IS_WINDOWS:
 from predictor import (WordPredictor, UserModel, DICTIONARIES, ELISION_LANGUAGES,
                        is_english)
 from hangul import HangulComposer, jamo_for
-from emojis import EMOJI_DATA, search as emoji_search, suggest as emoji_suggest
+from emojis import (EMOJI_DATA, is_country_flag, search as emoji_search,
+                    suggest as emoji_suggest)
+from calculator import DIV_ZERO, press as calc_press, evaluate as calc_evaluate
 
 
 LANGUAGE_LABELS = {"en_AU": "English (Australia)", "en_GB": "English (UK)",
@@ -1027,6 +1046,12 @@ window {{ background-color: {c['bg']}; }}
             border: 1px solid {c['key_border']}; border-bottom: 2px solid {c['key_bot']};
             font-size: {key_size}px; }}
 .key-btn.char-key {{ font-size: {char_size}px; }}
+#calc-display-box {{ background-color: {c['bar_bg']}; border: 1px solid {c['key_border']};
+                     border-radius: 4px; }}
+#calc-display {{ color: {c['key_fg']}; font-size: {char_size}px; }}
+#calc-answer {{ color: {c['sublabel_fg']}; font-size: {char_size}px; }}
+.key-btn.calc-type {{ background-color: {c['active_bg']}; color: {c['active_fg']};
+                      border-color: {c['active_bg']}; font-size: {special_size}px; }}
 #settings-label, .settings-choice, #settings-toggle {{ font-size: {settings_size}px; }}
 #settings-hint {{ font-size: {settings_size - 1}px; }}
 .settings-section {{ font-size: {settings_size + 2}px; }}
@@ -1242,7 +1267,7 @@ KEYSYMS = {
 ACCESSIBLE_KEY_NAMES = {
     "shift": "Shift", "caps": "Caps Lock", "tab": "Tab",
     "backspace": "Backspace", "return": "Enter", "escape": "Escape",
-    "ctrl": "Control", "alt": "Alt", "win": "Windows key",
+    "ctrl": "Control", "alt": "Alt", "win": "Windows key", "calc": "Calculator",
     "space": "Space bar", "delete": "Delete", "home": "Home", "end": "End",
     "left": "Left arrow", "right": "Right arrow",
     "up": "Up arrow", "down": "Down arrow", "prtscn": "Print Screen",
@@ -1262,6 +1287,30 @@ SHIFT_MAP = {
 BASE_KEY_W  = 52
 BASE_KEY_H  = _px(52)   # keys grow with the display scaling, like their text
 SUGGESTION_H = _px(40)   # height of the suggestion bar row
+EMOJI_SUGG_PX  = _px(26)  # emoji picture size in the suggestion bar
+EMOJI_PANEL_PX = _px(36)  # ... and in the emoji panel
+
+# Emoji are shown as bundled pictures (Noto Emoji), not drawn from the emoji
+# font: GTK on Windows draws some of Windows' emoji as black squares.
+EMOJI_PNG_DIR = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),
+                             "emoji_png")
+_emoji_pixbufs: dict[tuple[str, int], "GdkPixbuf.Pixbuf | None"] = {}
+
+
+def _emoji_pixbuf(char: str, size: int):
+    """The bundled picture of an emoji at size px, or None (show the text)."""
+    key = (char, size)
+    if key not in _emoji_pixbufs:
+        name = "emoji_u" + "_".join(f"{ord(c):x}" for c in char if c != "\ufe0f") + ".png"
+        path = os.path.join(EMOJI_PNG_DIR, name)
+        pb = None
+        if os.path.exists(path):
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file_at_size(path, size, size)
+            except GLib.Error as exc:
+                print(f"[emoji] {name}: {exc}")
+        _emoji_pixbufs[key] = pb
+    return _emoji_pixbufs[key]
 # Suggestion bar slots.  Slots 0..N-2 are words; the last is an emoji when
 # one matches the words, otherwise one more word.
 N_SUGGESTIONS = 7
@@ -1314,7 +1363,7 @@ TOUR_DWELL_MOVE_PX = 24   # pointer must move this far after a step appears befo
 REPEAT_DELAY_MS    = 400   # delay before repeat starts (ms)
 REPEAT_INTERVAL_MS = 50    # interval between repeated keypresses (ms)
 # Actions that should never repeat (they're toggles, not typeable keys)
-NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win", "hanyeong", "fn"}
+NON_REPEAT_ACTIONS = {"shift", "caps", "ctrl", "alt", "win", "hanyeong", "fn", "calc"}
 
 # ── Key layout ────────────────────────────────────────────────────────────���───
 # Each entry: (display_label, action, base_width, extra_css_classes)
@@ -1357,20 +1406,22 @@ KEY_ROWS = [
         ("v", "v", 52, []), ("b", "b", 52, []), ("n", "n", 52, []),
         ("m", "m", 52, []), (",", ",", 52, []), (".", ".", 52, []),
         ("/", "/", 52, []),
-        ("⇧", "shift", 247, ["special"]),
+        ("⇧", "shift", 135, ["special"]),
+        ("↑", "up", 52, ["special"]),        # directly above ↓ (widths line it up)
+        ("Calc", "calc", 52, ["special"]),   # opens the calculator panel
     ],
     # Row 4 — bottom (Fn latches like Ctrl: digits → F1–F12, arrows → Home/
-    # End/PgUp/PgDn for the next key)
+    # End/PgUp/PgDn for the next key).  ← ↓ → sit under ↑ in the row above,
+    # like the Windows on-screen keyboard.
     [
         ("Fn",   "fn",   52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("⊞",   "win",  52, ["special"]),
         ("Alt",  "alt",  52, ["special"]),
-        ("",     "space", 359, ["space"]),
+        ("",     "space", 411, ["space"]),
         ("Alt",  "alt",  52, ["special"]),
         ("Ctrl", "ctrl", 60, ["special"]),
         ("←", "left",  52, ["special"]),
-        ("↑", "up",    52, ["special"]),
         ("↓", "down",  52, ["special"]),
         ("→", "right", 52, ["special"]),
     ],
@@ -1398,7 +1449,7 @@ LAYOUT_ROWS: dict[str, list] = {
         [("⇧","shift",128,["special"]),
          ("w","w",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),(",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",299,["special"])],
+         ("⇧","shift",189,["special"]),("↑","up",52,["special"]),("Calc","calc",52,["special"])],
         _BOT_ROW,
     ],
     "qwertz": [
@@ -1418,7 +1469,7 @@ LAYOUT_ROWS: dict[str, list] = {
          ("y","y",52,[]),("x","x",52,[]),("c","c",52,[]),("v","v",52,[]),
          ("b","b",52,[]),("n","n",52,[]),("m","m",52,[]),
          (",",",",52,[]),(".",".",52,[]),("/","/",52,[]),
-         ("⇧","shift",247,["special"])],
+         ("⇧","shift",135,["special"]),("↑","up",52,["special"]),("Calc","calc",52,["special"])],
         _BOT_ROW,
     ],
 }
@@ -1469,6 +1520,8 @@ class KeyTyper:
             if _win_inject_char(char, mods or []):
                 return
             _win_focus_restore()
+            if mods:
+                _win_log_shortcut_target(mods)
             if PYNPUT_OK:
                 self._pynput_type_char(char, mods or [])
             return
@@ -1497,6 +1550,8 @@ class KeyTyper:
             if _win_inject_special(name, mods or []):
                 return
             _win_focus_restore()
+            if mods:
+                _win_log_shortcut_target(mods)
             if PYNPUT_OK:
                 self._pynput_send_special(name, mods or [])
             return
@@ -1519,6 +1574,12 @@ class KeyTyper:
 
     def _pynput_type_char(self, char: str, mods: list[str]) -> None:
         ctrl = _pynput_ctrl
+        if mods and char.isalpha() and char.isupper() and len(char.lower()) == 1:
+            # pynput sends "C" (it needs Shift) as a Unicode character with no
+            # key code, so Ctrl+"C" isn't a shortcut and copy does nothing.
+            # Press the real C key, with Shift held as a modifier instead.
+            char = char.lower()
+            mods = ["shift_l"] + mods
         try:
             for m in mods:
                 k = PYNPUT_KEY_MAP.get(m)
@@ -1758,6 +1819,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._emoji_btn:         Gtk.Button | None  = None
         self._emoji_flowbox:     Gtk.FlowBox | None = None
         self._emoji_label:          Gtk.Label | None   = None
+        self._emoji_btn_chars:      dict[Gtk.Button, str] = {}  # panel button → its emoji
         self._mod_hint_label:       Gtk.Label | None   = None
         self._font_size_label:      Gtk.Label | None   = None
         self._pin_status_label:     Gtk.Label | None   = None
@@ -1771,6 +1833,12 @@ class OnScreenKeyboard(Gtk.Window):
         # Clipboard history
         self._clipboard_history: list[str] = []
         self._clipboard_mode:    bool = False
+        # Calculator panel (built on first open)
+        self._calc_mode:         bool = False
+        self._calc_panel_ready:  bool = False
+        self._calc_expr:         str  = ""
+        self._calc_expr_lbl:     Gtk.Label | None = None
+        self._calc_answer_lbl:   Gtk.Label | None = None
         self._clipboard_btn:     Gtk.Button | None = None
         self._clipboard_panel_ready: bool = False
         self._clipboard_listbox: Gtk.ListBox | None = None
@@ -1868,10 +1936,14 @@ class OnScreenKeyboard(Gtk.Window):
         # Key repeat state
         self._repeat_timers: dict[str, int] = {}  # action → GLib source ID
         self._repeat_active: set[str]        = set()  # actions in fast-repeat phase
-        # Hold-for-accents: pending timer, the key whose popup is showing (its
-        # release must not also type the plain letter) and the popup itself
+        # Keys type on press: the key whose press already typed (so its
+        # 'clicked' on release doesn't type it again)
+        self._press_fired: str | None        = None
+        # Hold-for-accents: pending timer, whether Shift was on when the letter
+        # was pressed (the popup and the swapped-in accent keep that case) and
+        # the popup itself
         self._longpress_timer: int | None    = None
-        self._longpress_fired: str | None    = None
+        self._accent_shift: bool             = False
         self._accent_pop: Gtk.Popover | None = None
         # Korean: the syllable being built (not yet typed into the app), and
         # whether 한/A has switched the letter keys back to English
@@ -2970,11 +3042,28 @@ class OnScreenKeyboard(Gtk.Window):
         The label asks for (almost) no width — not even the word's natural
         width — so the bar never asks the window to grow; it still fills the
         width its button gets and cuts off only what won't fit."""
+        # New text replaces an emoji picture (_show_emoji_image sets its
+        # picture after the empty label)
+        if btn.get_image() is not None:
+            btn.set_image(None)
+            btn.set_always_show_image(False)
         lbl = btn.get_child()
         if isinstance(lbl, Gtk.Label):
             lbl.set_ellipsize(Pango.EllipsizeMode.END)
             lbl.set_width_chars(1)
             lbl.set_max_width_chars(1)
+
+    @staticmethod
+    def _show_emoji_image(btn: Gtk.Button, char: str, size: int) -> bool:
+        """Show an emoji's bundled picture on btn; False if there is none
+        (then the caller shows the emoji as text)."""
+        pb = _emoji_pixbuf(char, size)
+        if pb is None:
+            return False
+        btn.set_label("")
+        btn.set_image(Gtk.Image.new_from_pixbuf(pb))
+        btn.set_always_show_image(True)
+        return True
 
     @staticmethod
     def _on_suggestion_tooltip(btn, _x, _y, _kbd, tooltip) -> bool:
@@ -3029,6 +3118,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Emoji toggle button
         self._emoji_btn = Gtk.Button(label="😊")
+        self._show_emoji_image(self._emoji_btn, "😊", EMOJI_SUGG_PX)
         self._emoji_btn.set_name("settings-btn")   # reuse settings-btn style
         self._emoji_btn.set_size_request(_px(36), SUGGESTION_H)
         self._emoji_btn.connect("clicked", lambda _: self._toggle_emoji_mode())
@@ -3084,9 +3174,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         btn.set_size_request(width, BASE_KEY_H)
         self._all_key_btns.append((btn, width))
-        btn.connect("clicked", self._on_key_clicked, action)
+        btn.connect("clicked", self._on_key_clicked_signal, action)
 
-        # Key repeat — press starts the timer; release cancels it
+        # Press types the key and starts the repeat timer; release cancels it
         btn.add_events(Gdk.EventMask.BUTTON_PRESS_MASK |
                        Gdk.EventMask.BUTTON_RELEASE_MASK)
         btn.connect("button-press-event",   self._on_key_press_event,   action)
@@ -3354,18 +3444,28 @@ class OnScreenKeyboard(Gtk.Window):
     # ── Key event handling ───────────────────────────────────────────────────
 
     def _on_key_press_event(self, widget, event, action: str):
-        """Start the key-repeat timer when a button is held down (or, for a
-        letter with accented forms, the hold-for-accents timer)."""
-        if event.button != 1 or action in NON_REPEAT_ACTIONS:
-            return False
-        if self.fn_active and action in FN_MAP:
-            return False          # an Fn-layer key (F5, PgDn...) fires once
-        if self._accent_variants(action):
-            self._longpress_cancel()
-            self._longpress_timer = GLib.timeout_add(
-                LONG_PRESS_MS, self._on_long_press, widget, action)
-            return False
+        """Type the key the moment it is pressed (not on release — quicker,
+        especially with eye gaze), then start the key-repeat timer or, for a
+        letter with accented forms, the hold-for-accents timer."""
+        if event.button != 1 or event.type != Gdk.EventType.BUTTON_PRESS:
+            return False          # also skips the extra 2BUTTON_PRESS of a fast double tap
+        fn_layer = self.fn_active and action in FN_MAP
+        shifted  = self.shift_active
+        accents  = (self._accent_variants(action)
+                    and not self._active_sticky_modifiers()
+                    and not (self._settings_mode or self._emoji_mode or
+                             self._clipboard_mode or self._app_mode or
+                             self._custom_input_mode))
         self._repeat_stop(action)
+        self._longpress_cancel()
+        self._press_fired = action
+        self._on_key_clicked(widget, action)
+        if action in NON_REPEAT_ACTIONS or fn_layer:
+            return False          # toggles and Fn-layer keys (F5, PgDn...) fire once
+        if accents:
+            self._longpress_timer = GLib.timeout_add(
+                LONG_PRESS_MS, self._on_long_press, widget, action, shifted)
+            return False
 
         def _begin_repeat():
             # Switch from initial-delay phase to fast-repeat phase
@@ -3389,6 +3489,13 @@ class OnScreenKeyboard(Gtk.Window):
         if event.button == 1:
             self._repeat_stop(action)
             self._longpress_cancel()
+            # 'clicked' is emitted while this release is handled; forget the
+            # press afterwards (also when released off the key, with no click)
+            GLib.idle_add(self._clear_press_fired)
+        return False
+
+    def _clear_press_fired(self) -> bool:
+        self._press_fired = None
         return False
 
     # -- Korean (Hangul) ---------------------------------------------------------
@@ -3455,15 +3562,15 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(self._longpress_timer)
             self._longpress_timer = None
 
-    def _on_long_press(self, widget, action: str) -> bool:
+    def _on_long_press(self, widget, action: str, shifted: bool) -> bool:
         self._longpress_timer = None
-        self._longpress_fired = action      # the release must not type the letter
+        self._accent_shift = shifted
         self._open_accent_popup(widget, action)
         return False
 
     def _open_accent_popup(self, anchor: Gtk.Widget, action: str):
         self._close_accent_popup()
-        upper = self.shift_active ^ self.caps_lock
+        upper = self._accent_shift ^ self.caps_lock   # Shift was released by the typed letter
         pop = Gtk.Popover()
         pop.set_modal(False)                # never take focus from the typed-into app
         pop.get_style_context().add_class("tour-popover")
@@ -3489,6 +3596,11 @@ class OnScreenKeyboard(Gtk.Window):
     def _on_accent_chosen(self, ch: str):
         self._close_accent_popup()
         self._play_click_sound()
+        # The plain letter was typed when the key went down: swap it for this one
+        self.typer.send_special("backspace", [])
+        self.current_word = self.current_word[:-1]
+        if self._accent_shift:
+            self.shift_active = True        # _type_character releases it again
         mods = self._active_sticky_modifiers()
         self._type_character(ch, mods)
         if mods:
@@ -3517,15 +3629,19 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(tid)
         self._repeat_active.discard(action)
 
+    def _on_key_clicked_signal(self, btn, action: str):
+        """GTK 'clicked' (on release).  A mouse press already typed the key in
+        _on_key_press_event; this only types clicks that came without one
+        (e.g. a screen reader's click action)."""
+        if self._press_fired == action:
+            return
+        self._on_key_clicked(btn, action)
+
     def _on_key_clicked(self, btn, action: str):
-        # When the repeat is active for this key, the GTK 'clicked' signal fires
-        # on release — ignore it since repeat is already handling the key.
+        # When the repeat is active for this key, ignore the click: the repeat
+        # is already handling the key.
         if action in self._repeat_active:
             return
-        if self._longpress_fired == action:  # held for accents: popup is up
-            self._longpress_fired = None
-            return
-        self._longpress_fired = None
         self._flash_key(btn)
         self._handle_key(action)
 
@@ -3553,6 +3669,10 @@ class OnScreenKeyboard(Gtk.Window):
         self._play_click_sound()
         if action in ("ctrl", "alt"):
             self._toggle_modifier(action)
+            return
+
+        if action == "calc":
+            self._toggle_calc_mode()
             return
 
         if action == "fn":
@@ -3745,6 +3865,8 @@ class OnScreenKeyboard(Gtk.Window):
             self._close_emoji_mode()
         if keep != "clipboard" and self._clipboard_mode:
             self._close_clipboard_mode()
+        if keep != "calc" and self._calc_mode:
+            self._close_calc_mode()
         if keep != "app" and self._app_mode:
             self._close_app_mode()
         if keep != "custom_input" and self._custom_input_mode:
@@ -4168,6 +4290,154 @@ class OnScreenKeyboard(Gtk.Window):
         self._clipboard_history = []
         self._rebuild_clipboard_list()
 
+    # ── Calculator ────────────────────────────────────────────────────────────
+
+    # Button grid (calculator.press handles each label); the two action
+    # buttons sit in a column on the right.
+    CALC_ROWS = [
+        ["7", "8", "9", "÷", "⌫"],
+        ["4", "5", "6", "×", "C"],
+        ["1", "2", "3", "−", "("],
+        ["0", ".", "=", "+", ")"],
+    ]
+
+    def _toggle_calc_mode(self):
+        if self._calc_mode:
+            self._close_calc_mode()
+        else:
+            self._open_calc_mode()
+
+    def _open_calc_mode(self):
+        self._close_other_panels("calc")
+        self._calc_mode = True
+        if not self._calc_panel_ready and self._key_stack:
+            panel = self._build_calc_panel()
+            self._key_stack.add_named(panel, "calc")
+            panel.show_all()
+            self._calc_panel_ready = True
+        self._calc_update_display()
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("calc")
+
+    def _close_calc_mode(self):
+        self._calc_mode = False
+        if self._key_stack:
+            self._key_stack.set_visible_child_name("keys")
+        self._refresh_suggestions()
+
+    def _build_calc_panel(self) -> Gtk.Grid:
+        grid = Gtk.Grid(row_spacing=ROW_GAP, column_spacing=KEY_GAP,
+                        row_homogeneous=True, column_homogeneous=True)
+        grid.set_name("calc-panel")
+
+        # Row 0: the sum being typed, and its answer so far
+        display = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        display.set_name("calc-display-box")
+        self._calc_expr_lbl = Gtk.Label()
+        self._calc_expr_lbl.set_name("calc-display")
+        self._calc_expr_lbl.set_xalign(1.0)
+        self._calc_expr_lbl.set_ellipsize(Pango.EllipsizeMode.START)  # long sums keep their end
+        self._calc_answer_lbl = Gtk.Label()
+        self._calc_answer_lbl.set_name("calc-answer")
+        display.pack_start(self._calc_expr_lbl, True, True, 8)
+        display.pack_start(self._calc_answer_lbl, False, False, 8)
+        grid.attach(display, 0, 0, 7, 1)
+
+        for r, row in enumerate(self.CALC_ROWS, start=1):
+            for c, key in enumerate(row):
+                special = key in "⌫C()"
+                btn = self._make_calc_button(key, lambda k=key: self._on_calc_key(k),
+                                             "special" if special else "char-key")
+                grid.attach(btn, c, r, 1, 1)
+
+        type_btn = self._make_calc_button("Type answer", self._on_calc_type_answer,
+                                          "calc-type")
+        type_btn.set_tooltip_text("Type the answer into the app you're typing in")
+        grid.attach(type_btn, 5, 1, 2, 2)
+        close_btn = self._make_calc_button("Close", self._close_calc_mode, "special")
+        close_btn.get_accessible().set_name("Close calculator")
+        grid.attach(close_btn, 5, 3, 2, 2)
+        return grid
+
+    def _make_calc_button(self, label: str, callback, css_class: str) -> Gtk.Button:
+        """A calculator button that acts on press like the keys (with flash,
+        click sound and dwell); 'clicked' still covers clicks that come
+        without a press (a screen reader's click action)."""
+        btn = Gtk.Button(label=label)
+        ctx = btn.get_style_context()
+        ctx.add_class("key-btn")
+        ctx.add_class(css_class)
+        btn.set_hexpand(True)
+        btn.set_vexpand(True)
+        pressed = [False]
+
+        def _fire():
+            self._flash_key(btn)
+            self._play_click_sound()
+            callback()
+
+        def _on_press(_w, event):
+            if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+                pressed[0] = True
+                _fire()
+            return False
+
+        def _on_release(_w, event):
+            if event.button == 1:
+                GLib.idle_add(lambda: pressed.__setitem__(0, False))
+            return False
+
+        def _on_clicked(_b):
+            if not pressed[0]:
+                _fire()
+
+        def _on_enter(_w, event):
+            if event.detail != Gdk.NotifyType.INFERIOR:
+                self._dwell_start(btn, _fire)
+            return False
+
+        def _on_leave(_w, event):
+            if event.detail != Gdk.NotifyType.INFERIOR:
+                self._dwell_cancel(btn)
+                ctx.remove_class("dwell-pending")
+            return False
+
+        btn.connect("button-press-event", _on_press)
+        btn.connect("button-release-event", _on_release)
+        btn.connect("clicked", _on_clicked)
+        btn.connect("enter-notify-event", _on_enter)
+        btn.connect("leave-notify-event", _on_leave)
+        return btn
+
+    def _on_calc_key(self, key: str):
+        if key == "=":
+            answer = calc_evaluate(self._calc_expr)
+            if answer is not None and answer != DIV_ZERO:
+                self._calc_expr = answer.replace("-", "−")
+        else:
+            self._calc_expr = calc_press(self._calc_expr, key)
+        self._calc_update_display()
+
+    def _calc_update_display(self):
+        if self._calc_expr_lbl is None:
+            return
+        self._calc_expr_lbl.set_text(self._calc_expr or "0")
+        answer = calc_evaluate(self._calc_expr)
+        shown = "" if answer is None or answer == self._calc_expr.replace("−", "-") \
+            else (answer if answer == DIV_ZERO else f"= {answer}")
+        self._calc_answer_lbl.set_text(shown)
+
+    def _on_calc_type_answer(self):
+        """Type the answer into the app, then go back to the keys."""
+        answer = calc_evaluate(self._calc_expr)
+        if answer is None or answer == DIV_ZERO:
+            return
+        for ch in answer:
+            self.typer.type_char(ch)
+        self._ctx_reset()
+        self.current_word = ""
+        self._close_calc_mode()
+
     # ── Key size scaling ──────────────────────────────────────────────────────
 
     def _key_width_scale(self, scale: float, win_w: int) -> float:
@@ -4259,7 +4529,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         if not (self._settings_mode or self._emoji_mode or
                 self._clipboard_mode or self._app_mode or
-                self._custom_input_mode):
+                self._custom_input_mode or self._calc_mode):
             self._key_stack.set_visible_child_name("keys")
 
         self._apply_key_scale(self.settings.get("key_scale", 1.0))
@@ -5605,6 +5875,8 @@ class OnScreenKeyboard(Gtk.Window):
 
         for char, name, _ in EMOJI_DATA:
             btn = Gtk.Button(label=char)
+            self._show_emoji_image(btn, char, EMOJI_PANEL_PX)
+            self._emoji_btn_chars[btn] = char
             btn.get_style_context().add_class("emoji-btn")
             btn.set_tooltip_text(name)
             btn.connect("clicked", self._on_emoji_clicked, char)
@@ -5624,8 +5896,7 @@ class OnScreenKeyboard(Gtk.Window):
         btn = child.get_child()
         if btn is None:
             return False
-        char = btn.get_label()
-        entry = self._emoji_lookup.get(char)
+        entry = self._emoji_lookup.get(self._emoji_btn_chars.get(btn))
         if not entry:
             return False
         name, keywords = entry
@@ -6804,7 +7075,9 @@ class OnScreenKeyboard(Gtk.Window):
         self._update_modifier_visuals()
 
     def _type_character(self, action: str, mods: list[str]):
-        upper = self.shift_active ^ self.caps_lock
+        # Caps Lock doesn't change shortcuts (as on a real keyboard): with Caps
+        # on, Ctrl+C must stay copy, not become Ctrl+Shift+C.  Shift still does.
+        upper = self.shift_active if mods else self.shift_active ^ self.caps_lock
 
         if action.isalpha():
             char = action.upper() if upper else action.lower()
@@ -6994,7 +7267,8 @@ class OnScreenKeyboard(Gtk.Window):
                 val, is_emoji, is_custom, is_fuzzy, is_macro, expansion, _is_fb = slots[i]
                 # Store raw value; display with shift/caps casing applied
                 display = val if (is_emoji or is_macro) else self._case_word(val)
-                btn.set_label(display)
+                if not (is_emoji and self._show_emoji_image(btn, val, EMOJI_SUGG_PX)):
+                    btn.set_label(display)
                 btn.set_sensitive(True)
                 self._suggestion_values[i]    = val
                 self._suggestion_is_emoji[i]  = is_emoji
@@ -7309,6 +7583,13 @@ def _run_selftest() -> int:
             log(f"pixbuf loaded {pb.get_width()}x{pb.get_height()}")
         else:
             raise RuntimeError(f"osk.png missing at {png}")
+        # Every emoji the keyboard offers needs its picture in the bundle
+        # (country flags have none; they are only offered on Linux)
+        missing = [c for c, _n, _k in EMOJI_DATA
+                   if not is_country_flag(c) and _emoji_pixbuf(c, EMOJI_PANEL_PX) is None]
+        if missing:
+            raise RuntimeError(f"{len(missing)} emoji pictures missing from {EMOJI_PNG_DIR}")
+        log(f"emoji pictures ok ({len(EMOJI_DATA)})")
 
         win = OnScreenKeyboard()
         GLib.timeout_add(3000, Gtk.main_quit)

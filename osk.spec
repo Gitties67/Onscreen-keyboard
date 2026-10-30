@@ -52,6 +52,7 @@ datas = [
     (_here("VERSION"), "."),
     (_here("osk.png"), "."),   # runtime GTK window icon
     (_here("osk.ico"), "."),
+    (_here("emoji_png"), "emoji_png"),  # emoji pictures (Noto Emoji, Apache 2.0)
     # Fontconfig config (rthook_gtk.py sets FONTCONFIG_PATH / FONTCONFIG_FILE)
     (_need(os.path.join(MINGW, "etc", "fonts")), "etc/fonts"),
     (_need(os.path.join(MINGW_SHARE, "glib-2.0", "schemas", "gschemas.compiled")),
@@ -80,7 +81,7 @@ hiddenimports = [
     "gi.repository.GdkPixbuf", "gi.repository.cairo",
     "pynput", "pynput.keyboard", "pynput._util", "pynput._util.win32",
     "pynput.keyboard._win32", "pynput.mouse._win32",
-    "predictor", "emojis",
+    "predictor", "emojis", "calculator",
     "wave", "struct", "bisect", "threading",
     "urllib.request", "urllib.error", "webbrowser", "winsound",
 ]

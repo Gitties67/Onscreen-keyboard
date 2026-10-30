@@ -6,6 +6,8 @@ search(query, n)  — substring search on name + keywords → list of chars
 suggest(word, n)  — exact/prefix keyword match for suggestion bar → list of chars
 """
 
+import sys
+
 EMOJI_DATA: list[tuple[str, str, list[str]]] = [
     # ── Smileys & Emotion ─────────────────────────────────────────────────────
     ("😀", "grinning face",              ["smile", "happy", "grin"]),
@@ -450,6 +452,16 @@ EMOJI_DATA: list[tuple[str, str, list[str]]] = [
     ("🇮🇹", "italy flag",              ["italy", "italian", "flag"]),
     ("🇲🇽", "mexico flag",             ["mexico", "flag", "mexican"]),
 ]
+
+
+def is_country_flag(char: str) -> bool:
+    return any(0x1F1E6 <= ord(c) <= 0x1F1FF for c in char)
+
+
+# Windows has no country-flag emoji (Microsoft left them out): apps show them
+# as two letters ("US"), so don't offer them there.
+if sys.platform == "win32":
+    EMOJI_DATA = [e for e in EMOJI_DATA if not is_country_flag(e[0])]
 
 # Build reverse lookup once at import time
 _LOOKUP: dict[str, tuple[str, list[str]]] = {
