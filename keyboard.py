@@ -454,7 +454,7 @@ if not IS_WINDOWS:
 from predictor import (WordPredictor, UserModel, DICTIONARIES, ELISION_LANGUAGES,
                        is_english)
 from hangul import HangulComposer, jamo_for
-from emojis import (EMOJI_DATA, is_country_flag, search as emoji_search,
+from emojis import (EMOJI_DATA, is_country_flag, search as emoji_search, set_country_flags,
                     suggest as emoji_suggest, emoticon as emoji_emoticon,
                     EMOTICONS)
 from calculator import (DIV_ZERO, press as calc_press, evaluate as calc_evaluate,
@@ -747,6 +747,15 @@ SETTINGS_HELP = {
     "Auto space": "When you pick a suggested word, a space is typed after it so you can go "
                   "straight on to the next word. Turn it off if you'd rather add punctuation "
                   "or the space yourself.",
+    "Country flags": ("Offers country flags in the emoji panel and as suggestions (type "
+                      "'Germany' for the German flag). " + (
+                      "Windows has no flag emoji, so most apps (Word, Notepad, Chrome, "
+                      "Edge) show the two letters 'DE' instead. Discord, WhatsApp, Teams, "
+                      "Slack and Firefox show the real flag. No Windows setting changes "
+                      "this, so it starts off." if IS_WINDOWS else
+                      "Apps show the flag with your computer's emoji font; without one "
+                      "(some minimal Linux installs) they show two letters like 'DE'. "
+                      "It starts on when an emoji font is installed.")),
     "Dwell click": "Hover over a key without clicking and it presses itself after the delay. "
                    "Useful if clicking is hard or tiring, e.g. with a head mouse or eye tracker.",
     "Sound volume": "How loud the key sound is. It only changes the keyboard's own sound, "
@@ -780,6 +789,19 @@ SETTINGS_HELP = {
 # What the PC is set to: the starting language (and layout) on a fresh install
 _DETECTED_LANGUAGE = _detect_language()
 
+
+def _flags_default() -> bool:
+    """Country flags start on only where apps can show them: never on Windows
+    (no flag emoji), on Linux when a colour emoji font is installed."""
+    if IS_WINDOWS:
+        return False
+    try:
+        fonts = subprocess.run(["fc-list", ":", "family"], capture_output=True,
+                               text=True, timeout=5).stdout.lower()
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "emoji" in fonts or "joypixels" in fonts
+
 DEFAULT_SETTINGS: dict = {
     "theme":                "dark",   # dark | light | midnight | hc
     "font_size":            DEFAULT_FONT_SIZE, # key label font size in px (10–36, before display scaling)
@@ -799,6 +821,7 @@ DEFAULT_SETTINGS: dict = {
     "font_version":         FONT_SETTINGS_VERSION,
     "language":             _DETECTED_LANGUAGE,  # en_AU | en_GB | en_US | de | fr | ... (word suggestions)
     "space_after_suggestion": True,   # type a space after an accepted suggestion
+    "country_flags":        None,     # None = decide at first start (_flags_default)
     "sound_volume":         0.7,      # key sound loudness, 0.05 – 1.0
 }
 
@@ -1976,6 +1999,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Settings + dwell state
         self.settings:       dict = self._load_settings()
+        set_country_flags(self.settings["country_flags"])
         self._dwell_timers:  dict[int, int] = {}  # id(widget) → GLib source ID
         self._settings_mode: bool = False
 
@@ -5272,9 +5296,11 @@ class OnScreenKeyboard(Gtk.Window):
                         "space_after_suggestion"):
                 if not isinstance(merged.get(key), bool):
                     merged[key] = DEFAULT_SETTINGS[key]
+            if not isinstance(merged.get("country_flags"), bool):
+                merged["country_flags"] = _flags_default()
             return merged
         except Exception:
-            return dict(DEFAULT_SETTINGS)
+            return dict(DEFAULT_SETTINGS, country_flags=_flags_default())
 
     def _save_settings(self):
         try:
@@ -5577,6 +5603,26 @@ class OnScreenKeyboard(Gtk.Window):
         space_hint.set_xalign(0.0)
         space_row.pack_start(space_hint, False, False, 4)
         inner.pack_start(space_row, False, False, 0)
+
+        # ── Country flags ──────────────────────────────────────────────────
+        flags_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        flags_row.pack_start(self._settings_row_label("Country flags"), False, False, 0)
+        flags_on = bool(self.settings.get("country_flags"))
+        flags_toggle = Gtk.ToggleButton(label="On" if flags_on else "Off")
+        flags_toggle.set_name("settings-toggle")
+        flags_toggle.set_size_request(_px(100), -1)
+        flags_toggle.set_active(flags_on)
+        flags_toggle.connect("toggled", self._on_flags_toggled)
+        flags_toggle.get_accessible().set_description(
+            "Offer country flags in the emoji panel and suggestions")
+        flags_row.pack_start(flags_toggle, False, False, 0)
+        flags_hint = Gtk.Label(label="most Windows apps show flags as letters (DE)"
+                               if IS_WINDOWS else "type a country's name for its flag")
+        flags_hint.set_name("settings-hint")
+        flags_hint.set_xalign(0.0)
+        flags_hint.set_ellipsize(Pango.EllipsizeMode.END)
+        flags_row.pack_start(flags_hint, True, True, 4)
+        inner.pack_start(flags_row, False, False, 0)
 
         # ── 7. Dwell row ───────────────────────────────────────────────────
         dwell_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -5952,13 +5998,17 @@ class OnScreenKeyboard(Gtk.Window):
         return panel
 
     def _emoji_filter_func(self, child: Gtk.FlowBoxChild) -> bool:
-        """FlowBox filter: show emoji if it matches _emoji_query."""
-        if not self._emoji_query:
-            return True
-        q = self._emoji_query.lower()
+        """FlowBox filter: show emoji if it matches _emoji_query (country
+        flags only while switched on in Settings)."""
         btn = child.get_child()
         if btn is None:
             return False
+        if (not self.settings.get("country_flags")
+                and is_country_flag(self._emoji_btn_chars.get(btn, ""))):
+            return False
+        if not self._emoji_query:
+            return True
+        q = self._emoji_query.lower()
         entry = self._emoji_lookup.get(self._emoji_btn_chars.get(btn))
         if not entry:
             return False
@@ -5990,6 +6040,16 @@ class OnScreenKeyboard(Gtk.Window):
         toggle.set_label("On" if on else "Off")
         self.settings["space_after_suggestion"] = on
         self._save_settings()
+
+    def _on_flags_toggled(self, toggle: Gtk.ToggleButton):
+        on = toggle.get_active()
+        toggle.set_label("On" if on else "Off")
+        self.settings["country_flags"] = on
+        set_country_flags(on)
+        if self._emoji_flowbox:
+            self._emoji_flowbox.invalidate_filter()
+        self._save_settings()
+        self._refresh_suggestions()
 
     def _on_learn_toggled(self, toggle: Gtk.ToggleButton):
         on = toggle.get_active()
@@ -7666,9 +7726,7 @@ def _run_selftest() -> int:
         else:
             raise RuntimeError(f"osk.png missing at {png}")
         # Every emoji the keyboard offers needs its picture in the bundle
-        # (country flags have none; they are only offered on Linux)
-        missing = [c for c, _n, _k in EMOJI_DATA
-                   if not is_country_flag(c) and _emoji_pixbuf(c, EMOJI_PANEL_PX) is None]
+        missing = [c for c, _n, _k in EMOJI_DATA if _emoji_pixbuf(c, EMOJI_PANEL_PX) is None]
         missing += [e for e in set(EMOTICONS.values()) | {"🍆💦"}
                     if not (_emoji_pixbuf(e, EMOJI_SUGG_PX) or _emoji_row_pixbuf(e, EMOJI_SUGG_PX))]
         if missing:

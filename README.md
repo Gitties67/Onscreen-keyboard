@@ -103,7 +103,8 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Context-aware suggestions** — predictions take the words before into account ("thank" → *you*, "how are" → *you*); the context resets at . ! ? and Enter
 - **Learns your words** — remembers the words and word pairs you actually use, locally, to rank them higher (can be turned off or erased)
 - **Spell-check** — fuzzy matching catches common misspellings; correction appears ~250 ms after you pause
-- **Emoji panel** — browsable grid of ~770 emoji with live search; emoji suggestions in the suggestion bar. Typing a text face offers its emoji: `:)` → 🙂, `:D` → 😃, `<3` → ❤️, `;)` → 😉 …
+- **Emoji panel** — browsable grid of ~1,000 emoji with live search; emoji suggestions in the suggestion bar. Typing a text face offers its emoji: `:)` → 🙂, `:D` → 😃, `<3` → ❤️, `;)` → 😉 …
+- **Country flags** — type a country's name (*Germany*, *german*) for its flag. A Settings switch; off by default on Windows, whose apps mostly show flags as two letters (DE)
 - **Calculator** — the **Calc** key opens a calculator with x², √, powers, %, ±, π, 1/x and Ans; **Type answer** types the result into your app
 - **Custom dictionary** — add names, slang, abbreviations; they appear first in suggestions
 - **Macros** — trigger → expansion pairs with `{date}` / `{time}` tokens

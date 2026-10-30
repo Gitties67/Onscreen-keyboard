@@ -8,7 +8,6 @@ emoticon(typed)   — (emoticon, emoji) when typed ends with one like ":)", else
 """
 
 import re
-import sys
 
 EMOJI_DATA: list[tuple[str, str, list[str]]] = [
     # ── Smileys & Emotion ─────────────────────────────────────────────────────
@@ -789,30 +788,284 @@ EMOJI_DATA: list[tuple[str, str, list[str]]] = [
     ("🚩", "red flag",                   ["flag", "red flag", "warning", "marker"]),
     ("🏳️", "white flag",               ["white flag", "surrender", "peace"]),
     ("🏴‍☠️", "pirate flag",           ["pirate", "skull", "jolly roger"]),
-    ("🇬🇧", "uk flag",                 ["uk", "britain", "england", "flag"]),
-    ("🇺🇸", "usa flag",                ["usa", "america", "us", "flag", "american"]),
-    ("🇦🇺", "australia flag",          ["australia", "flag", "aussie"]),
-    ("🇨🇦", "canada flag",             ["canada", "flag", "canadian"]),
-    ("🇩🇪", "germany flag",            ["germany", "german", "flag"]),
-    ("🇫🇷", "france flag",             ["france", "french", "flag"]),
-    ("🇯🇵", "japan flag",              ["japan", "japanese", "flag"]),
-    ("🇨🇳", "china flag",              ["china", "chinese", "flag"]),
-    ("🇧🇷", "brazil flag",             ["brazil", "flag"]),
-    ("🇮🇳", "india flag",              ["india", "flag", "indian"]),
-    ("🇪🇸", "spain flag",              ["spain", "spanish", "flag"]),
-    ("🇮🇹", "italy flag",              ["italy", "italian", "flag"]),
-    ("🇲🇽", "mexico flag",             ["mexico", "flag", "mexican"]),
+    # Country flags: tools/build_flags.py
+    ("🇦🇫", "afghanistan flag",           ["afghanistan", "afghan"]),
+    ("🇦🇱", "albania flag",               ["albania"]),
+    ("🇩🇿", "algeria flag",               ["algeria"]),
+    ("🇦🇸", "american samoa flag",        ["american samoa"]),
+    ("🇦🇩", "andorra flag",               ["andorra"]),
+    ("🇦🇴", "angola flag",                ["angola"]),
+    ("🇦🇮", "anguilla flag",              ["anguilla"]),
+    ("🇦🇶", "antarctica flag",            ["antarctica"]),
+    ("🇦🇬", "antigua and barbuda flag",   ["antigua and barbuda"]),
+    ("🇦🇷", "argentina flag",             ["argentina", "argentinian", "argentine"]),
+    ("🇦🇲", "armenia flag",               ["armenia"]),
+    ("🇦🇼", "aruba flag",                 ["aruba"]),
+    ("🇦🇺", "australia flag",             ["australia", "aussie", "australian", "oz"]),
+    ("🇦🇹", "austria flag",               ["austria", "austrian"]),
+    ("🇦🇿", "azerbaijan flag",            ["azerbaijan"]),
+    ("🇧🇸", "bahamas flag",               ["bahamas"]),
+    ("🇧🇭", "bahrain flag",               ["bahrain"]),
+    ("🇧🇩", "bangladesh flag",            ["bangladesh", "bangladeshi"]),
+    ("🇧🇧", "barbados flag",              ["barbados"]),
+    ("🇧🇾", "belarus flag",               ["belarus"]),
+    ("🇧🇪", "belgium flag",               ["belgium", "belgian"]),
+    ("🇧🇿", "belize flag",                ["belize"]),
+    ("🇧🇯", "benin flag",                 ["benin"]),
+    ("🇧🇲", "bermuda flag",               ["bermuda"]),
+    ("🇧🇹", "bhutan flag",                ["bhutan"]),
+    ("🇧🇴", "bolivia flag",               ["bolivia"]),
+    ("🇧🇶", "bonaire flag",               ["bonaire"]),
+    ("🇧🇦", "bosnia and herzegovina flag", ["bosnia and herzegovina", "bosnian"]),
+    ("🇧🇼", "botswana flag",              ["botswana"]),
+    ("🇧🇻", "bouvet island flag",         ["bouvet island"]),
+    ("🇧🇷", "brazil flag",                ["brazil", "brazilian"]),
+    ("🇮🇴", "british indian ocean territory flag", ["british indian ocean territory"]),
+    ("🇻🇬", "british virgin islands flag", ["british virgin islands"]),
+    ("🇧🇳", "brunei darussalam flag",     ["brunei darussalam", "brunei", "darussalam"]),
+    ("🇧🇬", "bulgaria flag",              ["bulgaria", "bulgarian"]),
+    ("🇧🇫", "burkina faso flag",          ["burkina faso", "faso"]),
+    ("🇧🇮", "burundi flag",               ["burundi"]),
+    ("🇨🇻", "cabo verde flag",            ["cabo verde", "cabo"]),
+    ("🇰🇭", "cambodia flag",              ["cambodia", "cambodian"]),
+    ("🇨🇲", "cameroon flag",              ["cameroon"]),
+    ("🇨🇦", "canada flag",                ["canada", "canadian"]),
+    ("🇰🇾", "cayman islands flag",        ["cayman islands"]),
+    ("🇨🇫", "central african republic flag", ["central african republic"]),
+    ("🇹🇩", "chad flag",                  ["chad"]),
+    ("🇨🇱", "chile flag",                 ["chile", "chilean"]),
+    ("🇨🇳", "china flag",                 ["china", "chinese"]),
+    ("🇨🇽", "christmas island flag",      ["christmas island"]),
+    ("🇨🇨", "cocos (keeling) islands flag", ["cocos (keeling) islands"]),
+    ("🇨🇴", "colombia flag",              ["colombia", "colombian"]),
+    ("🇰🇲", "comoros flag",               ["comoros"]),
+    ("🇨🇬", "congo flag",                 ["congo"]),
+    ("🇨🇰", "cook islands flag",          ["cook islands"]),
+    ("🇨🇷", "costa rica flag",            ["costa rica", "rica", "costarica"]),
+    ("🇭🇷", "croatia flag",               ["croatia", "croatian"]),
+    ("🇨🇺", "cuba flag",                  ["cuba", "cuban"]),
+    ("🇨🇼", "curaçao flag",               ["curaçao"]),
+    ("🇨🇾", "cyprus flag",                ["cyprus"]),
+    ("🇨🇿", "czechia flag",               ["czechia", "czech"]),
+    ("🇨🇮", "côte d'ivoire flag",         ["côte d'ivoire", "côte", "d'ivoire"]),
+    ("🇨🇩", "dr congo flag",              ["dr congo", "drc"]),
+    ("🇩🇰", "denmark flag",               ["denmark", "danish", "dane"]),
+    ("🇩🇯", "djibouti flag",              ["djibouti"]),
+    ("🇩🇲", "dominica flag",              ["dominica"]),
+    ("🇩🇴", "dominican republic flag",    ["dominican republic"]),
+    ("🇪🇨", "ecuador flag",               ["ecuador"]),
+    ("🇪🇬", "egypt flag",                 ["egypt", "egyptian"]),
+    ("🇸🇻", "el salvador flag",           ["el salvador", "salvador", "salvadoran"]),
+    ("🇬🇶", "equatorial guinea flag",     ["equatorial guinea"]),
+    ("🇪🇷", "eritrea flag",               ["eritrea"]),
+    ("🇪🇪", "estonia flag",               ["estonia"]),
+    ("🇸🇿", "eswatini flag",              ["eswatini"]),
+    ("🇪🇹", "ethiopia flag",              ["ethiopia", "ethiopian"]),
+    ("🇫🇰", "falkland islands (malvinas) flag", ["falkland islands (malvinas)"]),
+    ("🇫🇴", "faroe islands flag",         ["faroe islands"]),
+    ("🇫🇯", "fiji flag",                  ["fiji", "fijian"]),
+    ("🇫🇮", "finland flag",               ["finland", "finnish", "finn"]),
+    ("🇫🇷", "france flag",                ["france", "french"]),
+    ("🇬🇫", "french guiana flag",         ["french guiana", "guiana"]),
+    ("🇵🇫", "french polynesia flag",      ["french polynesia"]),
+    ("🇹🇫", "french southern territories flag", ["french southern territories"]),
+    ("🇬🇦", "gabon flag",                 ["gabon"]),
+    ("🇬🇲", "gambia flag",                ["gambia"]),
+    ("🇬🇪", "georgia flag",               ["georgia"]),
+    ("🇩🇪", "germany flag",               ["germany", "german", "deutschland"]),
+    ("🇬🇭", "ghana flag",                 ["ghana", "ghanaian"]),
+    ("🇬🇮", "gibraltar flag",             ["gibraltar"]),
+    ("🇬🇷", "greece flag",                ["greece", "greek"]),
+    ("🇬🇱", "greenland flag",             ["greenland"]),
+    ("🇬🇩", "grenada flag",               ["grenada"]),
+    ("🇬🇵", "guadeloupe flag",            ["guadeloupe"]),
+    ("🇬🇺", "guam flag",                  ["guam"]),
+    ("🇬🇹", "guatemala flag",             ["guatemala"]),
+    ("🇬🇬", "guernsey flag",              ["guernsey"]),
+    ("🇬🇳", "guinea flag",                ["guinea"]),
+    ("🇬🇼", "guinea-bissau flag",         ["guinea-bissau"]),
+    ("🇬🇾", "guyana flag",                ["guyana"]),
+    ("🇭🇹", "haiti flag",                 ["haiti"]),
+    ("🇭🇲", "heard island and mcdonald islands flag", ["heard island and mcdonald islands"]),
+    ("🇻🇦", "holy see (vatican city state) flag", ["holy see (vatican city state)", "vatican", "state"]),
+    ("🇭🇳", "honduras flag",              ["honduras"]),
+    ("🇭🇰", "hong kong flag",             ["hong kong", "hongkong"]),
+    ("🇭🇺", "hungary flag",               ["hungary", "hungarian"]),
+    ("🇮🇸", "iceland flag",               ["iceland", "icelandic"]),
+    ("🇮🇳", "india flag",                 ["india", "indian"]),
+    ("🇮🇩", "indonesia flag",             ["indonesia", "indonesian"]),
+    ("🇮🇷", "iran flag",                  ["iran", "iranian", "persian"]),
+    ("🇮🇶", "iraq flag",                  ["iraq", "iraqi"]),
+    ("🇮🇪", "ireland flag",               ["ireland", "irish", "eire"]),
+    ("🇮🇲", "isle of man flag",           ["isle of man"]),
+    ("🇮🇱", "israel flag",                ["israel", "israeli"]),
+    ("🇮🇹", "italy flag",                 ["italy", "italian"]),
+    ("🇯🇲", "jamaica flag",               ["jamaica", "jamaican"]),
+    ("🇯🇵", "japan flag",                 ["japan", "japanese"]),
+    ("🇯🇪", "jersey flag",                ["jersey"]),
+    ("🇯🇴", "jordan flag",                ["jordan"]),
+    ("🇰🇿", "kazakhstan flag",            ["kazakhstan"]),
+    ("🇰🇪", "kenya flag",                 ["kenya", "kenyan"]),
+    ("🇰🇮", "kiribati flag",              ["kiribati"]),
+    ("🇰🇼", "kuwait flag",                ["kuwait"]),
+    ("🇰🇬", "kyrgyzstan flag",            ["kyrgyzstan"]),
+    ("🇱🇦", "laos flag",                  ["laos"]),
+    ("🇱🇻", "latvia flag",                ["latvia", "latvian"]),
+    ("🇱🇧", "lebanon flag",               ["lebanon", "lebanese"]),
+    ("🇱🇸", "lesotho flag",               ["lesotho"]),
+    ("🇱🇷", "liberia flag",               ["liberia"]),
+    ("🇱🇾", "libya flag",                 ["libya"]),
+    ("🇱🇮", "liechtenstein flag",         ["liechtenstein"]),
+    ("🇱🇹", "lithuania flag",             ["lithuania", "lithuanian"]),
+    ("🇱🇺", "luxembourg flag",            ["luxembourg"]),
+    ("🇲🇴", "macao flag",                 ["macao"]),
+    ("🇲🇬", "madagascar flag",            ["madagascar"]),
+    ("🇲🇼", "malawi flag",                ["malawi"]),
+    ("🇲🇾", "malaysia flag",              ["malaysia", "malaysian"]),
+    ("🇲🇻", "maldives flag",              ["maldives"]),
+    ("🇲🇱", "mali flag",                  ["mali"]),
+    ("🇲🇹", "malta flag",                 ["malta", "maltese"]),
+    ("🇲🇭", "marshall islands flag",      ["marshall islands"]),
+    ("🇲🇶", "martinique flag",            ["martinique"]),
+    ("🇲🇷", "mauritania flag",            ["mauritania"]),
+    ("🇲🇺", "mauritius flag",             ["mauritius"]),
+    ("🇾🇹", "mayotte flag",               ["mayotte"]),
+    ("🇲🇽", "mexico flag",                ["mexico", "mexican"]),
+    ("🇫🇲", "micronesia flag",            ["micronesia"]),
+    ("🇲🇩", "moldova flag",               ["moldova"]),
+    ("🇲🇨", "monaco flag",                ["monaco"]),
+    ("🇲🇳", "mongolia flag",              ["mongolia"]),
+    ("🇲🇪", "montenegro flag",            ["montenegro"]),
+    ("🇲🇸", "montserrat flag",            ["montserrat"]),
+    ("🇲🇦", "morocco flag",               ["morocco", "moroccan"]),
+    ("🇲🇿", "mozambique flag",            ["mozambique"]),
+    ("🇲🇲", "myanmar flag",               ["myanmar", "burma", "burmese"]),
+    ("🇳🇦", "namibia flag",               ["namibia"]),
+    ("🇳🇷", "nauru flag",                 ["nauru"]),
+    ("🇳🇵", "nepal flag",                 ["nepal", "nepali", "nepalese"]),
+    ("🇳🇱", "netherlands flag",           ["netherlands", "dutch", "holland"]),
+    ("🇳🇨", "new caledonia flag",         ["new caledonia"]),
+    ("🇳🇿", "new zealand flag",           ["new zealand", "zealand", "nz", "kiwi"]),
+    ("🇳🇮", "nicaragua flag",             ["nicaragua"]),
+    ("🇳🇪", "niger flag",                 ["niger"]),
+    ("🇳🇬", "nigeria flag",               ["nigeria", "nigerian"]),
+    ("🇳🇺", "niue flag",                  ["niue"]),
+    ("🇳🇫", "norfolk island flag",        ["norfolk island"]),
+    ("🇰🇵", "north korea flag",           ["north korea"]),
+    ("🇲🇰", "north macedonia flag",       ["north macedonia", "macedonia"]),
+    ("🇲🇵", "northern mariana islands flag", ["northern mariana islands"]),
+    ("🇳🇴", "norway flag",                ["norway", "norwegian"]),
+    ("🇴🇲", "oman flag",                  ["oman"]),
+    ("🇵🇰", "pakistan flag",              ["pakistan", "pakistani"]),
+    ("🇵🇼", "palau flag",                 ["palau"]),
+    ("🇵🇸", "palestine flag",             ["palestine", "palestinian"]),
+    ("🇵🇦", "panama flag",                ["panama"]),
+    ("🇵🇬", "papua new guinea flag",      ["papua new guinea", "png"]),
+    ("🇵🇾", "paraguay flag",              ["paraguay"]),
+    ("🇵🇪", "peru flag",                  ["peru", "peruvian"]),
+    ("🇵🇭", "philippines flag",           ["philippines", "filipino", "pinoy", "philippine"]),
+    ("🇵🇳", "pitcairn flag",              ["pitcairn"]),
+    ("🇵🇱", "poland flag",                ["poland", "polish"]),
+    ("🇵🇹", "portugal flag",              ["portugal", "portuguese"]),
+    ("🇵🇷", "puerto rico flag",           ["puerto rico", "puerto rican"]),
+    ("🇶🇦", "qatar flag",                 ["qatar", "qatari"]),
+    ("🇷🇴", "romania flag",               ["romania", "romanian"]),
+    ("🇷🇺", "russian federation flag",    ["russian federation", "russian", "federation"]),
+    ("🇷🇼", "rwanda flag",                ["rwanda"]),
+    ("🇷🇪", "réunion flag",               ["réunion"]),
+    ("🇧🇱", "saint barthélemy flag",      ["saint barthélemy"]),
+    ("🇸🇭", "saint helena flag",          ["saint helena"]),
+    ("🇰🇳", "saint kitts and nevis flag", ["saint kitts and nevis"]),
+    ("🇱🇨", "saint lucia flag",           ["saint lucia"]),
+    ("🇲🇫", "saint martin (french part) flag", ["saint martin (french part)"]),
+    ("🇵🇲", "saint pierre and miquelon flag", ["saint pierre and miquelon"]),
+    ("🇻🇨", "saint vincent and the grenadines flag", ["saint vincent and the grenadines"]),
+    ("🇼🇸", "samoa flag",                 ["samoa"]),
+    ("🇸🇲", "san marino flag",            ["san marino", "marino"]),
+    ("🇸🇹", "sao tome and principe flag", ["sao tome and principe"]),
+    ("🇸🇦", "saudi arabia flag",          ["saudi arabia", "saudi", "arabia"]),
+    ("🇸🇳", "senegal flag",               ["senegal"]),
+    ("🇷🇸", "serbia flag",                ["serbia", "serbian"]),
+    ("🇸🇨", "seychelles flag",            ["seychelles"]),
+    ("🇸🇱", "sierra leone flag",          ["sierra leone", "leone"]),
+    ("🇸🇬", "singapore flag",             ["singapore", "singaporean"]),
+    ("🇸🇽", "sint maarten (dutch part) flag", ["sint maarten (dutch part)"]),
+    ("🇸🇰", "slovakia flag",              ["slovakia", "slovak"]),
+    ("🇸🇮", "slovenia flag",              ["slovenia", "slovenian"]),
+    ("🇸🇧", "solomon islands flag",       ["solomon islands"]),
+    ("🇸🇴", "somalia flag",               ["somalia"]),
+    ("🇿🇦", "south africa flag",          ["south africa", "africa", "south african"]),
+    ("🇬🇸", "south georgia and the south sandwich islands flag", ["south georgia and the south sandwich islands"]),
+    ("🇰🇷", "south korea flag",           ["south korea", "korea", "korean"]),
+    ("🇸🇸", "south sudan flag",           ["south sudan"]),
+    ("🇪🇸", "spain flag",                 ["spain", "spanish", "espana"]),
+    ("🇱🇰", "sri lanka flag",             ["sri lanka", "lanka", "srilanka"]),
+    ("🇸🇩", "sudan flag",                 ["sudan"]),
+    ("🇸🇷", "suriname flag",              ["suriname"]),
+    ("🇸🇯", "svalbard and jan mayen flag", ["svalbard and jan mayen"]),
+    ("🇸🇪", "sweden flag",                ["sweden", "swedish", "swede"]),
+    ("🇨🇭", "switzerland flag",           ["switzerland", "swiss"]),
+    ("🇸🇾", "syria flag",                 ["syria", "syrian"]),
+    ("🇹🇼", "taiwan flag",                ["taiwan", "taiwanese"]),
+    ("🇹🇯", "tajikistan flag",            ["tajikistan"]),
+    ("🇹🇿", "tanzania flag",              ["tanzania"]),
+    ("🇹🇭", "thailand flag",              ["thailand", "thai"]),
+    ("🇹🇱", "timor-leste flag",           ["timor-leste"]),
+    ("🇹🇬", "togo flag",                  ["togo"]),
+    ("🇹🇰", "tokelau flag",               ["tokelau"]),
+    ("🇹🇴", "tonga flag",                 ["tonga"]),
+    ("🇹🇹", "trinidad and tobago flag",   ["trinidad and tobago"]),
+    ("🇹🇳", "tunisia flag",               ["tunisia"]),
+    ("🇹🇲", "turkmenistan flag",          ["turkmenistan"]),
+    ("🇹🇨", "turks and caicos islands flag", ["turks and caicos islands"]),
+    ("🇹🇻", "tuvalu flag",                ["tuvalu"]),
+    ("🇹🇷", "türkiye flag",               ["türkiye", "turkey", "turkish", "turkiye"]),
+    ("🇻🇮", "us virgin islands flag",     ["us virgin islands"]),
+    ("🇺🇬", "uganda flag",                ["uganda"]),
+    ("🇺🇦", "ukraine flag",               ["ukraine", "ukrainian"]),
+    ("🇦🇪", "united arab emirates flag",  ["united arab emirates", "emirates", "uae", "emirati", "dubai"]),
+    ("🇬🇧", "united kingdom flag",        ["united kingdom", "uk", "britain", "british", "great britain"]),
+    ("🇺🇸", "united states flag",         ["united states", "usa", "america", "american"]),
+    ("🇺🇲", "united states minor outlying islands flag", ["united states minor outlying islands"]),
+    ("🇺🇾", "uruguay flag",               ["uruguay", "uruguayan"]),
+    ("🇺🇿", "uzbekistan flag",            ["uzbekistan"]),
+    ("🇻🇺", "vanuatu flag",               ["vanuatu"]),
+    ("🇻🇪", "venezuela flag",             ["venezuela", "venezuelan"]),
+    ("🇻🇳", "vietnam flag",               ["vietnam", "vietnamese"]),
+    ("🇼🇫", "wallis and futuna flag",     ["wallis and futuna"]),
+    ("🇪🇭", "western sahara flag",        ["western sahara", "western", "sahara"]),
+    ("🇾🇪", "yemen flag",                 ["yemen"]),
+    ("🇿🇲", "zambia flag",                ["zambia"]),
+    ("🇿🇼", "zimbabwe flag",              ["zimbabwe", "zimbabwean"]),
+    ("🇦🇽", "åland islands flag",         ["åland islands", "åland"]),
+    ("🏴󠁧󠁢󠁥󠁮󠁧󠁿", "england flag",               ["england", "english"]),
+    ("🏴󠁧󠁢󠁳󠁣󠁴󠁿", "scotland flag",              ["scotland", "scottish", "scot"]),
+    ("🏴󠁧󠁢󠁷󠁬󠁳󠁿", "wales flag",                 ["wales", "welsh", "cymru"]),
 ]
 
 
 def is_country_flag(char: str) -> bool:
-    return any(0x1F1E6 <= ord(c) <= 0x1F1FF for c in char)
+    """A country's flag: two region letters (🇩🇪) or a tag sequence (England)."""
+    return any(0x1F1E6 <= ord(c) <= 0x1F1FF or 0xE0000 <= ord(c) <= 0xE007F
+               for c in char)
 
 
-# Windows has no country-flag emoji (Microsoft left them out): apps show them
-# as two letters ("US"), so don't offer them there.
-if sys.platform == "win32":
-    EMOJI_DATA = [e for e in EMOJI_DATA if not is_country_flag(e[0])]
+# Country flags can be switched off (Settings): Windows has no flag emoji, so
+# most apps there show them as two letters ("DE").  The keyboard turns this
+# on or off from its setting at startup.
+_flags_on = True
+
+
+def set_country_flags(on: bool) -> None:
+    global _flags_on
+    _flags_on = on
+
+
+def offered() -> list[tuple[str, str, list[str]]]:
+    """EMOJI_DATA without the country flags while they're switched off."""
+    if _flags_on:
+        return EMOJI_DATA
+    return [e for e in EMOJI_DATA if not is_country_flag(e[0])]
 
 # Build reverse lookup once at import time
 _LOOKUP: dict[str, tuple[str, list[str]]] = {
@@ -822,13 +1075,12 @@ _LOOKUP: dict[str, tuple[str, list[str]]] = {
 
 def search(query: str, n: int = 60) -> list[str]:
     """Return up to n emoji chars whose name or keywords contain query."""
-    if not query:
-        return [e[0] for e in EMOJI_DATA[:n]]
-    q = query.lower().strip()
+    emoji = offered()
+    q = (query or "").lower().strip()
     if not q:
-        return [e[0] for e in EMOJI_DATA[:n]]
+        return [e[0] for e in emoji[:n]]
     results: list[str] = []
-    for char, name, keywords in EMOJI_DATA:
+    for char, name, keywords in emoji:
         if q in name or any(q in kw for kw in keywords):
             results.append(char)
             if len(results) >= n:
@@ -851,7 +1103,7 @@ def suggest(word: str, n: int = 3) -> list[str]:
         return []
 
     scored: list[tuple[int, int, int, str]] = []  # (exact, name_bonus, remaining, char)
-    for idx, (char, name, keywords) in enumerate(EMOJI_DATA):
+    for idx, (char, name, keywords) in enumerate(offered()):
         best_remaining = None
         for kw in keywords:
             if w == kw:

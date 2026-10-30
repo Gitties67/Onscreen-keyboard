@@ -26,6 +26,10 @@ CC BY-SA 4.0.
 emoji_png/*.png are the 72px emoji images from Noto Emoji by Google
 (https://github.com/googlefonts/noto-emoji, 2D/png/72), Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Unmodified.
+The country-flag pictures among them (emoji_u1f1*.png and the England,
+Scotland and Wales flags) are rendered to 72px PNGs by tools/build_flags.py
+from Noto Emoji's third_party/region-flags/waved-svg: flags from Wikipedia,
+public domain or exempt from copyright (see that folder's LICENSE).
 
 
 --- wamerican / wbritish (SCOWL) ---------------------------------------
