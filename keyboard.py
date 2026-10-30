@@ -455,8 +455,10 @@ from predictor import (WordPredictor, UserModel, DICTIONARIES, ELISION_LANGUAGES
                        is_english)
 from hangul import HangulComposer, jamo_for
 from emojis import (EMOJI_DATA, is_country_flag, search as emoji_search,
-                    suggest as emoji_suggest)
-from calculator import DIV_ZERO, press as calc_press, evaluate as calc_evaluate
+                    suggest as emoji_suggest, emoticon as emoji_emoticon,
+                    EMOTICONS)
+from calculator import (DIV_ZERO, press as calc_press, evaluate as calc_evaluate,
+                        insert_number as calc_insert_number)
 
 
 LANGUAGE_LABELS = {"en_AU": "English (Australia)", "en_GB": "English (UK)",
@@ -1311,6 +1313,20 @@ def _emoji_pixbuf(char: str, size: int):
                 print(f"[emoji] {name}: {exc}")
         _emoji_pixbufs[key] = pb
     return _emoji_pixbufs[key]
+
+
+def _emoji_row_pixbuf(text: str, size: int):
+    """Pictures of several single-character emoji side by side ("🍆💦"),
+    or None if any is missing."""
+    chars = [c for c in text if c != "\ufe0f"]
+    pbs = [_emoji_pixbuf(c, size) for c in chars]
+    if len(pbs) < 2 or None in pbs:
+        return None
+    row = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, True, 8, size * len(pbs), size)
+    row.fill(0)
+    for i, pb in enumerate(pbs):
+        pb.copy_area(0, 0, pb.get_width(), pb.get_height(), row, i * size, 0)
+    return row
 # Suggestion bar slots.  Slots 0..N-2 are words; the last is an emoji when
 # one matches the words, otherwise one more word.
 N_SUGGESTIONS = 7
@@ -1767,6 +1783,8 @@ class OnScreenKeyboard(Gtk.Window):
             language=self._load_settings().get("language", "en_US"))
         self.typer        = KeyTyper()
         self.current_word = ""
+        self._emoticon_buf = ""  # characters typed since the last space, for ":)" → 🙂
+        self._emoticon_typed = ""  # the emoticon the emoji slot would replace
         self._last_word   = ""   # last committed word of this sentence ("" = none)
         self._ctx: list[str] = []      # last <=2 committed words of the current sentence
         self._ctx_stem    = ""         # "don'" while typing don't (apostrophe pending)
@@ -1838,6 +1856,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._calc_mode:         bool = False
         self._calc_panel_ready:  bool = False
         self._calc_expr:         str  = ""
+        self._calc_last_answer:  str  = ""    # what "Ans" puts in
         self._calc_expr_lbl:     Gtk.Label | None = None
         self._calc_answer_lbl:   Gtk.Label | None = None
         self._clipboard_btn:     Gtk.Button | None = None
@@ -3078,7 +3097,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _show_emoji_image(btn: Gtk.Button, char: str, size: int) -> bool:
         """Show an emoji's bundled picture on btn; False if there is none
         (then the caller shows the emoji as text)."""
-        pb = _emoji_pixbuf(char, size)
+        pb = _emoji_pixbuf(char, size) or _emoji_row_pixbuf(char, size)
         if pb is None:
             return False
         btn.set_label("")
@@ -3806,8 +3825,13 @@ class OnScreenKeyboard(Gtk.Window):
             action = FN_MAP.get(action, action)
             self._update_modifier_visuals()
         if self._korean_active() and self._korean_key(action):
+            self._emoticon_buf = ""
             return
         mods = self._active_sticky_modifiers()
+        if action == "backspace" and not mods:
+            self._emoticon_buf = self._emoticon_buf[:-1]
+        elif mods or len(action) > 1:   # Enter, arrows, Tab...: not part of a face
+            self._emoticon_buf = ""
 
         if action == "backspace":
             self.typer.send_special("backspace", mods)
@@ -3880,6 +3904,7 @@ class OnScreenKeyboard(Gtk.Window):
             self._ko_flush()                # don't lose a half-typed syllable
         self._ctx_reset()
         self.current_word = ""
+        self._emoticon_buf = ""
         if keep != "settings" and self._settings_mode:
             self._toggle_settings()
         if keep != "emoji" and self._emoji_mode:
@@ -4313,14 +4338,21 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Calculator ────────────────────────────────────────────────────────────
 
-    # Button grid (calculator.press handles each label); the two action
-    # buttons sit in a column on the right.
+    # Button grid (calculator.press handles each key); "Type answer" and
+    # "Close" sit beside the display, one key each.
     CALC_ROWS = [
-        ["7", "8", "9", "÷", "⌫"],
-        ["4", "5", "6", "×", "C"],
-        ["1", "2", "3", "−", "("],
-        ["0", ".", "=", "+", ")"],
+        ["x²",  "√", "7", "8", "9", "÷", "⌫"],
+        ["xʸ",  "%", "4", "5", "6", "×", "C"],
+        ["1/x", "π", "1", "2", "3", "−", "("],
+        ["±", "Ans", "0", ".", "=", "+", ")"],
     ]
+    CALC_KEYS = {"x²": "²", "xʸ": "^"}          # label → calculator.press key
+    CALC_NAMES = {                              # what a screen reader says
+        "x²": "Squared", "√": "Square root", "xʸ": "To the power of",
+        "%": "Percent", "1/x": "One divided by the answer", "π": "Pi",
+        "±": "Plus or minus", "Ans": "Last answer", "⌫": "Backspace",
+        "C": "Clear",
+    }
 
     def _toggle_calc_mode(self):
         if self._calc_mode:
@@ -4362,22 +4394,28 @@ class OnScreenKeyboard(Gtk.Window):
         self._calc_answer_lbl.set_name("calc-answer")
         display.pack_start(self._calc_expr_lbl, True, True, 8)
         display.pack_start(self._calc_answer_lbl, False, False, 8)
-        grid.attach(display, 0, 0, 7, 1)
+        grid.attach(display, 0, 0, 5, 1)
 
         for r, row in enumerate(self.CALC_ROWS, start=1):
-            for c, key in enumerate(row):
-                special = key in "⌫C()"
-                btn = self._make_calc_button(key, lambda k=key: self._on_calc_key(k),
-                                             "special" if special else "char-key")
+            for c, label in enumerate(row):
+                key = self.CALC_KEYS.get(label, label)
+                plain = label in "0123456789.÷×−+="
+                btn = self._make_calc_button(label, lambda k=key: self._on_calc_key(k),
+                                             "char-key" if plain else "special")
+                if label in self.CALC_NAMES:
+                    btn.get_accessible().set_name(self.CALC_NAMES[label])
                 grid.attach(btn, c, r, 1, 1)
 
         type_btn = self._make_calc_button("Type answer", self._on_calc_type_answer,
                                           "calc-type")
         type_btn.set_tooltip_text("Type the answer into the app you're typing in")
-        grid.attach(type_btn, 5, 1, 2, 2)
+        type_lbl = type_btn.get_child()          # wraps to two lines on a narrow key
+        type_lbl.set_line_wrap(True)
+        type_lbl.set_justify(Gtk.Justification.CENTER)
+        grid.attach(type_btn, 5, 0, 1, 1)
         close_btn = self._make_calc_button("Close", self._close_calc_mode, "special")
         close_btn.get_accessible().set_name("Close calculator")
-        grid.attach(close_btn, 5, 3, 2, 2)
+        grid.attach(close_btn, 6, 0, 1, 1)
         return grid
 
     def _make_calc_button(self, label: str, callback, css_class: str) -> Gtk.Button:
@@ -4435,6 +4473,9 @@ class OnScreenKeyboard(Gtk.Window):
             answer = calc_evaluate(self._calc_expr)
             if answer is not None and answer != DIV_ZERO:
                 self._calc_expr = answer.replace("-", "−")
+                self._calc_last_answer = answer
+        elif key == "Ans":
+            self._calc_expr = calc_insert_number(self._calc_expr, self._calc_last_answer)
         else:
             self._calc_expr = calc_press(self._calc_expr, key)
         self._calc_update_display()
@@ -4453,6 +4494,7 @@ class OnScreenKeyboard(Gtk.Window):
         answer = calc_evaluate(self._calc_expr)
         if answer is None or answer == DIV_ZERO:
             return
+        self._calc_last_answer = answer
         for ch in answer:
             self.typer.type_char(ch)
         self._ctx_reset()
@@ -7138,6 +7180,8 @@ class OnScreenKeyboard(Gtk.Window):
                 # username or password: don't learn the word or chain context.
                 self._ctx_reset()
             self.current_word = ""
+        if not mods:
+            self._emoticon_buf = (self._emoticon_buf + char)[-16:]
 
         self._refresh_suggestions()
 
@@ -7257,6 +7301,12 @@ class OnScreenKeyboard(Gtk.Window):
         # word labels only; skip when nothing is typed — an emoji for "the"/"to"
         # is just noise
         check_words = [s[0] for s in slots[:WORD_SLOTS] if s is not None and not s[1]] if w else []
+        # A text face just typed (":)", "<3") offers its emoji first
+        face = emoji_emoticon(self._emoticon_buf)
+        self._emoticon_typed = face[0] if face else ""
+        if face:
+            emoji_slot = (face[1], True, False, False, False, "", False)
+            check_words = []
         for word in check_words:
             hits = emoji_suggest(word, n=1)
             if hits:
@@ -7388,6 +7438,8 @@ class OnScreenKeyboard(Gtk.Window):
 
     def _on_suggestion_clicked(self, btn: Gtk.Button, idx: int = 0):
         label = btn.get_label()
+        if not label and idx < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[idx]:
+            label = self._suggestion_values[idx]      # shown as a picture, no label
         if not label:
             return
         self._play_click_sound()
@@ -7404,6 +7456,9 @@ class OnScreenKeyboard(Gtk.Window):
                 self._launch_app(self._app_results[idx])
             self._close_app_mode()
             return
+
+        # Any pick ends the text face; only its own emoji replaces it
+        face, self._emoticon_typed, self._emoticon_buf = self._emoticon_typed, "", ""
 
         # Korean: the syllable in the bar isn't in the app yet.  A word
         # replaces it (only the typed part needs erasing); an emoji keeps it.
@@ -7432,9 +7487,15 @@ class OnScreenKeyboard(Gtk.Window):
             self._refresh_suggestions()
             return
 
-        # Emoji suggestion
+        # Emoji suggestion — one for a typed text face replaces the face
         if idx < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[idx]:
-            self.typer.type_emoji(label)
+            for _ in face:
+                self.typer.send_special("backspace")
+            if face and IS_WINDOWS:
+                GLib.timeout_add(self.BACKSPACE_SETTLE_MS,
+                                 lambda: self.typer.type_emoji(label) and False)
+            else:
+                self.typer.type_emoji(label)
             self.current_word = ""
             self._refresh_suggestions()
             return
@@ -7608,6 +7669,8 @@ def _run_selftest() -> int:
         # (country flags have none; they are only offered on Linux)
         missing = [c for c, _n, _k in EMOJI_DATA
                    if not is_country_flag(c) and _emoji_pixbuf(c, EMOJI_PANEL_PX) is None]
+        missing += [e for e in set(EMOTICONS.values()) | {"🍆💦"}
+                    if not (_emoji_pixbuf(e, EMOJI_SUGG_PX) or _emoji_row_pixbuf(e, EMOJI_SUGG_PX))]
         if missing:
             raise RuntimeError(f"{len(missing)} emoji pictures missing from {EMOJI_PNG_DIR}")
         log(f"emoji pictures ok ({len(EMOJI_DATA)})")
