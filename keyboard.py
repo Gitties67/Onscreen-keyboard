@@ -1315,6 +1315,7 @@ def _emoji_pixbuf(char: str, size: int):
 # one matches the words, otherwise one more word.
 N_SUGGESTIONS = 7
 WORD_SLOTS    = N_SUGGESTIONS - 1
+SUGG_MIN_SCALE = 0.75   # a long suggestion's font shrinks to no less than 3/4 size
 TITLEBAR_H   = _px(28)   # height of the custom title-bar strip
 # Tight gaps, like the Windows on-screen keyboard: the space goes to the keys
 ROW_GAP      = 2      # between key rows (and between title/suggestion bar/keys)
@@ -3052,6 +3053,26 @@ class OnScreenKeyboard(Gtk.Window):
             lbl.set_ellipsize(Pango.EllipsizeMode.END)
             lbl.set_width_chars(1)
             lbl.set_max_width_chars(1)
+            if not getattr(lbl, "_osk_shrinks", False):
+                lbl._osk_shrinks = True
+                lbl.connect("size-allocate", OnScreenKeyboard._shrink_suggestion_label)
+
+    @staticmethod
+    def _shrink_suggestion_label(lbl, alloc):
+        """A word too long for its button gets a smaller font (down to
+        SUGG_MIN_SCALE, still readable) so most or all of it shows; only what
+        still doesn't fit is cut off with "…"."""
+        natural = lbl.create_pango_layout(lbl.get_text()).get_pixel_size()[0]
+        scale = 1.0
+        if natural > alloc.width > 0:
+            scale = max(SUGG_MIN_SCALE, round(alloc.width / natural, 2))
+        if getattr(lbl, "_osk_scale", 1.0) == scale:
+            return
+        lbl._osk_scale = scale
+        attrs = Pango.AttrList()
+        if scale < 1.0:
+            attrs.insert(Pango.attr_scale_new(scale))
+        lbl.set_attributes(attrs)
 
     @staticmethod
     def _show_emoji_image(btn: Gtk.Button, char: str, size: int) -> bool:
