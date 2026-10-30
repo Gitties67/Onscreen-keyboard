@@ -689,7 +689,7 @@ DEFAULT_FONT = "Segoe UI" if IS_WINDOWS else "Ubuntu"
 DEFAULT_FONT_SIZE = 18     # big and clear by default
 FONT_SIZE_MAX = 36
 FONT_SETTINGS_VERSION = 2  # bump to re-apply font defaults once on upgrade
-SETTINGS_LABEL_W = _px(150)  # width of the label column on the settings page
+SETTINGS_LABEL_W = _px(150)  # width of the label column on the settings page (when it fits)
 
 # Shared by the running keyboard and the installer's Start-menu shortcut, so a
 # pinned taskbar icon and the open keyboard are the same taskbar button.
@@ -974,9 +974,12 @@ def _theme_css_at_100(c: dict, font_size: int, font_family: str, key_fit: float 
     special_size  = max(9,  font_size - 2)   # modifier/nav labels slightly smaller
     char_size     = font_size + 8            # letters/digits/symbols: big, like Windows' OSK
     settings_size = max(14, font_size - 2)   # Settings text follows Font size too
+    sugg_size     = max(11, font_size - 3)   # suggestions: a bit smaller, so more fits
     sublabel_size = max(8,  font_size - 4)   # shift-symbol hint in corner
     key_size      = font_size
     dot_r         = max(1.0, 2.0 * key_fit)  # accent-mark dot radius
+    # Settings text shrinks a little with a keyboard dragged small, never below 3/4
+    settings_size = max(11, round(settings_size * max(0.75, key_fit)))
     if key_fit < 1.0:                        # keys dragged small: labels follow
         key_size, char_size, special_size, sublabel_size = (
             max(6, round(v * key_fit)) for v in (key_size, char_size, special_size, sublabel_size))
@@ -1011,7 +1014,7 @@ window {{ background-color: {c['bg']}; }}
 #titlebar-title {{ color: {c['titlebar_fg']}; }}
 #suggestion-bar {{ background-color: {c['bar_bg']}; border-bottom: 1px solid {c['bar_border']}; }}
 .suggestion-btn {{ color: {c['sugg_fg']}; background-color: transparent;
-                   font-size: {font_size}px; }}
+                   font-size: {sugg_size}px; }}
 .suggestion-btn:hover {{ background-color: {c['sugg_hover']}; }}
 .palette-swatch {{ border: 1px solid {c['key_border']}; padding: 0; box-shadow: none;
                    min-width: 32px; min-height: 32px; }}
@@ -1259,9 +1262,9 @@ SHIFT_MAP = {
 BASE_KEY_W  = 52
 BASE_KEY_H  = _px(52)   # keys grow with the display scaling, like their text
 SUGGESTION_H = _px(40)   # height of the suggestion bar row
-# Suggestion bar slots, like the Windows keyboard's 8.  Slots 0..N-2 are words;
-# the last is an emoji when one matches the words, otherwise one more word.
-N_SUGGESTIONS = 8
+# Suggestion bar slots.  Slots 0..N-2 are words; the last is an emoji when
+# one matches the words, otherwise one more word.
+N_SUGGESTIONS = 7
 WORD_SLOTS    = N_SUGGESTIONS - 1
 TITLEBAR_H   = _px(28)   # height of the custom title-bar strip
 # Tight gaps, like the Windows on-screen keyboard: the space goes to the keys
@@ -1662,6 +1665,38 @@ class KeyTyper:
 
 
 # ── Main keyboard window ───────────────────���────────────────────────────────���─
+class _LabelColumn(Gtk.Box):
+    """The Settings label column: SETTINGS_LABEL_W wide when there's room,
+    so the rows line up, but — unlike a fixed width — it narrows (names cut
+    with "…") on a keyboard dragged small instead of pushing the row's
+    buttons off the right edge."""
+
+    width = SETTINGS_LABEL_W   # shared by every row; see fit_to_page()
+    _all: list = []            # live columns (a WeakSet loses PyGObject wrappers)
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        _LabelColumn._all.append(self)
+        self.connect("destroy", lambda c: c in _LabelColumn._all and _LabelColumn._all.remove(c))
+
+    def do_get_preferred_width(self):
+        minimum, natural = Gtk.Box.do_get_preferred_width(self)
+        return minimum, max(minimum, _LabelColumn.width)
+
+    @staticmethod
+    def fit_to_page(page_w: int) -> bool:
+        """One column width for the whole page — a quarter of it, at most
+        SETTINGS_LABEL_W — so the rows still line up when it's narrow.
+        True if it changed (caller re-lays-out the page)."""
+        w = max(_px(60), min(SETTINGS_LABEL_W, page_w // 4))
+        if w == _LabelColumn.width:
+            return False
+        _LabelColumn.width = w
+        for col in list(_LabelColumn._all):
+            col.queue_resize()      # GTK caches preferred sizes; ask again
+        return True
+
+
 class OnScreenKeyboard(Gtk.Window):
 
     def __init__(self):
@@ -4930,6 +4965,33 @@ class OnScreenKeyboard(Gtk.Window):
             if self._settings_btn:
                 self._settings_btn.get_style_context().remove_class("active")
 
+    def _let_settings_squeeze(self, widget):
+        """Let the Settings rows fit a narrow keyboard: choice buttons and
+        hints may shrink, cutting their text with "…", instead of running off
+        the right edge.  Their natural (full) width is used whenever it fits."""
+        if isinstance(widget, Gtk.Label) and widget.get_name() == "settings-hint":
+            widget.set_ellipsize(Pango.EllipsizeMode.END)
+        elif isinstance(widget, Gtk.Button) and (
+                widget.get_style_context().has_class("settings-choice")
+                or widget.get_name() == "settings-toggle"):
+            widget.connect("notify::label", self._ellipsize_button_label)
+            self._ellipsize_button_label(widget)
+            # A fixed width (e.g. 190 px for the action buttons) is a hard
+            # minimum that ran rows off a narrow keyboard; size to the text
+            # instead.  Tiny +/− buttons keep theirs.
+            w, h = widget.get_size_request()
+            if w >= _px(90):
+                widget.set_size_request(-1, h)
+        if isinstance(widget, Gtk.Container):
+            for child in widget.get_children():
+                self._let_settings_squeeze(child)
+
+    @staticmethod
+    def _ellipsize_button_label(btn, *_):
+        lbl = btn.get_child()
+        if isinstance(lbl, Gtk.Label):
+            lbl.set_ellipsize(Pango.EllipsizeMode.END)
+
     def _settings_section_header(self, text: str, is_first: bool = False) -> Gtk.Box:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         box.set_margin_top(0 if is_first else 14)
@@ -4945,11 +5007,11 @@ class OnScreenKeyboard(Gtk.Window):
     def _settings_row_label(self, text: str) -> Gtk.Box:
         """Setting name for the label column, with an (i) button that explains
         the setting when SETTINGS_HELP has an entry for it."""
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        box.set_size_request(SETTINGS_LABEL_W, -1)
+        box = _LabelColumn(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         lbl = Gtk.Label(label=text)
         lbl.set_name("settings-label")
         lbl.set_xalign(0.0)
+        lbl.set_ellipsize(Pango.EllipsizeMode.END)   # a narrow keyboard cuts, not overflows
         box.pack_start(lbl, False, False, 0)
         help_text = SETTINGS_HELP.get(text)
         if help_text:
@@ -5008,12 +5070,15 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Wrap in a scrolled window so all settings are accessible
         scroll_outer = Gtk.ScrolledWindow()
-        # Sideways scrolling when narrow, so the long Settings rows never set
-        # the keyboard's minimum width
-        scroll_outer.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        # No sideways scrolling: the rows squeeze to fit instead (see
+        # _let_settings_squeeze / _LabelColumn), so they stay narrower than
+        # the smallest keyboard and never set its minimum width
+        scroll_outer.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll_outer.set_vexpand(True)
         scroll_outer.set_overlay_scrolling(False)   # a real gutter, never on top of rows
         scroll_outer.set_name("settings-scroll")
+        scroll_outer.connect("size-allocate", lambda _sw, a: GLib.idle_add(
+            lambda w=a.width: _LabelColumn.fit_to_page(w) and False))
         self._settings_scroll = scroll_outer
 
         inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -5151,8 +5216,7 @@ class OnScreenKeyboard(Gtk.Window):
             if i == 0:
                 lang_row.pack_start(self._settings_row_label("Language"), False, False, 0)
             else:
-                pad = Gtk.Box()
-                pad.set_size_request(SETTINGS_LABEL_W, -1)
+                pad = _LabelColumn()
                 lang_row.pack_start(pad, False, False, 0)
             for code in codes:
                 btn = Gtk.Button(label=LANGUAGE_LABELS[code])
@@ -5489,6 +5553,7 @@ class OnScreenKeyboard(Gtk.Window):
         update_row.pack_start(self._update_status_label, True, True, 4)
         inner.pack_start(update_row, False, False, 0)
 
+        self._let_settings_squeeze(inner)
         scroll_outer.add(inner)
         panel.pack_start(scroll_outer, True, True, 0)
 

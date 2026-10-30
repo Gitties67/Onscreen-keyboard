@@ -36,7 +36,7 @@ Three files:
 
 **Manual resize**: 8-zone edge/corner resize (because the WM doesn't provide resize handles for DOCK windows). Top/bottom 7px `EventBox` strips handle `n/s/nw/ne/sw/se` edges; left/right 8px margins on the window handle `e/w` edges. All tracked via `_resize_start_*` state in `_on_resize_motion`.
 
-**Suggestions**: `predictor.predict(...)` is called after every keypress; results populate `N_SUGGESTIONS` (8) equal-width `Gtk.Button` widgets in the suggestion bar — the last is an emoji slot when one matches. Labels ellipsize (full word in a tooltip) so a long word never widens the window. `current_word` resets on space/return/backspace-to-empty.
+**Suggestions**: `predictor.predict(...)` is called after every keypress; results populate `N_SUGGESTIONS` (7) equal-width `Gtk.Button` widgets in the suggestion bar — the last is an emoji slot when one matches. Labels ellipsize (full word in a tooltip) so a long word never widens the window. `current_word` resets on space/return/backspace-to-empty.
 
 **App launcher** (`_app_mode`): Win/⊞ button toggles a built-in app search (bypasses Cinnamon's menu, which cannot stay open when our keyboard is clicked — see architecture notes). Uses `Gio.AppInfo.get_all()` to enumerate apps. Results replace the suggestion buttons; clicking launches via `app_info.launch()`.
 
