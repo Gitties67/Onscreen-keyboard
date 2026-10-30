@@ -7557,11 +7557,14 @@ class OnScreenKeyboard(Gtk.Window):
             self._refresh_suggestions()
             return
 
-        # Emoji suggestion — one for a typed text face replaces the face
+        # Emoji suggestion — replaces the text face or the word being typed,
+        # like a phone keyboard ("Po" → 🇵🇱, ":)" → 🙂)
         if idx < len(self._suggestion_is_emoji) and self._suggestion_is_emoji[idx]:
-            for _ in face:
+            erase = len(face) if face else (
+                0 if self._korean_active() else len(self.current_word))
+            for _ in range(erase):
                 self.typer.send_special("backspace")
-            if face and IS_WINDOWS:
+            if erase and IS_WINDOWS:
                 GLib.timeout_add(self.BACKSPACE_SETTLE_MS,
                                  lambda: self.typer.type_emoji(label) and False)
             else:
