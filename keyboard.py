@@ -37,7 +37,8 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gio", "2.0")
-from gi.repository import Gtk, Gdk, GLib, Gio
+gi.require_version("Pango", "1.0")
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -1258,6 +1259,10 @@ SHIFT_MAP = {
 BASE_KEY_W  = 52
 BASE_KEY_H  = _px(52)   # keys grow with the display scaling, like their text
 SUGGESTION_H = _px(40)   # height of the suggestion bar row
+# Suggestion bar slots, like the Windows keyboard's 8.  Slots 0..N-2 are words;
+# the last is an emoji when one matches the words, otherwise one more word.
+N_SUGGESTIONS = 8
+WORD_SLOTS    = N_SUGGESTIONS - 1
 TITLEBAR_H   = _px(28)   # height of the custom title-bar strip
 # Tight gaps, like the Windows on-screen keyboard: the space goes to the keys
 ROW_GAP      = 2      # between key rows (and between title/suggestion bar/keys)
@@ -1742,11 +1747,11 @@ class OnScreenKeyboard(Gtk.Window):
         self._macro_draft:    dict = {}
 
         # Suggestion bar: what value each slot will type (word, emoji, or custom)
-        self._suggestion_values:    list[str]  = [""] * 5
-        self._suggestion_is_emoji:  list[bool] = [False] * 5
-        self._suggestion_is_custom: list[bool] = [False] * 5
-        self._suggestion_is_fuzzy:  list[bool] = [False] * 5
-        self._suggestion_is_macro:  list[bool] = [False] * 5
+        self._suggestion_values:    list[str]  = [""] * N_SUGGESTIONS
+        self._suggestion_is_emoji:  list[bool] = [False] * N_SUGGESTIONS
+        self._suggestion_is_custom: list[bool] = [False] * N_SUGGESTIONS
+        self._suggestion_is_fuzzy:  list[bool] = [False] * N_SUGGESTIONS
+        self._suggestion_is_macro:  list[bool] = [False] * N_SUGGESTIONS
 
         # Custom dictionary input mode
         self._custom_input_mode: bool = False
@@ -2924,6 +2929,27 @@ class OnScreenKeyboard(Gtk.Window):
             self._save_geometry()
         return True
 
+    @staticmethod
+    def _fit_suggestion_label(btn, *_):
+        """Cut a long suggestion off with "…" instead of widening the bar.
+        The label asks for (almost) no width — not even the word's natural
+        width — so the bar never asks the window to grow; it still fills the
+        width its button gets and cuts off only what won't fit."""
+        lbl = btn.get_child()
+        if isinstance(lbl, Gtk.Label):
+            lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            lbl.set_width_chars(1)
+            lbl.set_max_width_chars(1)
+
+    @staticmethod
+    def _on_suggestion_tooltip(btn, _x, _y, _kbd, tooltip) -> bool:
+        """Hovering a suggestion that was cut off shows the whole word."""
+        lbl = btn.get_child()
+        if isinstance(lbl, Gtk.Label) and lbl.get_layout().is_ellipsized():
+            tooltip.set_text(lbl.get_text())
+            return True
+        return False
+
     def _build_suggestion_bar(self) -> Gtk.Box:
         bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         bar.set_name("suggestion-bar")
@@ -2935,14 +2961,24 @@ class OnScreenKeyboard(Gtk.Window):
         self._search_label.set_no_show_all(True)
         bar.pack_start(self._search_label, False, False, 6)
 
-        # Suggestion / app-result buttons (index passed so click handler knows slot)
-        for i in range(5):
+        # Suggestion / app-result buttons (index passed so click handler knows
+        # slot).  Equal widths, and a long word is cut off with "…" (full word
+        # on hover) instead of widening its button — which used to stretch
+        # the whole keyboard.
+        words = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0, homogeneous=True)
+        for i in range(N_SUGGESTIONS):
             btn = Gtk.Button(label="")
             btn.get_style_context().add_class("suggestion-btn")
-            btn.set_size_request(-1, SUGGESTION_H)
+            btn.set_size_request(1, SUGGESTION_H)
+            # set_label() builds a fresh label each time, so re-apply on change
+            btn.connect("notify::label", self._fit_suggestion_label)
+            self._fit_suggestion_label(btn)
+            btn.set_has_tooltip(True)
+            btn.connect("query-tooltip", self._on_suggestion_tooltip)
             btn.connect("clicked", lambda b, idx=i: self._on_suggestion_clicked(b, idx))
-            bar.pack_start(btn, True, True, 0)
+            words.pack_start(btn, True, True, 0)
             self._suggestion_btns.append(btn)
+        bar.pack_start(words, True, True, 0)
 
         # ── Panel-mode toggles (right side): [settings] [emoji] [clipboard] ───
         # pack_end packs right-to-left, so the FIRST pack_end ends up rightmost.
@@ -3700,6 +3736,7 @@ class OnScreenKeyboard(Gtk.Window):
         self._custom_input_mode = False
         for btn in self._suggestion_btns:
             btn.get_style_context().remove_class("ci-save")
+            btn.show()
         self._custom_input_text = ""
         self._custom_input_mode_target = "word"
         if target in ("macro_trigger", "macro_expansion"):
@@ -3750,7 +3787,7 @@ class OnScreenKeyboard(Gtk.Window):
                 self._flash_custom_words_status(f"✓ Added “{word}”")
 
     # Slots in the suggestion bar used as buttons while typing a custom entry
-    CI_SAVE_SLOT, CI_CANCEL_SLOT = 3, 4
+    CI_SAVE_SLOT, CI_CANCEL_SLOT = N_SUGGESTIONS - 2, N_SUGGESTIONS - 1
 
     def _update_custom_input_display(self):
         target = self._custom_input_mode_target
@@ -3779,6 +3816,8 @@ class OnScreenKeyboard(Gtk.Window):
             else:
                 btn.set_label("")
                 btn.set_sensitive(False)
+            # Only Save / Cancel: the empty slots would squeeze them to "…"
+            btn.set_visible(i in (self.CI_SAVE_SLOT, self.CI_CANCEL_SLOT))
 
     def _scroll_settings_to(self, widget) -> bool:
         """Scroll the settings page so `widget` is near the top."""
@@ -6651,7 +6690,7 @@ class OnScreenKeyboard(Gtk.Window):
                 btn.set_sensitive(False)
 
     def _search_apps(self, query: str) -> list[Gio.AppInfo]:
-        """Return up to 5 Gio.AppInfo objects whose display name contains query."""
+        """Return up to N_SUGGESTIONS Gio.AppInfo objects whose display name contains query."""
         q = query.strip().lower()
         results: list[Gio.AppInfo] = []
         app_list = self._cached_apps if self._cached_apps is not None else Gio.AppInfo.get_all()
@@ -6665,7 +6704,7 @@ class OnScreenKeyboard(Gtk.Window):
                 continue
             results.append(app)
         results.sort(key=lambda a: a.get_display_name().lower())
-        return results[:5]
+        return results[:N_SUGGESTIONS]
 
     def _launch_app(self, app_info: Gio.AppInfo):
         """Launch a Gio.AppInfo entry."""
@@ -6798,8 +6837,9 @@ class OnScreenKeyboard(Gtk.Window):
             GLib.source_remove(self._fuzzy_timer)
             self._fuzzy_timer = None
 
-        # ── Build word candidates for slots 0–4 ──────────────────────────────
-        # slot 4 is reserved for emoji if there's a match; otherwise a 5th word.
+        # ── Build word candidates for every slot ─────────────────────────────
+        # The last slot is reserved for emoji if there's a match; otherwise one
+        # more word.
         # slots: (label, is_emoji, is_custom, is_fuzzy, is_macro, expansion, is_fallback)
         slots: list[tuple[str, bool, bool, bool, bool, str, bool]] = []
 
@@ -6823,7 +6863,7 @@ class OnScreenKeyboard(Gtk.Window):
             slots.append((v, False, True, False, False, "", False))
 
         # Exact-prefix dictionary words — or next-word prediction when no prefix
-        n_word_slots = 4 - len(slots)   # fill up to 4 word slots total
+        n_word_slots = WORD_SLOTS - len(slots)   # fill up to WORD_SLOTS word slots
         if w:
             exact_sugg = [x for x in self.predictor.predict(
                               w, n=n_word_slots + 2, context=self._ctx)
@@ -6834,42 +6874,42 @@ class OnScreenKeyboard(Gtk.Window):
 
         seen_words = {s[0].lower() for s in slots}
         for v in exact_sugg:
-            if len(slots) >= 4:
+            if len(slots) >= WORD_SLOTS:
                 break
             if v.lower() not in seen_words:
                 slots.append((v, False, False, False, False, "", False))
                 seen_words.add(v.lower())
 
-        # Pad to 4 word slots with common fallback words (marked as fallback so
+        # Pad the word slots with common fallback words (marked as fallback so
         # the fuzzy timer knows these aren't real predictions for the current prefix)
         # Only when no word is in progress — otherwise a fallback word would
         # complete to something unrelated to the typed prefix.
         fallback = [] if w else self.predictor.predict_padded("", 20)
         for v in fallback:
-            if len(slots) >= 4:
+            if len(slots) >= WORD_SLOTS:
                 break
             if v.lower() not in seen_words:
                 slots.append((v, False, False, False, False, "", True))
                 seen_words.add(v.lower())
 
-        # Slot 4: emoji if any of the 4 word slots has an emoji match,
-        # otherwise pad with a 5th word
+        # Last slot: emoji if any word slot has an emoji match, otherwise one
+        # more word
         emoji_slot: tuple[str, bool, bool, bool, bool, str, bool] | None = None
         # word labels only; skip when nothing is typed — an emoji for "the"/"to"
         # is just noise
-        check_words = [s[0] for s in slots[:4] if s is not None and not s[1]] if w else []
+        check_words = [s[0] for s in slots[:WORD_SLOTS] if s is not None and not s[1]] if w else []
         for word in check_words:
             hits = emoji_suggest(word, n=1)
             if hits:
                 emoji_slot = (hits[0], True, False, False, False, "", False)
                 break
         if emoji_slot:
-            # Keep emoji at index 4 — pad short word lists with blank slots so
-            # the fuzzy updater (which fills 0–3) can never overwrite it.
-            slots.extend([None] * (4 - len(slots)))
+            # Keep emoji in the last slot — pad short word lists with blank
+            # slots so the fuzzy updater (word slots only) can never overwrite it.
+            slots.extend([None] * (WORD_SLOTS - len(slots)))
             slots.append(emoji_slot)
         else:
-            # 5th word
+            # one more word
             for v in fallback:
                 if v.lower() not in seen_words:
                     slots.append((v, False, False, False, False, "", True))
@@ -6877,12 +6917,12 @@ class OnScreenKeyboard(Gtk.Window):
                     break
 
         # ── Populate buttons ──────────────────────────────────────────────────
-        self._suggestion_values    = [""] * 5
-        self._suggestion_is_emoji  = [False] * 5
-        self._suggestion_is_custom = [False] * 5
-        self._suggestion_is_fuzzy  = [False] * 5
-        self._suggestion_is_macro  = [False] * 5
-        self._suggestion_macro_expansions: list[str] = [""] * 5
+        self._suggestion_values    = [""] * N_SUGGESTIONS
+        self._suggestion_is_emoji  = [False] * N_SUGGESTIONS
+        self._suggestion_is_custom = [False] * N_SUGGESTIONS
+        self._suggestion_is_fuzzy  = [False] * N_SUGGESTIONS
+        self._suggestion_is_macro  = [False] * N_SUGGESTIONS
+        self._suggestion_macro_expansions: list[str] = [""] * N_SUGGESTIONS
 
         for i, btn in enumerate(self._suggestion_btns):
             if i < len(slots) and slots[i] is not None:
@@ -6903,9 +6943,9 @@ class OnScreenKeyboard(Gtk.Window):
 
         # Schedule fuzzy spell-check only when there are real empty word slots —
         # fallback words don't count as real predictions for the current prefix.
-        n_real = sum(1 for s in slots[:4]
+        n_real = sum(1 for s in slots[:WORD_SLOTS]
                      if s is not None and not s[1] and not s[4] and not s[6])
-        if w and n_real < 4 and len(w) >= 3:
+        if w and n_real < WORD_SLOTS and len(w) >= 3:
             self._fuzzy_timer = GLib.timeout_add(250, self._run_fuzzy_update)
 
     def _run_fuzzy_update(self) -> bool:
@@ -6921,14 +6961,14 @@ class OnScreenKeyboard(Gtk.Window):
         custom_sugg  = self.predictor.custom_matches(w)
         custom_lower = {c.lower() for c in custom_sugg}
         # Count macro slots first so we can correctly budget the exact-word query
-        n_macro      = sum(1 for m in self._suggestion_is_macro[:4] if m)
-        # Word slots are 0–3; find which are already filled with exact matches
+        n_macro      = sum(1 for m in self._suggestion_is_macro[:WORD_SLOTS] if m)
+        # Find which word slots are already filled with exact matches
         exact_sugg   = [x for x in self.predictor.predict(
-                            w, n=max(1, 4 - n_macro), context=self._ctx)
+                            w, n=max(1, WORD_SLOTS - n_macro), context=self._ctx)
                         if x not in custom_lower]
         # Slots already occupied by custom + exact words + any macro slot
         n_filled     = len(custom_sugg) + len(exact_sugg) + n_macro
-        n_fuzzy_need = max(0, 4 - n_filled)
+        n_fuzzy_need = max(0, WORD_SLOTS - n_filled)
         if n_fuzzy_need <= 0:
             return False
 
@@ -6936,11 +6976,11 @@ class OnScreenKeyboard(Gtk.Window):
         fuzzy_sugg  = [x for x in self.predictor.fuzzy_predict(w, n=n_fuzzy_need)
                        if x not in custom_lower and x not in exact_lower]
 
-        # Fill empty word slots (0–3) with fuzzy suggestions
+        # Fill empty word slots with fuzzy suggestions
         slot_start = n_filled
         for i, v in enumerate(fuzzy_sugg):
             idx = slot_start + i
-            if idx >= 4:   # don't overwrite slot 4 (emoji/5th word)
+            if idx >= WORD_SLOTS:   # don't overwrite the last slot (emoji/extra word)
                 break
             self._suggestion_btns[idx].set_label(self._case_word(v))
             self._suggestion_btns[idx].set_sensitive(True)

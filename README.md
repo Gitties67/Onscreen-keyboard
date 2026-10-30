@@ -96,7 +96,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Behaves like a normal Windows app** — taskbar button, real minimise and restore, Windows-style title-bar buttons, resize cursors on every edge
 - **First-run tour** — four quick tips on first launch; skip it, or replay it any time from Settings → Help
 - **Full key layout** — five big rows like the Windows on-screen keyboard, with PrtScn, Home and End keys; F1–F12, PgUp and PgDn on the **Fn** key; QWERTY/AZERTY/QWERTZ
-- **Word prediction** — 5 suggestions from the dictionary, your custom words and a phrase model, keeping the capitals you type ("A" → *Alex*, "i" → *I'm*)
+- **Word prediction** — 8 suggestions (like the Windows keyboard; long words are cut off with … and shown in full on hover) from the dictionary, your custom words and a phrase model, keeping the capitals you type ("A" → *Alex*, "i" → *I'm*)
 - **Your language** — English (Australian, UK or US spelling), Deutsch, Français, Español, Italiano, Português, Nederlands, Bahasa Indonesia, Bahasa Melayu, Filipino, Tiếng Việt or 한국어 (Korean). It starts on your PC's language (and the matching layout: QWERTZ for German, AZERTY for French), changeable in Settings
 - **No accent hunting** — type *uber* and pick *über*, *cafe* → *café*, *manana* → *mañana*. Or hold a letter for its accents (hold **e** → é è ê ë); keys with accents have a small dot. Vietnamese works the same way: type *nguoi* → *người*
 - **Korean** — the keys show Hangul (2-set layout). Letters build the syllable shown in the bar (ㅎ ㅏ ㄴ → 한), which is typed when you start the next one, press space or pick a suggestion. The **한/A** key switches to English letters and back
