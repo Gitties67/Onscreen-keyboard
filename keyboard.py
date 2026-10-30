@@ -7367,14 +7367,24 @@ class OnScreenKeyboard(Gtk.Window):
         if face:
             emoji_slot = (face[1], True, False, False, False, "", False)
             check_words = []
+        second_emoji = None
         for word in check_words:
-            hits = emoji_suggest(word, n=1)
+            hits = emoji_suggest(word, n=2, capitalised=self._word_title)
             if hits:
                 emoji_slot = (hits[0], True, False, False, False, "", False)
+                # A word that is a country and a thing ("turkey" 🦃 / 🇹🇷)
+                # offers both: the second takes the last word slot
+                if (len(hits) > 1 and self.settings.get("country_flags")
+                        and is_country_flag(hits[0]) != is_country_flag(hits[1])):
+                    second_emoji = (hits[1], True, False, False, False, "", False)
                 break
         if emoji_slot:
             # Keep emoji in the last slot — pad short word lists with blank
             # slots so the fuzzy updater (word slots only) can never overwrite it.
+            if second_emoji:
+                del slots[WORD_SLOTS - 1:]
+                slots.extend([None] * (WORD_SLOTS - 1 - len(slots)))
+                slots.append(second_emoji)
             slots.extend([None] * (WORD_SLOTS - len(slots)))
             slots.append(emoji_slot)
         else:
@@ -7450,8 +7460,8 @@ class OnScreenKeyboard(Gtk.Window):
         slot_start = n_filled
         for i, v in enumerate(fuzzy_sugg):
             idx = slot_start + i
-            if idx >= WORD_SLOTS:   # don't overwrite the last slot (emoji/extra word)
-                break
+            if idx >= WORD_SLOTS or self._suggestion_is_emoji[idx]:
+                break               # don't overwrite an emoji or the last slot
             self._suggestion_btns[idx].set_label(self._case_word(v))
             self._suggestion_btns[idx].set_sensitive(True)
             self._suggestion_values[idx]    = v

@@ -51,6 +51,8 @@ class FlagTests(unittest.TestCase):
         self.assertEqual(suggest("german", 1), ["🇩🇪"])
         self.assertIn("🇹🇷", suggest("turkey", 3))
         self.assertEqual(suggest("us", 1), [])           # the word "us" isn't the USA
+        self.assertEqual(suggest("turkey", 1), ["🦃"])
+        self.assertEqual(suggest("turkey", 1, capitalised=True), ["🇹🇷"])
 
     def test_switched_off(self):
         set_country_flags(False)

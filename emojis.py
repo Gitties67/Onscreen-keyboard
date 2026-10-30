@@ -1088,7 +1088,7 @@ def search(query: str, n: int = 60) -> list[str]:
     return results
 
 
-def suggest(word: str, n: int = 3) -> list[str]:
+def suggest(word: str, n: int = 3, capitalised: bool = False) -> list[str]:
     """
     Return up to n emojis for the suggestion bar, ranked by match quality.
 
@@ -1097,12 +1097,14 @@ def suggest(word: str, n: int = 3) -> list[str]:
       2. Name of the emoji starts with word (more "on-topic")
       3. Fewer remaining characters in the matched keyword
       4. Original EMOJI_DATA order as tiebreaker
+    A capitalised word puts country flags first among equals: "Turkey" →
+    the flag, "turkey" → the bird.
     """
     w = word.lower().strip()
     if len(w) < 2:
         return []
 
-    scored: list[tuple[int, int, int, str]] = []  # (exact, name_bonus, remaining, char)
+    scored: list[tuple[int, int, int, int, str]] = []  # (exact, flag, name_bonus, remaining, char)
     for idx, (char, name, keywords) in enumerate(offered()):
         best_remaining = None
         for kw in keywords:
@@ -1117,10 +1119,11 @@ def suggest(word: str, n: int = 3) -> list[str]:
             continue
         exact      = 0 if best_remaining == 0 else 1   # lower = better
         name_bonus = 0 if name.startswith(w) else 1    # lower = better
-        scored.append((exact, name_bonus, best_remaining, char))
+        flag       = 0 if capitalised and is_country_flag(char) else 1
+        scored.append((exact, flag, name_bonus, best_remaining, char))
 
-    scored.sort(key=lambda t: (t[0], t[1], t[2]))
-    return [char for _, _, _, char in scored[:n]]
+    scored.sort(key=lambda t: t[:4])
+    return [t[4] for t in scored[:n]]
 
 
 # Text faces typed since the last space → the emoji offered for them.  Every
