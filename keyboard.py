@@ -7223,9 +7223,13 @@ class OnScreenKeyboard(Gtk.Window):
         elif mods:
             self.current_word = ""
             self._ctx_reset()      # shortcuts (paste, select-all...) change the text
+        elif char == "'" and self.current_word and \
+                self.predictor.language not in ELISION_LANGUAGES:
+            # Mid-contraction: the word goes on, so "don'" still suggests don't
+            self.current_word += "'"
         elif char == "'" and self.current_word:
-            # Mid-contraction (don't, I'm): hold the stem so the committed
-            # token is "don't", not "don" + "t".
+            # French/Italian elision (l'homme): the word after the apostrophe
+            # is a word of its own; hold the stem for the context.
             self._ctx_stem = self.current_word + "'"
             self.current_word = ""
         else:
@@ -7256,7 +7260,7 @@ class OnScreenKeyboard(Gtk.Window):
     def _ctx_commit(self, word: str):
         """A word was finished (space, punctuation, Enter, suggestion click):
         push it onto the sentence context and let the user model learn it."""
-        word = (word or "").lower()
+        word = (word or "").lower().strip("'")     # dogs' → dogs
         if self._ctx_stem:
             if self.predictor.language in ELISION_LANGUAGES:
                 pass                  # "l'" + "homme": the word is just "homme"

@@ -78,6 +78,33 @@ class ContextPredictionTests(unittest.TestCase):
         self.assertEqual(len(set(got)), 5)
 
 
+class ContractionTests(unittest.TestCase):
+    def setUp(self):
+        self.p = shared_predictor()
+        self.p.set_user_model(None)
+
+    def test_typed_with_or_without_apostrophe(self):
+        for typed in ("don", "dont", "don'"):
+            self.assertEqual(self.p.predict(typed, n=1, context=[]), ["don't"], typed)
+        self.assertEqual(self.p.predict("arent", n=1), ["aren't"])
+        self.assertEqual(self.p.predict("youre", n=1), ["you're"])
+        self.assertIn("it's", self.p.predict("its", n=3))
+
+    def test_apostrophe_prefix_is_exact(self):
+        self.assertNotIn("done", self.p.predict("don'", n=5))
+
+    def test_possessives_left_out(self):
+        self.assertFalse(any(w.endswith("'s") and w not in self.p._bi
+                             for w in self.p._words))
+
+    def test_next_word_after_contraction(self):
+        self.assertTrue(self.p.predict_next(["don't"], n=5))
+
+    def test_elision_languages_unchanged(self):
+        fr = WordPredictor(language="fr")
+        self.assertFalse(any("'" in w for w in fr._words))
+
+
 class MissingDataTests(unittest.TestCase):
     def test_missing_everything(self):
         p = WordPredictor("/nonexistent/words.txt", "/nonexistent/ngrams.txt")

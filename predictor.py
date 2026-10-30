@@ -73,11 +73,21 @@ def ngrams_path_for(language: str) -> str | None:
     return _data_path("ngrams.txt" if is_english(language) else f"ngrams_{language}.txt")
 
 
-_FOLD_EXTRA = str.maketrans({"ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "ł": "l", "đ": "d"})
+_FOLD_EXTRA = str.maketrans({"ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "ł": "l", "đ": "d",
+                             "'": "", "’": ""})   # "dont" finds "don't"
+
+# English contractions kept from the word list (not possessives like "dog's");
+# "'s" ones only when the phrase model knows them (it's, that's, let's).
+_CONTRACTION_RE = re.compile(r"^[a-z]+(n't|'re|'ve|'ll|'m|'d)$")
+# Frequency-list fragments of split contractions ("don't" → "don" + "t"):
+# their rank belongs to the contraction, not to the rare word itself.
+_CONTRACTION_STEMS = {"don", "isn", "aren", "wasn", "weren", "didn", "doesn", "hasn",
+                      "haven", "hadn", "couldn", "wouldn", "shouldn", "mustn", "needn", "ain"}
 
 
 def fold(text: str) -> str:
-    """Accent-free form for matching: "Über" → "uber", "straße" → "strasse"."""
+    """Accent-free form for matching: "Über" → "uber", "straße" → "strasse",
+    "don't" → "dont"."""
     text = text.lower().translate(_FOLD_EXTRA)
     if text.isascii():
         return text
@@ -689,8 +699,8 @@ class WordPredictor:
         cased: dict[str, str] = {}
         for orig in raw:
             w = orig.lower()
-            # Keep only alphabetic words, 2–15 chars, no possessives/plurals edge cases
-            if w.isalpha() and 2 <= len(w) <= 15:
+            # Keep alphabetic words, 2–15 chars, and contractions (don't, it's)
+            if (w.isalpha() or self._is_contraction(w)) and 2 <= len(w) <= 15:
                 if orig != w and w not in lower_forms:
                     cased.setdefault(w, orig)   # only ever capitalised: Alex, Sydney
                 if w not in seen:
@@ -702,7 +712,7 @@ class WordPredictor:
             self._rank = {w: i for i, w in enumerate(words)}
         self._words = sorted(words)
         self._wordset = set(self._words)
-        pairs = sorted((fold(w), w) for w in self._words if not w.isascii())
+        pairs = sorted((fold(w), w) for w in self._words if not w.isascii() or "'" in w)
         self._fold_keys = [k for k, _ in pairs]
         self._fold_words = [w for _, w in pairs]
         self._cased = cased
@@ -725,6 +735,7 @@ class WordPredictor:
                         break
         self._rank_alias = alias
         self._local_of = local_of
+        self._rank_contractions()
 
         # Build first-character index for fast fuzzy candidate filtering
         by_first: dict[str, list[str]] = {}
@@ -746,6 +757,40 @@ class WordPredictor:
         return [w for w in self._custom if w.lower().startswith(p)]
 
     # ── User model glue ─────────────────────────────────────────────────────
+
+    def _is_contraction(self, w: str) -> bool:
+        """A contraction worth suggesting: from the phrase model (any language
+        that doesn't split at the apostrophe, e.g. German "geht's"), or an
+        English n't/'re/'ve/'ll/'m/'d form.  Possessives ("dog's") are not."""
+        if "'" not in w or self.language in ELISION_LANGUAGES:
+            return False
+        if not w.replace("'", "").isalpha():
+            return False
+        return w in self._bi or (self._english and bool(_CONTRACTION_RE.match(w)))
+
+    def _rank_contractions(self) -> None:
+        """The frequency list has no contractions (it split "don't" into "don"
+        + "t"), so rank each by its phrase-model count among ranked words, and
+        move the fragment ("don") behind it."""
+        if not (self._english and self._rank and self._bi):
+            return
+        counts = sorted((self._bi[w][0] for w in self._rank if w in self._bi), reverse=True)
+        for w in self._words:
+            if "'" not in w or w in self._rank:
+                continue
+            c = self._bi[w][0] if w in self._bi else 0
+            # rank = how many ranked words the phrase model saw more often
+            lo, hi = 0, len(counts)
+            while lo < hi:
+                mid = (lo + hi) // 2
+                if counts[mid] > c:
+                    lo = mid + 1
+                else:
+                    hi = mid
+            self._rank[w] = lo if c else _UNRANKED - 1
+            stem = w[:-2] if w.endswith("n't") else ""   # don't → don
+            if stem in _CONTRACTION_STEMS and stem in self._rank:
+                self._rank[stem] = max(self._rank[stem], 20000)
 
     def is_known(self, word: str) -> bool:
         """True if word is a dictionary word or a custom word (case-insensitive)."""
@@ -796,6 +841,8 @@ class WordPredictor:
             end = bisect.bisect_left(keys, fp + "\uffff", idx)
             if end > idx:
                 cands = list(set(cands).union(self._fold_words[idx:end]))
+            if "'" in prefix:       # "don'" → don't, not done
+                cands = [w for w in cands if w.startswith(prefix)]
             # Accents the user typed on purpose must match exactly first.
             strict = not prefix.isascii()
             cands.sort(key=lambda w: (strict and not w.startswith(prefix),
@@ -873,6 +920,8 @@ class WordPredictor:
                              and (w in self._wordset or "'" in w))
             if user:
                 cands.update(user.words_with_prefix(prefix))
+            if "'" in prefix:
+                cands = {w for w in cands if w.startswith(prefix)}
         else:
             ok = lambda w: w in self._wordset or "'" in w or w in ("i", "a")
             cands = {w for w in c3 if ok(w)}
