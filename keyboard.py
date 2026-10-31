@@ -51,30 +51,63 @@ _win_our_pid: int = os.getpid()    # cached once; used to detect when OSK owns t
 # instance to show itself).  0 until _win_single_instance_or_exit() registers it.
 _win_show_msg: list[int] = [0]
 
+# Last Start / Search / shell-flyout window seen in front (0 = none).  Tapping
+# the keyboard can leave Windows with NO foreground window while the flyout is
+# still on screen; this is what we hand the foreground back to.
+_win_last_flyout: list[int] = [0]
+
+
+def _win_flyout_still_open() -> int:
+    """The remembered flyout if it is still showing (visible, not cloaked)."""
+    hwnd = _win_last_flyout[0]
+    if not hwnd:
+        return 0
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.IsWindowVisible.argtypes = [wintypes.HWND]
+        if not user32.IsWindowVisible(hwnd):
+            return 0
+        cloaked = wintypes.DWORD(0)
+        dwm = ctypes.windll.dwmapi
+        dwm.DwmGetWindowAttribute.argtypes = [wintypes.HWND, wintypes.DWORD,
+                                              ctypes.c_void_p, wintypes.DWORD]
+        DWMWA_CLOAKED = 14
+        dwm.DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, ctypes.byref(cloaked),
+                                  ctypes.sizeof(cloaked))
+        return 0 if cloaked.value else int(hwnd)
+    except Exception:
+        return 0
+
+
 def _win_focus_restore() -> None:
-    """Restore focus to the last target window — but ONLY if the OSK itself currently
-    owns the foreground (i.e. WS_EX_NOACTIVATE failed to prevent the steal).
-    If any other process (Chrome, Notepad, …) already has the foreground, leave it
-    completely alone — calling SetForegroundWindow would pull the wrong window to the
-    front or disrupt that app's internal focus state."""
-    target = _win_last_target[0]
-    if not target:
-        return
+    """Before SendInput: make sure the right window is in front.
+
+    Only acts when the keyboard itself owns the foreground or NO window does
+    (Windows leaves it empty after a tap on the uiAccess keyboard).  Then the
+    still-open Start / Search flyout gets it back, otherwise the last app.  If
+    any other window is in front, leave it alone: SendInput goes there."""
     try:
         import ctypes
         user32 = ctypes.windll.user32
+        _win_setup_protos()
         current = user32.GetForegroundWindow()
-        if not current or current == target:
-            return  # target already has focus, nothing to do
-        pid = ctypes.c_ulong()
-        user32.GetWindowThreadProcessId(current, ctypes.byref(pid))
-        if pid.value != _win_our_pid:
-            return  # another app has focus — leave it, pynput will send there
-        user32.SetForegroundWindow(target)
+        if current:
+            pid = ctypes.c_ulong()
+            user32.GetWindowThreadProcessId(current, ctypes.byref(pid))
+            if pid.value != _win_our_pid:
+                return  # another window is in front - SendInput goes there
+        target = _win_flyout_still_open() or _win_last_target[0]
+        if not target or target == current:
+            return
+        ok = user32.SetForegroundWindow(target)
+        _win_log(f"focus_restore: foreground {'none' if not current else 'osk'} "
+                 f"-> {int(target):#x} ok={bool(ok)}")
         # Give Windows time to process the foreground change before SendInput fires.
-        time.sleep(0.02)
-    except Exception:
-        pass
+        time.sleep(0.03)
+    except Exception as exc:
+        _win_log(f"focus_restore error: {exc}")
 
 
 # ── Windows direct message injection (focus-independent typing) ───────────────
@@ -409,6 +442,11 @@ def _win_has_uiaccess() -> str:
         from ctypes import wintypes
         k32, adv = ctypes.windll.kernel32, ctypes.windll.advapi32
         k32.GetCurrentProcess.restype = wintypes.HANDLE
+        adv.OpenProcessToken.argtypes = [wintypes.HANDLE, wintypes.DWORD,
+                                         ctypes.POINTER(wintypes.HANDLE)]
+        adv.GetTokenInformation.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p,
+                                            wintypes.DWORD, ctypes.POINTER(wintypes.DWORD)]
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
         tok = wintypes.HANDLE()
         if not adv.OpenProcessToken(k32.GetCurrentProcess(), 0x0008, ctypes.byref(tok)):
             return "unknown (OpenProcessToken failed)"
@@ -445,11 +483,16 @@ def _win_typing_goes_to_foreground() -> bool:
         if _WIN_DEBUG_LOG:
             _win_log(f"key: foreground={_win_describe(fg)} "
                      f"target={int(_win_last_target[0] or 0):#x}")
-        if not fg:
-            return False
         pid = ctypes.c_ulong()
-        user32.GetWindowThreadProcessId(fg, ctypes.byref(pid))
-        if pid.value == _win_our_pid:
+        if fg:
+            user32.GetWindowThreadProcessId(fg, ctypes.byref(pid))
+        if not fg or pid.value == _win_our_pid:
+            # Nothing (or the keyboard) in front.  If Start / Search is still
+            # on screen, the keys are meant for it: KeyTyper's fallback
+            # (_win_focus_restore + SendInput) hands it the foreground back.
+            if _win_flyout_still_open():
+                _win_log("typing -> flyout (restore + SendInput)")
+                return True
             return False
         if fg == _win_last_target[0] and not _win_is_shell_host(pid.value):
             return False
@@ -2771,8 +2814,13 @@ class OnScreenKeyboard(Gtk.Window):
                         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
                         cls = ctypes.create_unicode_buffer(64)
                         user32.GetClassNameW(hwnd, cls, 64)
-                        if (pid.value != our_pid and cls.value not in _WIN_SHELL_CLASSES
-                                and not _win_is_shell_host(pid.value)):
+                        shell = (cls.value in _WIN_SHELL_CLASSES
+                                 or _win_is_shell_host(pid.value))
+                        if (pid.value != our_pid and shell
+                                and cls.value not in _WIN_TRAY_CLASSES):
+                            _win_last_flyout[0] = hwnd
+                        if pid.value != our_pid and not shell:
+                            _win_last_flyout[0] = 0
                             prev = _win_last_target[0]
                             _win_last_target[0] = hwnd
                             # Log only on change so the linchpin's health is
