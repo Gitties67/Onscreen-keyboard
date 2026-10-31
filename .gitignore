@@ -4,3 +4,4 @@ build/
 dist/
 version_info.txt
 installer/Output/
+installer/osk-signing.cer

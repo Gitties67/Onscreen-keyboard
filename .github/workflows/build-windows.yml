@@ -87,12 +87,40 @@ jobs:
         run: |
           $d = "dist\OnScreenKeyboard"
           if (-not (Test-Path "$d\OnScreenKeyboard.exe")) { throw "OnScreenKeyboard.exe missing from $d" }
+          if (-not (Test-Path "$d\OnScreenKeyboardTop.exe")) { throw "OnScreenKeyboardTop.exe missing from $d" }
           Get-ChildItem $d | Format-Table Name, Length
           $files = Get-ChildItem $d -Recurse -File
           "{0} files, {1:N1} MB" -f $files.Count, (($files | Measure-Object Length -Sum).Sum / 1MB)
           Write-Host "--- DLLs/typelibs/loaders sanity ---"
           $files | Where-Object { $_.Name -match 'libgtk-3|libgdk_pixbuf|gspawn-win64-helper|\.typelib$|loaders\.cache|fonts\.conf|gschemas\.compiled' } |
             ForEach-Object { $_.FullName.Substring((Resolve-Path $d).Path.Length) } | Sort-Object
+
+      # OnScreenKeyboardTop.exe has uiAccess="true" (stays above Start/Search);
+      # Windows only runs it when signed by a trusted certificate.  Sign it with
+      # a certificate made for this build only, export the public half for the
+      # installer to trust, then delete the private key so it can never sign
+      # anything else.
+      - name: Sign the uiAccess exe (throwaway certificate)
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $exe = (Resolve-Path "dist\OnScreenKeyboard\OnScreenKeyboardTop.exe").Path
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert `
+            -Subject "CN=On-Screen Keyboard $v, OU=OnScreenKeyboard-uiaccess, O=Gitties67" `
+            -CertStoreLocation Cert:\CurrentUser\My -KeyAlgorithm RSA -KeyLength 3072 `
+            -HashAlgorithm SHA256 -NotAfter (Get-Date).AddYears(30) `
+            -TextExtension @("2.5.29.19={critical}{text}ca=false")
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe not found" }
+          & $signtool.FullName sign /fd SHA256 /sha1 $cert.Thumbprint /s My $exe
+          if ($LASTEXITCODE -ne 0) { throw "signtool failed ($LASTEXITCODE)" }
+          Export-Certificate -Cert $cert -FilePath installer\osk-signing.cer | Out-Null
+          Remove-Item -Path $cert.PSPath -DeleteKey
+          if (Test-Path "Cert:\CurrentUser\My\$($cert.Thumbprint)") { throw "private key still present" }
+          $sig = Get-AuthenticodeSignature $exe
+          if ($sig.SignerCertificate.Thumbprint -ne $cert.Thumbprint) { throw "exe not signed with the build certificate" }
+          Write-Host "Signed OnScreenKeyboardTop.exe with $($cert.Thumbprint); private key deleted"
 
       # Run from pwsh with msys64 stripped from PATH so the test proves the
       # bundle is self-contained (no DLLs silently resolved from MSYS2).
@@ -145,6 +173,32 @@ jobs:
           $u = Start-Process (Join-Path $dir 'unins000.exe') -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES' -Wait -PassThru
           Write-Host "uninstall exit $($u.ExitCode)"
 
+      # All-users install: trusts the build certificate, so the signed uiAccess
+      # exe must verify as Valid and start (via ShellExecute, as Explorer does).
+      # Uninstall must remove the certificate again.
+      - name: All-users installer test (signed uiAccess exe)
+        shell: pwsh
+        run: |
+          $env:PATH = (($env:PATH -split ';') | Where-Object { $_ -and $_ -notmatch 'msys64|mingw' }) -join ';'
+          $marker = '*OU=OnScreenKeyboard-uiaccess*'
+          $setup = (Resolve-Path "installer\Output\OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe").Path
+          $dir = Join-Path $env:ProgramFiles 'OnScreenKeyboard-ci'
+          $log = "$env:RUNNER_TEMP\osk-setup-all.log"
+          $p = Start-Process $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS /DIR=`"$dir`" /LOG=`"$log`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content $log -ErrorAction SilentlyContinue; throw "installer exit $($p.ExitCode)" }
+          if (-not (Get-ChildItem Cert:\LocalMachine\Root | Where-Object Subject -like $marker)) { throw "signing certificate not installed" }
+          $top = Join-Path $dir 'OnScreenKeyboardTop.exe'
+          $sig = Get-AuthenticodeSignature $top
+          if ($sig.Status -ne 'Valid') { throw "signature not trusted after install: $($sig.Status) $($sig.StatusMessage)" }
+          $t = Start-Process $top -ArgumentList '--selftest' -PassThru
+          if (-not $t.WaitForExit(90000)) { $t.Kill(); throw "uiAccess selftest timeout" }
+          foreach ($l in @((Join-Path $dir 'osk_selftest.log'), (Join-Path $env:TEMP 'osk_selftest.log'))) { if (Test-Path $l) { Get-Content $l } }
+          if ($t.ExitCode -ne 0) { throw "uiAccess selftest exit $($t.ExitCode)" }
+          $u = Start-Process (Join-Path $dir 'unins000.exe') -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES' -Wait -PassThru
+          Write-Host "uninstall exit $($u.ExitCode)"
+          if (Get-ChildItem Cert:\LocalMachine\Root | Where-Object Subject -like $marker) { throw "certificate left behind after uninstall" }
+          Write-Host "all-users install OK: signature Valid, uiAccess exe ran, certificate removed on uninstall"
+
       - name: Package portable zip and checksums
         shell: pwsh
         run: |
@@ -179,13 +233,14 @@ jobs:
 
             ### Windows
             **Recommended:** download **OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe** and run it.
-            It installs for your user account only (no administrator rights needed) and can add a Start Menu entry, a desktop icon, and optionally start the keyboard when you sign in.
+            Choose **Install for all users** (needs administrator) to keep the keyboard **above the Start menu and Windows Search**. This installs a signed build plus its signing certificate, which was made for this release only and whose private key was deleted after signing. **Only for me** needs no administrator rights, but the Start menu will cover the keyboard.
+            The installer can add a Start Menu entry, a desktop icon, and optionally start the keyboard when you sign in.
 
             **Portable alternative:** download **OnScreenKeyboard-portable-${{ steps.ver.outputs.version }}.zip**, extract the whole folder anywhere, and run `OnScreenKeyboard.exe` inside it. Do not move the exe out of its folder.
 
             Checksums for the files above are in **SHA256SUMS.txt**.
 
-            The files are not code-signed yet, so Windows SmartScreen may appear on first launch — click **More info → Run anyway**.
+            The installer itself is not code-signed by a public authority, so Windows SmartScreen may appear on first launch — click **More info → Run anyway**.
 
             Settings are stored in `%APPDATA%\OnScreenKeyboard`.
 

@@ -8,6 +8,14 @@
 #endif
 #define AppName "On-Screen Keyboard"
 #define AppExe  "OnScreenKeyboard.exe"
+; CI drops the public half of the per-build signing certificate here (its
+; private key is deleted once OnScreenKeyboardTop.exe is signed).  Without it
+; (local builds) every install mode just uses the plain exe.
+#if FileExists(AddBackslash(SourcePath) + "osk-signing.cer")
+  #define SignedTop
+#endif
+; Marker in the certificate subject, used to find our certificates again.
+#define CertMarker "OU=OnScreenKeyboard-uiaccess"
 
 [Setup]
 ; Fixed GUID: identifies the app across versions so upgrades replace in place.
@@ -19,8 +27,10 @@ AppPublisher=Gitties67
 AppPublisherURL=https://github.com/Gitties67/Onscreen-keyboard
 AppSupportURL=https://github.com/Gitties67/Onscreen-keyboard/issues
 VersionInfoVersion={#AppVersion}
-; Per-user by default (no admin / UAC); the dialog lets the user choose all-users.
-PrivilegesRequired=lowest
+; All users by default: only an admin install in Program Files can run the
+; signed uiAccess build that stays above Start / Search.  The dialog still
+; offers "only for me" (no admin, plain build, menu covers the keyboard).
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 DefaultDirName={autopf}\OnScreenKeyboard
 DefaultGroupName={#AppName}
@@ -54,26 +64,41 @@ Type: filesandordirs; Name: "{app}\_internal"
 
 [Files]
 Source: "..\dist\OnScreenKeyboard\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+#ifdef SignedTop
+Source: "osk-signing.cer"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: IsAdminInstallMode
+#endif
 
 [Icons]
 ; AppUserModelID must match APP_USER_MODEL_ID in keyboard.py so a pinned taskbar
 ; icon and the running keyboard share one taskbar button.
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; AppUserModelID: "Gitties67.OnScreenKeyboard"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon; AppUserModelID: "Gitties67.OnScreenKeyboard"
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{code:AppExeName}"; AppUserModelID: "Gitties67.OnScreenKeyboard"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{code:AppExeName}"; Tasks: desktopicon; AppUserModelID: "Gitties67.OnScreenKeyboard"
 ; Debug launch (writes %LOCALAPPDATA%\OnScreenKeyboard\osk_debug.log).  The app is single-instance:
 ; QUIT the running keyboard first, otherwise this just re-shows it and logs nothing new.
 ; No AppUserModelID here on purpose: pinning must resolve to the normal shortcut.
-Name: "{autoprograms}\{#AppName} (debug mode)"; Filename: "{app}\{#AppExe}"; Parameters: "--debug"
+Name: "{autoprograms}\{#AppName} (debug mode)"; Filename: "{app}\{code:AppExeName}"; Parameters: "--debug"
 
 [Registry]
-; Per-user autostart; removed again on uninstall.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "OnScreenKeyboard"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: startup
+; Autostart (HKCU for "only for me", HKLM for all users); removed on uninstall.
+Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "OnScreenKeyboard"; ValueData: """{app}\{code:AppExeName}"""; Flags: uninsdeletevalue; Tasks: startup
 
 [Run]
-; Interactive installs: "Launch" checkbox on the final page.
-Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+#ifdef SignedTop
+; Trust this build's signing certificate (machine Trusted Root) so Windows will
+; start the uiAccess exe, replacing any older build's certificate.  It is
+; limited to code signing and its private key no longer exists anywhere.
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' }} | Remove-Item; Import-Certificate -FilePath '{tmp}\osk-signing.cer' -CertStoreLocation Cert:\LocalMachine\Root | Out-Null"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; StatusMsg: "Trusting the keyboard's signature..."
+#endif
+; Interactive installs: "Launch" checkbox on the final page.  shellexec: the
+; uiAccess exe cannot be started with CreateProcess (ERROR_ELEVATION_REQUIRED).
+Filename: "{app}\{code:AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent runasoriginaluser shellexec
 ; Silent self-update (the app passes /RELAUNCH=1): start the new version.
-Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: RelaunchRequested
+Filename: "{app}\{code:AppExeName}"; Flags: nowait runasoriginaluser shellexec; Check: RelaunchRequested
+
+#ifdef SignedTop
+[UninstallRun]
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' }} | Remove-Item"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; RunOnceId: "RemoveSigningCert"
+#endif
 
 [UninstallDelete]
 ; Remove anything left in the install folder (e.g. files created at runtime).
@@ -81,6 +106,15 @@ Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: RelaunchReq
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+function AppExeName(Param: String): String;
+begin
+  Result := '{#AppExe}';
+#ifdef SignedTop
+  if IsAdminInstallMode then
+    Result := 'OnScreenKeyboardTop.exe';
+#endif
+end;
+
 function RelaunchRequested: Boolean;
 begin
   Result := ExpandConstant('{param:RELAUNCH|0}') = '1';

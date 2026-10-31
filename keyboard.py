@@ -337,6 +337,12 @@ def _win_post_vk(hwnd: int, vk: int) -> bool:
 _WIN_FLYOUT_CLASS = "Windows.UI.Core.CoreWindow"
 
 
+def _win_is_top_build() -> bool:
+    """True for OnScreenKeyboardTop.exe: the signed uiAccess build an
+    all-users install runs, which Windows lets sit above Start / Search."""
+    return os.path.basename(sys.executable).lower() == "onscreenkeyboardtop.exe"
+
+
 def _win_shell_popup_hwnd() -> int:
     """The foreground window if it is a shell flyout (Windows Search, Start,
     Action Center...), else 0.
@@ -794,9 +800,8 @@ SETTINGS_HELP = {
                     "not your computer's volume.",
     "Key sound": "A sound on every key press, so you know it registered. Click is soft, Beep "
                  "is louder, Off is silent.",
-    "Modifier keys": "How Ctrl, Alt and ⊞ behave. Auto-release lets go after the next key (tap "
-                     "Ctrl, then C, to copy; ⊞ then S to search). Sticky keeps Ctrl on until you "
-                     "tap it again.",
+    "Modifier keys": "How Ctrl and Alt behave. Auto-release lets go after the next key (tap "
+                     "Ctrl, then C, to copy). Sticky keeps them on until you tap them again.",
     "Shift key": "One-shot capitalises just the next letter. Sticky keeps Shift on until you "
                  "tap it again, handy for typing several capitals.",
     "Taskbar": ("Keeps the keyboard on your taskbar so it's always one click away. Windows "
@@ -2681,10 +2686,11 @@ class OnScreenKeyboard(Gtk.Window):
                                          f"(pid={pid.value})")
                 except Exception:
                     pass
-                try:
-                    self._win_avoid_shell_popup(_win_shell_popup_hwnd())
-                except Exception as exc:
-                    _win_log(f"poll: avoid popup error ({exc})")
+                # ⊞ stays lit while Start / Search is open, like a toggle key
+                start_open = bool(_win_shell_popup_hwnd())
+                if start_open != self.win_active:
+                    self.win_active = start_open
+                    self._update_modifier_visuals()
                 return True  # keep the timeout alive
 
             self._win_poll_timer = GLib.timeout_add(50, _win_poll_foreground)
@@ -2700,80 +2706,6 @@ class OnScreenKeyboard(Gtk.Window):
         except Exception as exc:
             _win_log(f"realize: focus setup FAILED ({exc})")
             print(f"[windows] Focus setup failed: {exc}")
-
-    def _win_avoid_shell_popup(self, popup: int) -> None:
-        """Keep the keyboard visible beside Windows Search / Start.
-
-        Those flyouts sit in a z-order band above every ordinary always-on-top
-        window, so a keyboard under them can't be raised (only a signed
-        uiAccess app, like the built-in osk.exe, may go above them).  Instead,
-        while a flyout overlaps us, slide the keyboard just clear of it, then
-        put it back when the flyout closes — unless the user moved it since."""
-        hwnd = getattr(self, "_win_hwnd", None)
-        if not hwnd or self._minimized or self._moving or self._resizing:
-            return
-        import ctypes
-        from ctypes import wintypes
-        user32 = ctypes.windll.user32
-        user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
-        user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int,
-                                        ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                        wintypes.UINT]
-        user32.MonitorFromWindow.restype = wintypes.HMONITOR
-        user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
-        SWP_FLAGS = 0x0001 | 0x0004 | 0x0010   # NOSIZE | NOZORDER | NOACTIVATE
-
-        r = wintypes.RECT()
-        if not user32.GetWindowRect(hwnd, ctypes.byref(r)):
-            return
-        home = getattr(self, "_win_popup_home", None)
-
-        if not popup:
-            if home:
-                self._win_popup_home = None
-                if (r.left, r.top) == self._win_popup_moved_to:
-                    user32.SetWindowPos(hwnd, None, home[0], home[1], 0, 0, SWP_FLAGS)
-                    _win_log(f"popup: closed, keyboard back to {home}")
-            return
-
-        p = wintypes.RECT()
-        if not user32.GetWindowRect(popup, ctypes.byref(p)):
-            return
-        if p.left >= r.right or p.right <= r.left or p.top >= r.bottom or p.bottom <= r.top:
-            return   # no overlap
-
-        class MONITORINFO(ctypes.Structure):
-            _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT),
-                        ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
-        mi = MONITORINFO()
-        mi.cbSize = ctypes.sizeof(MONITORINFO)
-        MONITOR_DEFAULTTONEAREST = 2
-        if not user32.GetMonitorInfoW(user32.MonitorFromWindow(popup, MONITOR_DEFAULTTONEAREST),
-                                      ctypes.byref(mi)):
-            return
-        wa = mi.rcWork
-        w, h = r.right - r.left, r.bottom - r.top
-        x0 = max(wa.left, min(r.left, wa.right - w))
-        y0 = max(wa.top, min(r.top, wa.bottom - h))
-        fits = []
-        if p.top - h >= wa.top:       fits.append((x0, p.top - h))    # above
-        if p.bottom + h <= wa.bottom: fits.append((x0, p.bottom))     # below
-        if p.left - w >= wa.left:     fits.append((p.left - w, y0))   # left
-        if p.right + w <= wa.right:   fits.append((p.right, y0))      # right
-        if fits:
-            x, y = min(fits, key=lambda c: abs(c[0] - r.left) + abs(c[1] - r.top))
-        else:
-            # No room anywhere: the top of the screen covers the least of
-            # Search/Start, which open from the taskbar at the bottom.
-            x, y = x0, wa.top
-        if (x, y) == (r.left, r.top):
-            return
-        if not home:
-            self._win_popup_home = (r.left, r.top)
-        user32.SetWindowPos(hwnd, None, x, y, 0, 0, SWP_FLAGS)
-        self._win_popup_moved_to = (x, y)
-        _win_log(f"popup: flyout {p.left},{p.top},{p.right},{p.bottom} "
-                 f"overlaps keyboard; moved to {x},{y}")
 
     def _on_windows_destroy(self, _widget):
         """Tear down Win32 resources before the window is destroyed."""
@@ -3779,7 +3711,7 @@ class OnScreenKeyboard(Gtk.Window):
         mods = self._active_sticky_modifiers()
         self._type_character(ch, mods)
         if mods:
-            self.ctrl_active = self.alt_active = self.win_active = False
+            self.ctrl_active = self.alt_active = False
             self._update_modifier_visuals()
 
     def _close_accent_popup(self):
@@ -3857,10 +3789,7 @@ class OnScreenKeyboard(Gtk.Window):
 
         if action == "win":
             if IS_WINDOWS:
-                # Latches like Ctrl/Alt: tap ⊞ then S → Win+S (Windows Search),
-                # E → Explorer, D → desktop...  Tap ⊞ again to cancel.
-                self.win_active = not self.win_active
-                self._update_modifier_visuals()
+                self._win_toggle_start()
             else:
                 self._toggle_app_mode()
             return
@@ -4031,7 +3960,6 @@ class OnScreenKeyboard(Gtk.Window):
             else:
                 # Persistent: Ctrl stays latched; only Alt clears
                 self.alt_active = False
-            self.win_active = False
             self._update_modifier_visuals()
 
     # ── Built-in app launcher ─────────────────────────────────────────────────
@@ -5210,13 +5138,25 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Toggle app mode ───────────────────────────────────────────────────────
 
+    def _win_toggle_start(self):
+        """⊞ on Windows: open Start, or close Start / Search if one is open.
+        The key's lit state follows the menu (set by the foreground poll), so
+        typing goes into Start's search box while ⊞ is blue."""
+        if not (PYNPUT_OK and _pynput_ctrl):
+            return
+        import pynput.keyboard as _pk
+        # Esc closes whichever is open; a Win tap with Search open would
+        # switch to Start instead of closing.
+        key = _pk.Key.esc if _win_shell_popup_hwnd() else _pk.Key.cmd
+        try:
+            _pynput_ctrl.press(key)
+            _pynput_ctrl.release(key)
+        except Exception as exc:
+            _win_log(f"toggle_start error: {exc}")
+
     def _toggle_app_mode(self):
         if IS_WINDOWS:
-            # On Windows, just open the Start menu via Win key press
-            if PYNPUT_OK and _pynput_ctrl:
-                import pynput.keyboard as _pk
-                _pynput_ctrl.press(_pk.Key.cmd)
-                _pynput_ctrl.release(_pk.Key.cmd)
+            self._win_toggle_start()
             return
         # Showing/hiding self._search_label and swapping the suggestion-button
         # labels for app names changes the suggestion bar's minimum size, which
@@ -5826,7 +5766,7 @@ class OnScreenKeyboard(Gtk.Window):
         mod_toggle.set_size_request(_px(100), -1)
         mod_toggle.set_active(auto_release)
         mod_toggle.connect("toggled", self._on_mod_release_toggled, mod_toggle)
-        mod_toggle.get_accessible().set_description("Ctrl, Alt and the Windows key release automatically after the next keypress")
+        mod_toggle.get_accessible().set_description("Ctrl and Alt release automatically after the next keypress")
         mod_row.pack_start(mod_toggle, False, False, 0)
 
         mod_hint = Gtk.Label(
@@ -6591,7 +6531,8 @@ class OnScreenKeyboard(Gtk.Window):
                     # /RELAUNCH=1 is read by installer/OnScreenKeyboard.iss to start the
                     # new version once files are replaced (silent mode skips postinstall).
                     subprocess.Popen(
-                        [tmp_path, "/SP-", "/SILENT", "/CLOSEAPPLICATIONS", "/RELAUNCH=1"],
+                        [tmp_path, "/SP-", "/SILENT", "/CLOSEAPPLICATIONS", "/RELAUNCH=1",
+                         "/ALLUSERS" if _win_is_top_build() else "/CURRENTUSER"],
                         env=_child_env(),
                         creationflags=getattr(subprocess, "DETACHED_PROCESS", 0)
                                       | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
@@ -6662,7 +6603,12 @@ class OnScreenKeyboard(Gtk.Window):
         if IS_WINDOWS or getattr(sys, "frozen", False):
             # os.execv on Windows doesn't replace the process before GTK tears down;
             # spawn a new process first, then quit cleanly.
-            subprocess.Popen([sys.executable], env=_child_env())
+            if IS_WINDOWS:
+                # ShellExecute: CreateProcess refuses OnScreenKeyboardTop.exe
+                # (uiAccess) with ERROR_ELEVATION_REQUIRED.
+                os.startfile(sys.executable)
+            else:
+                subprocess.Popen([sys.executable], env=_child_env())
             Gtk.main_quit()
             return
         launch = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch.sh")
@@ -7305,7 +7251,6 @@ class OnScreenKeyboard(Gtk.Window):
         mods = []
         if self.ctrl_active: mods.append("ctrl_l")
         if self.alt_active:  mods.append("alt_l")
-        if self.win_active:  mods.append("super_l")
         return mods
 
     def _toggle_modifier(self, action: str):

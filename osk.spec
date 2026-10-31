@@ -4,7 +4,8 @@
 #   python3 tools/gen_version_info.py
 #   MINGW_PREFIX_WIN="$(cygpath -m "$MINGW_PREFIX")" python3 -m PyInstaller --clean --noconfirm osk.spec
 #
-# Output: dist/OnScreenKeyboard/OnScreenKeyboard.exe (+ _internal/).
+# Output: dist/OnScreenKeyboard/OnScreenKeyboard.exe and OnScreenKeyboardTop.exe
+# (uiAccess build, see below), sharing one _internal/.
 #
 # GTK typelibs, DLLs and GdkPixbuf loaders (with a relocatable loaders.cache)
 # are collected by PyInstaller's / pyinstaller-hooks-contrib's gi hooks.  This
@@ -117,8 +118,31 @@ exe = EXE(
     version=os.path.join(SPECPATH, "version_info.txt"),
 )
 
+# Same program, built with uiAccess="true" in its manifest.  Windows puts the
+# topmost windows of a uiAccess app in a band above Start / Search (like the
+# built-in osk.exe), but only starts it if the exe is Authenticode-signed by a
+# trusted certificate AND sits in a secure folder (Program Files).  CI signs it
+# and the all-users installer runs it; the portable zip and per-user installs
+# keep using the plain exe above, which needs neither.
+exe_top = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name="OnScreenKeyboardTop",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=False,
+    uac_uiaccess=True,
+    icon=os.path.join(SPECPATH, "osk.ico"),
+    version=os.path.join(SPECPATH, "version_info.txt"),
+)
+
 coll = COLLECT(
     exe,
+    exe_top,
     a.binaries,
     a.datas,
     strip=False,
