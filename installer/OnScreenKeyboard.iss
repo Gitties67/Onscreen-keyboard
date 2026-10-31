@@ -27,11 +27,12 @@ AppPublisher=Gitties67
 AppPublisherURL=https://github.com/Gitties67/Onscreen-keyboard
 AppSupportURL=https://github.com/Gitties67/Onscreen-keyboard/issues
 VersionInfoVersion={#AppVersion}
-; All users by default: only an admin install in Program Files can run the
-; signed uiAccess build that stays above Start / Search.  The dialog still
-; offers "only for me" (no admin, plain build, menu covers the keyboard).
+; Always an admin install in Program Files: only there can the signed
+; uiAccess build stay above Start / Search.  No "all users / only for me"
+; question; /CURRENTUSER on the command line still installs per-user (CI's
+; smoke test, and self-updates of older per-user installs).
 PrivilegesRequired=admin
-PrivilegesRequiredOverridesAllowed=dialog
+PrivilegesRequiredOverridesAllowed=commandline
 DefaultDirName={autopf}\OnScreenKeyboard
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes

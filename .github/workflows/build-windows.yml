@@ -233,7 +233,7 @@ jobs:
 
             ### Windows
             **Recommended:** download **OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe** and run it.
-            Choose **Install for all users** (needs administrator) to keep the keyboard **above the Start menu and Windows Search**. This installs a signed build plus its signing certificate, which was made for this release only and whose private key was deleted after signing. **Only for me** needs no administrator rights, but the Start menu will cover the keyboard.
+            Windows asks for administrator permission once: that lets the keyboard stay **above the Start menu and Windows Search**. It installs a signed build plus its signing certificate, which was made for this release only and whose private key was deleted after signing.
             The installer can add a Start Menu entry, a desktop icon, and optionally start the keyboard when you sign in.
 
             **Portable alternative:** download **OnScreenKeyboard-portable-${{ steps.ver.outputs.version }}.zip**, extract the whole folder anywhere, and run `OnScreenKeyboard.exe` inside it. Do not move the exe out of its folder.
