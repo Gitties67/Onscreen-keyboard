@@ -33,6 +33,9 @@ VersionInfoVersion={#AppVersion}
 ; smoke test, and self-updates of older per-user installs).
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=commandline
+; Older versions installed per-user.  Don't reuse that mode on update: install
+; for all users and remove the old per-user copy (PrepareToInstall below).
+UsePreviousPrivileges=no
 DefaultDirName={autopf}\OnScreenKeyboard
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -114,6 +117,38 @@ begin
   if IsAdminInstallMode then
     Result := 'OnScreenKeyboardTop.exe';
 #endif
+end;
+
+// Pre-0.1.28 versions installed per-user (%LOCALAPPDATA%\Programs).  An
+// update now installs to Program Files, so silently uninstall that old copy
+// first: otherwise its shortcuts, autostart entry and exe stay behind and two
+// keyboards fight over the single-instance lock.  Settings (%APPDATA%) stay.
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Uninst: String;
+  Code, I: Integer;
+begin
+  Result := '';
+  if not IsAdminInstallMode then
+    exit;
+  if not RegQueryStringValue(HKEY_CURRENT_USER,
+      'Software\Microsoft\Windows\CurrentVersion\Uninstall\{3E8A2B9F-3615-475A-A4EE-94978BD1DA6E}_is1',
+      'UninstallString', Uninst) then
+    exit;
+  Uninst := RemoveQuotes(Uninst);
+  if not FileExists(Uninst) then
+    exit;
+  Log('Removing old per-user install: ' + Uninst);
+  if Exec(Uninst, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE,
+          ewWaitUntilTerminated, Code) then
+    // unins000.exe hands over to a temp copy and returns at once: wait for
+    // the real uninstall to finish (it deletes unins000.exe last).
+    for I := 1 to 60 do
+    begin
+      if not FileExists(Uninst) then
+        break;
+      Sleep(500);
+    end;
 end;
 
 function RelaunchRequested: Boolean;

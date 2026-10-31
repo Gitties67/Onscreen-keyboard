@@ -337,12 +337,6 @@ def _win_post_vk(hwnd: int, vk: int) -> bool:
 _WIN_FLYOUT_CLASS = "Windows.UI.Core.CoreWindow"
 
 
-def _win_is_top_build() -> bool:
-    """True for OnScreenKeyboardTop.exe: the signed uiAccess build an
-    all-users install runs, which Windows lets sit above Start / Search."""
-    return os.path.basename(sys.executable).lower() == "onscreenkeyboardtop.exe"
-
-
 def _win_shell_popup_hwnd() -> int:
     """The foreground window if it is a shell flyout (Windows Search, Start,
     Action Center...), else 0.
@@ -6531,8 +6525,9 @@ class OnScreenKeyboard(Gtk.Window):
                     # /RELAUNCH=1 is read by installer/OnScreenKeyboard.iss to start the
                     # new version once files are replaced (silent mode skips postinstall).
                     subprocess.Popen(
-                        [tmp_path, "/SP-", "/SILENT", "/CLOSEAPPLICATIONS", "/RELAUNCH=1",
-                         "/ALLUSERS" if _win_is_top_build() else "/CURRENTUSER"],
+                        # No install-mode flag: the installer always installs
+                        # for all users and moves older per-user installs over.
+                        [tmp_path, "/SP-", "/SILENT", "/CLOSEAPPLICATIONS", "/RELAUNCH=1"],
                         env=_child_env(),
                         creationflags=getattr(subprocess, "DETACHED_PROCESS", 0)
                                       | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),

@@ -181,9 +181,16 @@ jobs:
         run: |
           $env:PATH = (($env:PATH -split ';') | Where-Object { $_ -and $_ -notmatch 'msys64|mingw' }) -join ';'
           $marker = '*OU=OnScreenKeyboard-uiaccess*'
+          $log = "$env:RUNNER_TEMP\osk-setup-all.log"
+          trap {
+            # Annotations are readable without signing in (job logs are not).
+            $detail = @("$_") + @(Get-Content $log -Tail 12 -ErrorAction SilentlyContinue)
+            $detail += @(Get-Content (Join-Path $env:TEMP 'osk_selftest.log') -Tail 12 -ErrorAction SilentlyContinue)
+            Write-Host ("::error title=All-users install test::" + ($detail -join '%0A'))
+            exit 1
+          }
           $setup = (Resolve-Path "installer\Output\OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe").Path
           $dir = Join-Path $env:ProgramFiles 'OnScreenKeyboard-ci'
-          $log = "$env:RUNNER_TEMP\osk-setup-all.log"
           $p = Start-Process $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS /DIR=`"$dir`" /LOG=`"$log`"" -Wait -PassThru
           if ($p.ExitCode -ne 0) { Get-Content $log -ErrorAction SilentlyContinue; throw "installer exit $($p.ExitCode)" }
           if (-not (Get-ChildItem Cert:\LocalMachine\Root | Where-Object Subject -like $marker)) { throw "signing certificate not installed" }
@@ -233,6 +240,7 @@ jobs:
 
             ### Windows
             **Recommended:** download **OnScreenKeyboard-Setup-${{ steps.ver.outputs.version }}.exe** and run it.
+            Updating from inside the app works as usual; Windows asks for permission once, and an older install is moved over automatically (settings are kept).
             Windows asks for administrator permission once: that lets the keyboard stay **above the Start menu and Windows Search**. It installs a signed build plus its signing certificate, which was made for this release only and whose private key was deleted after signing.
             The installer can add a Start Menu entry, a desktop icon, and optionally start the keyboard when you sign in.
 
