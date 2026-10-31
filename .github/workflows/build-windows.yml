@@ -116,6 +116,7 @@ jobs:
           & $signtool.FullName sign /fd SHA256 /sha1 $cert.Thumbprint /s My $exe
           if ($LASTEXITCODE -ne 0) { throw "signtool failed ($LASTEXITCODE)" }
           Export-Certificate -Cert $cert -FilePath installer\osk-signing.cer | Out-Null
+          Set-Content -Path installer\osk-signing.iss -Value "#define CertThumb `"$($cert.Thumbprint)`"" -Encoding ascii
           Remove-Item -Path $cert.PSPath -DeleteKey
           if (Test-Path "Cert:\CurrentUser\My\$($cert.Thumbprint)") { throw "private key still present" }
           $sig = Get-AuthenticodeSignature $exe

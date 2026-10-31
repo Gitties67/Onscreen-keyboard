@@ -11,11 +11,12 @@
 ; CI drops the public half of the per-build signing certificate here (its
 ; private key is deleted once OnScreenKeyboardTop.exe is signed).  Without it
 ; (local builds) every install mode just uses the plain exe.
-#if FileExists(AddBackslash(SourcePath) + "osk-signing.cer")
+; CI also writes osk-signing.iss: #define CertThumb "<SHA-1 thumbprint>".
+#if FileExists(AddBackslash(SourcePath) + "osk-signing.cer") && \
+    FileExists(AddBackslash(SourcePath) + "osk-signing.iss")
+  #include "osk-signing.iss"
   #define SignedTop
 #endif
-; Marker in the certificate subject, used to find our certificates again.
-#define CertMarker "OU=OnScreenKeyboard-uiaccess"
 
 [Setup]
 ; Fixed GUID: identifies the app across versions so upgrades replace in place.
@@ -69,7 +70,7 @@ Type: filesandordirs; Name: "{app}\_internal"
 [Files]
 Source: "..\dist\OnScreenKeyboard\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 #ifdef SignedTop
-Source: "osk-signing.cer"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: IsAdminInstallMode
+Source: "osk-signing.cer"; Flags: dontcopy
 #endif
 
 [Icons]
@@ -87,22 +88,12 @@ Name: "{autoprograms}\{#AppName} (debug mode)"; Filename: "{app}\{code:AppExeNam
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "OnScreenKeyboard"; ValueData: """{app}\{code:AppExeName}"""; Flags: uninsdeletevalue; Tasks: startup
 
 [Run]
-#ifdef SignedTop
-; Trust this build's signing certificate (machine Trusted Root) so Windows will
-; start the uiAccess exe, replacing any older build's certificate.  It is
-; limited to code signing and its private key no longer exists anywhere.
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' } | Remove-Item; Import-Certificate -FilePath '{tmp}\osk-signing.cer' -CertStoreLocation Cert:\LocalMachine\Root | Out-Null"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; StatusMsg: "Trusting the keyboard's signature..."
-#endif
 ; Interactive installs: "Launch" checkbox on the final page.  shellexec: the
 ; uiAccess exe cannot be started with CreateProcess (ERROR_ELEVATION_REQUIRED).
 Filename: "{app}\{code:AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent runasoriginaluser shellexec
 ; Silent self-update (the app passes /RELAUNCH=1): start the new version.
 Filename: "{app}\{code:AppExeName}"; Flags: nowait runasoriginaluser shellexec; Check: RelaunchRequested
 
-#ifdef SignedTop
-[UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' } | Remove-Item"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; RunOnceId: "RemoveSigningCert"
-#endif
 
 [UninstallDelete]
 ; Remove anything left in the install folder (e.g. files created at runtime).
@@ -149,6 +140,71 @@ begin
         break;
       Sleep(500);
     end;
+end;
+
+#ifdef SignedTop
+// The signed uiAccess exe only starts if Windows trusts its certificate.  Each
+// build has its own (private key deleted after signing).  Trust it in the
+// machine Root store with certutil, remembering its thumbprint in HKLM so an
+// update or uninstall removes exactly that certificate.  certutil's output
+// goes into the setup log so a failure says why.
+const
+  CertKey = 'Software\Gitties67\OnScreenKeyboard';
+
+function RunLogged(Params: String): Integer;
+var
+  OutFile: String;
+  Output: AnsiString;
+begin
+  OutFile := ExpandConstant('{tmp}\certutil-out.txt');
+  if not Exec(ExpandConstant('{cmd}'),
+              '/C ""' + ExpandConstant('{sys}\certutil.exe') + '" ' + Params +
+              ' > "' + OutFile + '" 2>&1"', '', SW_HIDE, ewWaitUntilTerminated, Result) then
+    Result := -1;
+  Log('certutil ' + Params + ' -> exit ' + IntToStr(Result));
+  if LoadStringFromFile(OutFile, Output) then
+    Log(String(Output));
+end;
+
+procedure RemoveTrustedCert;
+var
+  Old: String;
+begin
+  if RegQueryStringValue(HKLM, CertKey, 'CertThumb', Old) and (Old <> '') then
+  begin
+    RunLogged('-delstore Root ' + Old);
+    RegDeleteValue(HKLM, CertKey, 'CertThumb');
+    RegDeleteKeyIfEmpty(HKLM, CertKey);
+  end;
+end;
+
+procedure TrustSigningCert;
+begin
+  RemoveTrustedCert;   // previous version's certificate
+  ExtractTemporaryFile('osk-signing.cer');
+  if RunLogged('-f -addstore Root "' + ExpandConstant('{tmp}\osk-signing.cer') + '"') = 0 then
+    RegWriteStringValue(HKLM, CertKey, 'CertThumb', '{#CertThumb}')
+  else
+    Log('ERROR: could not trust the signing certificate; the keyboard will not stay above Start.');
+end;
+#endif
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+#ifdef SignedTop
+  // ssInstall (before files are copied): the certificate must be trusted
+  // before the [Run] entries start the signed exe.
+  if (CurStep = ssInstall) and IsAdminInstallMode then
+    TrustSigningCert;
+#endif
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+#ifdef SignedTop
+  if (CurUninstallStep = usPostUninstall) and IsAdminInstallMode then
+    RemoveTrustedCert;
+#endif
 end;
 
 function RelaunchRequested: Boolean;
