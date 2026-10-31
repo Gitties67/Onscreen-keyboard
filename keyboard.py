@@ -1729,6 +1729,10 @@ class KeyTyper:
         # Only modified combos (Ctrl/Alt) or apps where injection fails fall
         # through to the focus-restore + pynput path.
         if IS_WINDOWS:
+            # A tap on the keyboard can leave Windows with no active window;
+            # Chrome & co. then drop the text box focus and ignore the keys.
+            # Re-activate the app (or open Start/Search) first.
+            _win_focus_restore()
             if _win_inject_char(char, mods or []):
                 return
             _win_focus_restore()
@@ -1759,6 +1763,7 @@ class KeyTyper:
     def send_special(self, name: str, mods: list[str] | None = None) -> None:
         # Windows — focus-independent PostMessage injection first, pynput fallback.
         if IS_WINDOWS:
+            _win_focus_restore()      # see type_char
             if _win_inject_special(name, mods or []):
                 return
             _win_focus_restore()
@@ -1855,6 +1860,7 @@ class KeyTyper:
         # Windows — focus-independent WM_CHAR injection first (handles surrogate
         # pairs); fall back to focus-restore + pynput.type() if injection fails.
         if IS_WINDOWS:
+            _win_focus_restore()      # see type_char
             hwnd = None if _win_typing_goes_to_foreground() else _win_target_focus_hwnd()
             if hwnd and _win_post_char(hwnd, emoji_str):
                 _win_log(f"emoji len={len(emoji_str)} -> hwnd={hwnd:#x} ok")
