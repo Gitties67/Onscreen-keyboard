@@ -91,7 +91,7 @@ Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: s
 ; Trust this build's signing certificate (machine Trusted Root) so Windows will
 ; start the uiAccess exe, replacing any older build's certificate.  It is
 ; limited to code signing and its private key no longer exists anywhere.
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' }} | Remove-Item; Import-Certificate -FilePath '{tmp}\osk-signing.cer' -CertStoreLocation Cert:\LocalMachine\Root | Out-Null"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; StatusMsg: "Trusting the keyboard's signature..."
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' } | Remove-Item; Import-Certificate -FilePath '{tmp}\osk-signing.cer' -CertStoreLocation Cert:\LocalMachine\Root | Out-Null"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; StatusMsg: "Trusting the keyboard's signature..."
 #endif
 ; Interactive installs: "Launch" checkbox on the final page.  shellexec: the
 ; uiAccess exe cannot be started with CreateProcess (ERROR_ELEVATION_REQUIRED).
@@ -101,7 +101,7 @@ Filename: "{app}\{code:AppExeName}"; Flags: nowait runasoriginaluser shellexec; 
 
 #ifdef SignedTop
 [UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' }} | Remove-Item"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; RunOnceId: "RemoveSigningCert"
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root | Where-Object {{ $_.Subject -like '*{#CertMarker}*' } | Remove-Item"""; Flags: runhidden waituntilterminated; Check: IsAdminInstallMode; RunOnceId: "RemoveSigningCert"
 #endif
 
 [UninstallDelete]
