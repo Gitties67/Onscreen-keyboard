@@ -117,7 +117,7 @@ Always use `launch.sh` — it auto-detects the X display, Xauthority, and AT-SPI
 - **Key sound** — soft click by default; switch to a beep or turn it off in Settings
 - **Adjustable key size, font, opacity** — all live, all remembered on restart
 - **Free resize** — drag any edge or corner; keys scale to fit
-- **App launcher** — Win/⊞ button opens built-in app search (Linux) or toggles the Start menu (Windows; lit while Start is open)
+- **App launcher** — Win/⊞ button opens built-in app search (Linux); on Windows it latches like Shift (⊞ then E = Win+E; tap ⊞ again on its own to open Start)
 - **Updates** — built-in update checker in ⚙ Settings
 
 ---
@@ -192,7 +192,7 @@ On Windows the keyboard follows **display scaling** (Settings → Display → Sc
 | **Caps** | Persistent uppercase toggle |
 | **Ctrl / Alt** | Sticky — latch on click; release set by Modifier keys setting |
 | **Fn** | One-shot: the keys show their Fn meaning (F1–F12, Home, End, PgUp, PgDn) until the next key press |
-| **⊞ Win** | App launcher (Linux) / opens and closes Start (Windows) |
+| **⊞ Win** | App launcher (Linux) / latching Windows key (Windows): tap to hold, tap again to open Start, or tap a key for Win+key |
 | **😊** | Emoji panel |
 | **PrtScn** | Screenshot tool (Linux) |
 

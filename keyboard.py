@@ -334,36 +334,85 @@ def _win_post_vk(hwnd: int, vk: int) -> bool:
         return False
 
 
-_WIN_FLYOUT_CLASS = "Windows.UI.Core.CoreWindow"
+# Taskbar windows: clicking the taskbar briefly makes it the foreground, but
+# typing should still go to the app you were in.
+_WIN_TRAY_CLASSES = frozenset({"Shell_TrayWnd", "Shell_SecondaryTrayWnd",
+                               "NotifyIconOverflowWindow"})
 
 
-def _win_shell_popup_hwnd() -> int:
-    """The foreground window if it is a shell flyout (Windows Search, Start,
-    Action Center...), else 0.
+# Programs that draw Start, Search and other shell flyouts.  Their windows take
+# real (SendInput) keystrokes only, and are never the app typing returns to.
+_WIN_SHELL_HOSTS = frozenset({
+    "startmenuexperiencehost.exe", "searchhost.exe", "searchapp.exe",
+    "searchui.exe", "shellexperiencehost.exe", "textinputhost.exe",
+})
+_win_exe_cache: dict = {}
 
-    Those flyouts are top-level CoreWindows.  The foreground poll deliberately
-    never records them as the typing target (so typing goes back to your app
-    once they close), which meant PostMessage typing went to the app *behind*
-    Search instead of into the search box.  While one is in front, typing must
-    use SendInput, which goes to whatever has the foreground."""
+
+def _win_is_shell_host(pid: int) -> bool:
+    """True if process `pid` is one of the shell flyout hosts above."""
+    name = _win_exe_cache.get(pid)
+    if name is None:
+        name = ""
+        try:
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.windll.kernel32
+            k32.OpenProcess.restype = wintypes.HANDLE
+            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            k32.QueryFullProcessImageNameW.argtypes = [
+                wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+            k32.CloseHandle.argtypes = [wintypes.HANDLE]
+            h = k32.OpenProcess(0x1000, False, pid)   # QUERY_LIMITED_INFORMATION
+            if h:
+                try:
+                    buf = ctypes.create_unicode_buffer(520)
+                    size = wintypes.DWORD(520)
+                    if k32.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(size)):
+                        name = os.path.basename(buf.value).lower()
+                finally:
+                    k32.CloseHandle(h)
+        except Exception:
+            pass
+        if len(_win_exe_cache) > 256:
+            _win_exe_cache.clear()
+        _win_exe_cache[pid] = name
+    return name in _WIN_SHELL_HOSTS
+
+
+def _win_typing_goes_to_foreground() -> bool:
+    """True when keys must go to the foreground window with SendInput rather
+    than be posted to the tracked target app.
+
+    The foreground poll never records shell windows (Start, Search, Action
+    Center... whatever window class this Windows build uses for them) as the
+    target, so typing returns to your app once they close.  While one of them
+    is in front, posting to the tracked target would type into the app hidden
+    behind the menu.  Rule: the foreground is not the tracked target, not the
+    keyboard itself and not the taskbar -> type into the foreground."""
     if not IS_WINDOWS:
-        return 0
+        return False
     try:
         import ctypes
         user32 = ctypes.windll.user32
         _win_setup_protos()
-        hwnd = user32.GetForegroundWindow()
-        if not hwnd:
-            return 0
-        cls = ctypes.create_unicode_buffer(64)
-        user32.GetClassNameW(hwnd, cls, 64)
-        if cls.value != _WIN_FLYOUT_CLASS:
-            return 0
+        fg = user32.GetForegroundWindow()
+        if not fg:
+            return False
         pid = ctypes.c_ulong()
-        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        return 0 if pid.value == _win_our_pid else int(hwnd)
+        user32.GetWindowThreadProcessId(fg, ctypes.byref(pid))
+        if pid.value == _win_our_pid:
+            return False
+        if fg == _win_last_target[0] and not _win_is_shell_host(pid.value):
+            return False
+        cls = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(fg, cls, 64)
+        if cls.value in _WIN_TRAY_CLASSES:
+            return False
+        _win_log(f"typing -> foreground {int(fg):#x} class={cls.value!r} (pid={pid.value})")
+        return True
     except Exception:
-        return 0
+        return False
 
 
 def _win_inject_char(char: str, mods: list[str]) -> bool:
@@ -374,7 +423,7 @@ def _win_inject_char(char: str, mods: list[str]) -> bool:
     no modifier state and the target thread's async key state isn't shared with
     us, so Ctrl+C posted as messages would type a literal 'c'.  Those go to
     pynput, which uses real SendInput against the (focus-restored) target."""
-    if mods or _win_shell_popup_hwnd():
+    if mods or _win_typing_goes_to_foreground():
         return False
     hwnd = _win_target_focus_hwnd()
     if not hwnd:
@@ -406,7 +455,7 @@ def _win_inject_special(name: str, mods: list[str]) -> bool:
 
     Unmodified navigation/editing keys post cleanly.  Modified combos fall back
     to pynput for the same reason as _win_inject_char."""
-    if mods or _win_shell_popup_hwnd():
+    if mods or _win_typing_goes_to_foreground():
         return False
     vk = _WIN_VK.get(name)
     if vk is None:
@@ -1715,7 +1764,7 @@ class KeyTyper:
         # Windows — focus-independent WM_CHAR injection first (handles surrogate
         # pairs); fall back to focus-restore + pynput.type() if injection fails.
         if IS_WINDOWS:
-            hwnd = None if _win_shell_popup_hwnd() else _win_target_focus_hwnd()
+            hwnd = None if _win_typing_goes_to_foreground() else _win_target_focus_hwnd()
             if hwnd and _win_post_char(hwnd, emoji_str):
                 _win_log(f"emoji len={len(emoji_str)} -> hwnd={hwnd:#x} ok")
                 return
@@ -2670,7 +2719,8 @@ class OnScreenKeyboard(Gtk.Window):
                         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
                         cls = ctypes.create_unicode_buffer(64)
                         user32.GetClassNameW(hwnd, cls, 64)
-                        if pid.value != our_pid and cls.value not in _WIN_SHELL_CLASSES:
+                        if (pid.value != our_pid and cls.value not in _WIN_SHELL_CLASSES
+                                and not _win_is_shell_host(pid.value)):
                             prev = _win_last_target[0]
                             _win_last_target[0] = hwnd
                             # Log only on change so the linchpin's health is
@@ -2680,11 +2730,6 @@ class OnScreenKeyboard(Gtk.Window):
                                          f"(pid={pid.value})")
                 except Exception:
                     pass
-                # ⊞ stays lit while Start / Search is open, like a toggle key
-                start_open = bool(_win_shell_popup_hwnd())
-                if start_open != self.win_active:
-                    self.win_active = start_open
-                    self._update_modifier_visuals()
                 return True  # keep the timeout alive
 
             self._win_poll_timer = GLib.timeout_add(50, _win_poll_foreground)
@@ -3705,7 +3750,7 @@ class OnScreenKeyboard(Gtk.Window):
         mods = self._active_sticky_modifiers()
         self._type_character(ch, mods)
         if mods:
-            self.ctrl_active = self.alt_active = False
+            self.ctrl_active = self.alt_active = self.win_active = False
             self._update_modifier_visuals()
 
     def _close_accent_popup(self):
@@ -3783,7 +3828,14 @@ class OnScreenKeyboard(Gtk.Window):
 
         if action == "win":
             if IS_WINDOWS:
-                self._win_toggle_start()
+                # Like holding the real key: tap ⊞ (lit) does nothing yet.
+                # Tap a key -> Win+key, and ⊞ lets go.  Tap ⊞ again without
+                # using it -> it lets go and opens Start, like releasing a
+                # real Win key on its own.
+                self.win_active = not self.win_active
+                self._update_modifier_visuals()
+                if not self.win_active:
+                    self._win_tap()
             else:
                 self._toggle_app_mode()
             return
@@ -3954,6 +4006,7 @@ class OnScreenKeyboard(Gtk.Window):
             else:
                 # Persistent: Ctrl stays latched; only Alt clears
                 self.alt_active = False
+            self.win_active = False      # ⊞ was used for Win+key: no Start
             self._update_modifier_visuals()
 
     # ── Built-in app launcher ─────────────────────────────────────────────────
@@ -5132,25 +5185,21 @@ class OnScreenKeyboard(Gtk.Window):
 
     # ── Toggle app mode ───────────────────────────────────────────────────────
 
-    def _win_toggle_start(self):
-        """⊞ on Windows: open Start, or close Start / Search if one is open.
-        The key's lit state follows the menu (set by the foreground poll), so
-        typing goes into Start's search box while ⊞ is blue."""
+    def _win_tap(self):
+        """Press and release the Windows key on its own (opens/closes Start)."""
         if not (PYNPUT_OK and _pynput_ctrl):
             return
         import pynput.keyboard as _pk
-        # Esc closes whichever is open; a Win tap with Search open would
-        # switch to Start instead of closing.
-        key = _pk.Key.esc if _win_shell_popup_hwnd() else _pk.Key.cmd
+        _win_focus_restore()
         try:
-            _pynput_ctrl.press(key)
-            _pynput_ctrl.release(key)
+            _pynput_ctrl.press(_pk.Key.cmd)
+            _pynput_ctrl.release(_pk.Key.cmd)
         except Exception as exc:
-            _win_log(f"toggle_start error: {exc}")
+            _win_log(f"win tap error: {exc}")
 
     def _toggle_app_mode(self):
         if IS_WINDOWS:
-            self._win_toggle_start()
+            self._win_tap()
             return
         # Showing/hiding self._search_label and swapping the suggestion-button
         # labels for app names changes the suggestion bar's minimum size, which
@@ -7246,6 +7295,7 @@ class OnScreenKeyboard(Gtk.Window):
         mods = []
         if self.ctrl_active: mods.append("ctrl_l")
         if self.alt_active:  mods.append("alt_l")
+        if self.win_active:  mods.append("super_l")
         return mods
 
     def _toggle_modifier(self, action: str):
