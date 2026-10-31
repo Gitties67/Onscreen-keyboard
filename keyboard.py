@@ -245,7 +245,7 @@ def _win_target_focus_hwnd():
             return gti.hwndFocus
 
         # ── Attempt 2: AttachThreadInput + GetFocus ─────────────────────────
-        our_tid = user32.GetCurrentThreadId()
+        our_tid = ctypes.windll.kernel32.GetCurrentThreadId()
         focused = None
         if user32.AttachThreadInput(our_tid, target_tid, True):
             try:
@@ -380,6 +380,51 @@ def _win_is_shell_host(pid: int) -> bool:
     return name in _WIN_SHELL_HOSTS
 
 
+def _win_exe_name(pid: int) -> str:
+    _win_is_shell_host(pid)            # fills the cache
+    return _win_exe_cache.get(pid, "") or "?"
+
+
+def _win_describe(hwnd) -> str:
+    """'0x1234 class='...' exe='...'' for the debug log (no window titles)."""
+    if not hwnd:
+        return "none"
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        cls = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(hwnd, cls, 64)
+        return f"{int(hwnd):#x} class={cls.value!r} exe={_win_exe_name(pid.value)!r}"
+    except Exception as exc:
+        return f"{int(hwnd):#x} (describe error {exc})"
+
+
+def _win_has_uiaccess() -> str:
+    """'yes' / 'no' / error text: did Windows start us with uiAccess (the
+    permission that lets our window sit above Start / Search)?"""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k32, adv = ctypes.windll.kernel32, ctypes.windll.advapi32
+        k32.GetCurrentProcess.restype = wintypes.HANDLE
+        tok = wintypes.HANDLE()
+        if not adv.OpenProcessToken(k32.GetCurrentProcess(), 0x0008, ctypes.byref(tok)):
+            return "unknown (OpenProcessToken failed)"
+        try:
+            val, ret = wintypes.DWORD(), wintypes.DWORD()
+            TokenUIAccess = 26
+            if not adv.GetTokenInformation(tok, TokenUIAccess, ctypes.byref(val),
+                                           ctypes.sizeof(val), ctypes.byref(ret)):
+                return "unknown (GetTokenInformation failed)"
+            return "yes" if val.value else "no"
+        finally:
+            k32.CloseHandle(tok)
+    except Exception as exc:
+        return f"unknown ({exc})"
+
+
 def _win_typing_goes_to_foreground() -> bool:
     """True when keys must go to the foreground window with SendInput rather
     than be posted to the tracked target app.
@@ -397,6 +442,9 @@ def _win_typing_goes_to_foreground() -> bool:
         user32 = ctypes.windll.user32
         _win_setup_protos()
         fg = user32.GetForegroundWindow()
+        if _WIN_DEBUG_LOG:
+            _win_log(f"key: foreground={_win_describe(fg)} "
+                     f"target={int(_win_last_target[0] or 0):#x}")
         if not fg:
             return False
         pid = ctypes.c_ulong()
@@ -409,7 +457,7 @@ def _win_typing_goes_to_foreground() -> bool:
         user32.GetClassNameW(fg, cls, 64)
         if cls.value in _WIN_TRAY_CLASSES:
             return False
-        _win_log(f"typing -> foreground {int(fg):#x} class={cls.value!r} (pid={pid.value})")
+        _win_log("typing -> foreground (SendInput)")
         return True
     except Exception:
         return False
@@ -2714,6 +2762,10 @@ class OnScreenKeyboard(Gtk.Window):
             def _win_poll_foreground():
                 try:
                     hwnd = user32.GetForegroundWindow()
+                    if hwnd != self._win_last_fg:
+                        self._win_last_fg = hwnd
+                        if _WIN_DEBUG_LOG:
+                            _win_log(f"poll: foreground -> {_win_describe(hwnd)}")
                     if hwnd:
                         pid = ctypes.c_ulong()
                         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
@@ -2732,6 +2784,9 @@ class OnScreenKeyboard(Gtk.Window):
                     pass
                 return True  # keep the timeout alive
 
+            self._win_last_fg = None
+            _win_log(f"start: exe={os.path.basename(sys.executable)!r} "
+                     f"uiAccess={_win_has_uiaccess()}")
             self._win_poll_timer = GLib.timeout_add(50, _win_poll_foreground)
             _win_log("poll: foreground-window polling started (50ms)")
             print("[windows] foreground-window polling started")
